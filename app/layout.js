@@ -6,7 +6,7 @@ export const metadata = {
   keywords: 'MBA admissions, ISB consulting, INSEAD admissions, B-school consulting, MBA essay help, interview prep',
   openGraph: {
     title: 'Acceptance Consulting | Get Accepted to Your Dream B-School',
-    description: 'Not your typical consultants. We're the friends who've been in your shoes, sat in those classrooms, and now sit in your corner.',
+    description: 'Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.',
     url: 'https://www.acceptanceconsulting.com',
     siteName: 'Acceptance Consulting',
     type: 'website',
