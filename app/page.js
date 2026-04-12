@@ -589,14 +589,12 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
   }, []);
   const links = [
     { label:"Home", action:()=>{setPage("home");window.scrollTo({top:0,behavior:"smooth"});} },
-    { label:"Services", action:()=>{setPage("home");setTimeout(()=>document.getElementById("services")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"Blog", action:()=>{setPage("blog");window.scrollTo(0,0);} },
     { label:"Testimonials", action:()=>{setPage("home");setTimeout(()=>document.getElementById("testimonials")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"Our Team", action:()=>{setPage("home");setTimeout(()=>document.getElementById("our-team")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"About Us", action:()=>{setPage("home");setTimeout(()=>document.getElementById("about")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"FAQ", action:()=>{setPage("faq");window.scrollTo(0,0);} },
     { label:"Leaderboard", action:()=>{setPage("leaderboard");window.scrollTo(0,0);} },
-    { label:"Contact", action:()=>{setPage("home");setTimeout(()=>document.getElementById("contact")?.scrollIntoView({behavior:"smooth"}),50);} },
   ];
   return (
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"10px 32px":"16px 32px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
