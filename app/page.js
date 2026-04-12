@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createClient } from '@supabase/supabase-js';
 
 /* ── Supabase ── */
@@ -7,6 +7,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 );
+const ADMIN_EMAIL = "manangupta246@gmail.com";
 
 /* ── Config ── */
 const WHATSAPP_COMMUNITY = "https://chat.whatsapp.com/L6upA5MYtSEGOYLU8UTBs1";
@@ -19,7 +20,7 @@ const GRAY = "#555";
 const LIGHT_GRAY = "#f8f8f8";
 const avatar = (n) => `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(n)}&backgroundColor=fecaca`;
 
-/* ── Counter (only animation that uses JS) ── */
+/* ── Counter ── */
 function AnimatedCounter({ target, suffix = "" }) {
   const [c, setC] = useState(0);
   const ref = useRef(null);
@@ -110,6 +111,8 @@ const linkedinPosts = [
   { title: "Why your MBA essay probably is not working", placeholder: "LinkedIn Post Screenshot 3" },
 ];
 
+const BLOG_CATEGORIES = ["All","MBA Strategy","ISB Admissions","International B-Schools","Essay Tips","Interview Prep","Scholarships","Reapplication"];
+
 /* ── Styles ── */
 const hs = (sz="clamp(32px,5vw,48px)") => ({ fontFamily:"'Playfair Display',serif", fontSize:sz, fontWeight:800, color:DARK, lineHeight:1.15, margin:0 });
 const bs = { fontFamily:"'DM Sans',sans-serif", fontSize:"16px", color:GRAY, lineHeight:1.75 };
@@ -134,8 +137,7 @@ function AuthModal({ onClose, onAuth }) {
     try {
       if (mode === "signup") {
         const { data, error: err } = await supabase.auth.signUp({
-          email,
-          password,
+          email, password,
           options: { data: { full_name: name } }
         });
         if (err) throw err;
@@ -180,23 +182,19 @@ function AuthModal({ onClose, onAuth }) {
     <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
       <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"24px",padding:"40px 32px",maxWidth:"420px",width:"100%",position:"relative",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}}>
         <button onClick={onClose} style={{position:"absolute",top:"16px",right:"20px",background:"none",border:"none",fontSize:"22px",color:GRAY,cursor:"pointer"}}>{"\u2715"}</button>
-
         <div style={{textAlign:"center",marginBottom:"28px"}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"22px",color:DARK,marginBottom:"4px"}}><span style={{color:RED}}>Acceptance</span> Consulting</div>
           <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:GRAY,margin:0}}>{mode==="login"?"Welcome back!":"Create your account"}</p>
         </div>
-
         <button onClick={handleGoogle} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:"12px",border:"1px solid rgba(0,0,0,0.12)",background:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"15px",color:DARK,marginBottom:"20px",transition:"background 0.2s"}}>
           <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
           Continue with Google
         </button>
-
         <div style={{display:"flex",alignItems:"center",gap:"12px",margin:"20px 0"}}>
           <div style={{flex:1,height:"1px",background:"rgba(0,0,0,0.1)"}}></div>
           <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:GRAY}}>or</span>
           <div style={{flex:1,height:"1px",background:"rgba(0,0,0,0.1)"}}></div>
         </div>
-
         <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
           {mode==="signup" && (
             <input type="text" placeholder="Full Name" value={name} onChange={e=>setName(e.target.value)} style={inputStyle} />
@@ -205,14 +203,11 @@ function AuthModal({ onClose, onAuth }) {
           <input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} style={inputStyle}
             onKeyDown={e=>{if(e.key==="Enter")handleEmailAuth();}} />
         </div>
-
         {error && <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:"#DC2626",margin:"12px 0 0",textAlign:"center"}}>{error}</p>}
         {success && <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:"#16A34A",margin:"12px 0 0",textAlign:"center"}}>{success}</p>}
-
         <button onClick={handleEmailAuth} disabled={loading} style={{...bps,width:"100%",marginTop:"20px",textAlign:"center",opacity:loading?0.6:1}}>
           {loading ? "Please wait..." : (mode==="login" ? "Log In" : "Sign Up")}
         </button>
-
         <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:GRAY,textAlign:"center",margin:"20px 0 0"}}>
           {mode==="login" ? "Do not have an account? " : "Already have an account? "}
           <span onClick={()=>{setMode(mode==="login"?"signup":"login");setError("");setSuccess("");}} style={{color:RED,fontWeight:700,cursor:"pointer"}}>
@@ -224,19 +219,17 @@ function AuthModal({ onClose, onAuth }) {
   );
 }
 
-/* ── User Menu (dropdown) ── */
+/* ── User Menu ── */
 function UserMenu({ user, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
   const initials = displayName.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
-
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
   return (
     <div ref={ref} style={{position:"relative",flexShrink:0}}>
       <button onClick={()=>setOpen(!open)} style={{width:"40px",height:"40px",borderRadius:"50%",background:RED,color:"#fff",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"14px",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -254,7 +247,337 @@ function UserMenu({ user, onLogout }) {
   );
 }
 
-/* ──────── COMPONENTS ──────── */
+/* ──────── BLOG COMPONENTS ──────── */
+
+function slugify(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+/* ── Rich Text Editor ── */
+function RichEditor({ value, onChange }) {
+  const editorRef = useRef(null);
+  const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    if (isInitialMount.current && editorRef.current) {
+      editorRef.current.innerHTML = value || '';
+      isInitialMount.current = false;
+    }
+  }, [value]);
+
+  const exec = (cmd, val) => {
+    document.execCommand(cmd, false, val || null);
+    editorRef.current?.focus();
+    if (onChange) onChange(editorRef.current.innerHTML);
+  };
+
+  const handleInput = () => {
+    if (onChange) onChange(editorRef.current.innerHTML);
+  };
+
+  const addImage = () => {
+    const url = prompt("Enter image URL:");
+    if (url) exec('insertHTML', '<img src="' + url + '" style="max-width:100%;border-radius:12px;margin:16px 0;" />');
+  };
+
+  const tbtn = (label, cmd, val) => (
+    <button key={cmd+label} onClick={()=>exec(cmd,val)} style={{padding:"6px 10px",background:"none",border:"1px solid rgba(0,0,0,0.1)",borderRadius:"6px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:DARK}} title={label}>{label}</button>
+  );
+
+  return (
+    <div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:"4px",marginBottom:"8px",padding:"8px",background:LIGHT_GRAY,borderRadius:"10px"}}>
+        {tbtn("B","bold")}
+        {tbtn("I","italic")}
+        {tbtn("U","underline")}
+        {tbtn("H2","formatBlock","h2")}
+        {tbtn("H3","formatBlock","h3")}
+        {tbtn("UL","insertUnorderedList")}
+        {tbtn("OL","insertOrderedList")}
+        {tbtn("Quote","formatBlock","blockquote")}
+        <button onClick={addImage} style={{padding:"6px 10px",background:"none",border:"1px solid rgba(0,0,0,0.1)",borderRadius:"6px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:DARK}} title="Image">IMG</button>
+      </div>
+      <div
+        ref={editorRef}
+        contentEditable
+        onInput={handleInput}
+        style={{
+          minHeight:"300px",padding:"20px",borderRadius:"12px",
+          border:"1px solid rgba(0,0,0,0.12)",fontFamily:"'DM Sans',sans-serif",
+          fontSize:"16px",lineHeight:1.8,color:DARK,outline:"none",
+          background:"#fff",overflowY:"auto",maxHeight:"500px"
+        }}
+      />
+    </div>
+  );
+}
+
+/* ── Blog Editor (Admin Only) ── */
+function BlogEditor({ post, onSave, onCancel }) {
+  const [title, setTitle] = useState(post?.title || "");
+  const [content, setContent] = useState(post?.content || "");
+  const [excerpt, setExcerpt] = useState(post?.excerpt || "");
+  const [coverImage, setCoverImage] = useState(post?.cover_image || "");
+  const [category, setCategory] = useState(post?.category || "MBA Strategy");
+  const [tagsStr, setTagsStr] = useState(post?.tags?.join(", ") || "");
+  const [published, setPublished] = useState(post?.published ?? false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const inputStyle = {
+    width:"100%",padding:"14px 16px",borderRadius:"12px",
+    border:"1px solid rgba(0,0,0,0.12)",fontFamily:"'DM Sans',sans-serif",
+    fontSize:"15px",outline:"none",boxSizing:"border-box"
+  };
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) { setError("Title and content are required."); return; }
+    setSaving(true); setError("");
+    const slug = post?.slug || slugify(title) + '-' + Date.now().toString(36);
+    const tags = tagsStr.split(",").map(t=>t.trim()).filter(Boolean);
+    const postData = {
+      title, slug, content, excerpt: excerpt || title,
+      cover_image: coverImage || null, category, tags, published,
+      author_name: "Acceptance Consulting",
+      author_email: ADMIN_EMAIL,
+      updated_at: new Date().toISOString()
+    };
+    try {
+      if (post?.id) {
+        const { error: err } = await supabase.from('posts').update(postData).eq('id', post.id);
+        if (err) throw err;
+      } else {
+        const { error: err } = await supabase.from('posts').insert([postData]);
+        if (err) throw err;
+      }
+      onSave();
+    } catch (err) {
+      setError(err.message || "Failed to save post.");
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div style={{paddingTop:"100px",minHeight:"100vh",background:"#fff"}}>
+      <div style={{...sps,...mws,maxWidth:"800px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"36px",flexWrap:"wrap",gap:"12px"}}>
+          <h1 style={{...hs("clamp(24px,4vw,36px)"),margin:0}}>{post?.id ? "Edit Post" : "New Blog Post"}</h1>
+          <button onClick={onCancel} style={{...bos,padding:"10px 24px",fontSize:"13px"}}>Cancel</button>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:"20px"}}>
+          <div>
+            <label style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:DARK,marginBottom:"6px",display:"block"}}>Title</label>
+            <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Post title" style={inputStyle} />
+          </div>
+          <div>
+            <label style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:DARK,marginBottom:"6px",display:"block"}}>Excerpt (short summary)</label>
+            <input value={excerpt} onChange={e=>setExcerpt(e.target.value)} placeholder="Brief summary for the blog list" style={inputStyle} />
+          </div>
+          <div>
+            <label style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:DARK,marginBottom:"6px",display:"block"}}>Cover Image URL (optional)</label>
+            <input value={coverImage} onChange={e=>setCoverImage(e.target.value)} placeholder="https://example.com/image.jpg" style={inputStyle} />
+            {coverImage && <img src={coverImage} alt="Cover preview" style={{marginTop:"8px",maxWidth:"100%",maxHeight:"200px",borderRadius:"12px",objectFit:"cover"}} />}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"16px"}}>
+            <div>
+              <label style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:DARK,marginBottom:"6px",display:"block"}}>Category</label>
+              <select value={category} onChange={e=>setCategory(e.target.value)} style={{...inputStyle,cursor:"pointer"}}>
+                {BLOG_CATEGORIES.filter(c=>c!=="All").map(c=>(<option key={c} value={c}>{c}</option>))}
+              </select>
+            </div>
+            <div>
+              <label style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:DARK,marginBottom:"6px",display:"block"}}>Tags (comma separated)</label>
+              <input value={tagsStr} onChange={e=>setTagsStr(e.target.value)} placeholder="gmat, essays, isb" style={inputStyle} />
+            </div>
+          </div>
+          <div>
+            <label style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:DARK,marginBottom:"6px",display:"block"}}>Content</label>
+            <RichEditor value={content} onChange={setContent} />
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:"12px"}}>
+            <label style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:DARK,display:"flex",alignItems:"center",gap:"8px",cursor:"pointer"}}>
+              <input type="checkbox" checked={published} onChange={e=>setPublished(e.target.checked)} style={{width:"18px",height:"18px",accentColor:RED}} />
+              Publish immediately
+            </label>
+          </div>
+          {error && <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:"#DC2626",margin:0}}>{error}</p>}
+          <div style={{display:"flex",gap:"12px"}}>
+            <button onClick={handleSave} disabled={saving} style={{...bps,opacity:saving?0.6:1}}>
+              {saving ? "Saving..." : (post?.id ? "Update Post" : "Create Post")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Blog Post View ── */
+function BlogPostView({ post, onBack }) {
+  const date = new Date(post.created_at).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  return (
+    <div style={{paddingTop:"100px",minHeight:"100vh",background:"#fff"}}>
+      <div style={{...sps,...mws,maxWidth:"780px"}}>
+        <button onClick={onBack} style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:RED,background:"none",border:"none",cursor:"pointer",marginBottom:"28px",display:"flex",alignItems:"center",gap:"6px"}}>{"\u2190"} Back to Blog</button>
+        {post.cover_image && (
+          <img src={post.cover_image} alt={post.title} style={{width:"100%",height:"360px",objectFit:"cover",borderRadius:"20px",marginBottom:"32px"}} />
+        )}
+        <div style={{display:"flex",alignItems:"center",gap:"12px",marginBottom:"20px",flexWrap:"wrap"}}>
+          <span style={{padding:"6px 16px",borderRadius:"50px",background:RED_BG,color:RED,fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:700}}>{post.category}</span>
+          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:GRAY}}>{date}</span>
+          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:GRAY}}>by {post.author_name}</span>
+        </div>
+        <h1 style={{...hs("clamp(28px,5vw,44px)"),marginBottom:"32px"}}>{post.title}</h1>
+        <div
+          className="blog-content"
+          dangerouslySetInnerHTML={{__html: post.content}}
+          style={{fontFamily:"'DM Sans',sans-serif",fontSize:"17px",color:DARK,lineHeight:1.85}}
+        />
+        {post.tags && post.tags.length > 0 && (
+          <div style={{marginTop:"40px",paddingTop:"24px",borderTop:"1px solid rgba(0,0,0,0.08)",display:"flex",gap:"8px",flexWrap:"wrap"}}>
+            {post.tags.map((tag,i)=>(<span key={i} style={{padding:"6px 14px",borderRadius:"50px",background:LIGHT_GRAY,fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:600,color:GRAY}}>#{tag}</span>))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Blog List Page ── */
+function BlogPage({ user }) {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [viewingPost, setViewingPost] = useState(null);
+  const [editingPost, setEditingPost] = useState(null);
+  const [showEditor, setShowEditor] = useState(false);
+  const isAdmin = user?.email === ADMIN_EMAIL;
+
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
+    let query = supabase.from('posts').select('*').order('created_at', { ascending: false });
+    if (!isAdmin) {
+      query = query.eq('published', true);
+    }
+    const { data, error } = await query;
+    if (!error && data) setPosts(data);
+    setLoading(false);
+  }, [isAdmin]);
+
+  useEffect(() => { fetchPosts(); }, [fetchPosts]);
+
+  if (showEditor || editingPost) {
+    return (
+      <BlogEditor
+        post={editingPost}
+        onSave={() => { setShowEditor(false); setEditingPost(null); fetchPosts(); }}
+        onCancel={() => { setShowEditor(false); setEditingPost(null); }}
+      />
+    );
+  }
+
+  if (viewingPost) {
+    return <BlogPostView post={viewingPost} onBack={() => setViewingPost(null)} />;
+  }
+
+  const filtered = posts.filter(p => {
+    const matchCat = activeCategory === "All" || p.category === activeCategory;
+    const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase()) || (p.excerpt && p.excerpt.toLowerCase().includes(search.toLowerCase())) || (p.tags && p.tags.some(t => t.toLowerCase().includes(search.toLowerCase())));
+    return matchCat && matchSearch;
+  });
+
+  const handleDelete = async (id) => {
+    if (!confirm("Are you sure you want to delete this post?")) return;
+    await supabase.from('posts').delete().eq('id', id);
+    fetchPosts();
+  };
+
+  return (
+    <div style={{paddingTop:"100px",minHeight:"100vh",background:"#fff"}}>
+      <div style={{...sps,...mws}}>
+        <div style={{textAlign:"center",marginBottom:"48px"}}>
+          <p style={lbs}>Our Blog</p>
+          <h1 style={hs()}>Insights & Advice</h1>
+          <p style={{...bs,maxWidth:"550px",margin:"12px auto 0"}}>Tips, strategies, and stories from the admissions trenches to help you on your MBA journey.</p>
+        </div>
+
+        {isAdmin && (
+          <div style={{display:"flex",justifyContent:"center",marginBottom:"32px"}}>
+            <button onClick={()=>setShowEditor(true)} style={bps}>+ Write New Post</button>
+          </div>
+        )}
+
+        <div style={{maxWidth:"500px",margin:"0 auto 28px",position:"relative"}}>
+          <input
+            value={search} onChange={e=>setSearch(e.target.value)}
+            placeholder="Search posts..."
+            style={{width:"100%",padding:"14px 16px 14px 44px",borderRadius:"50px",border:"1px solid rgba(0,0,0,0.1)",fontFamily:"'DM Sans',sans-serif",fontSize:"15px",outline:"none",boxSizing:"border-box",background:LIGHT_GRAY}}
+          />
+          <span style={{position:"absolute",left:"16px",top:"50%",transform:"translateY(-50%)",fontSize:"18px",color:GRAY}}>{"\u{1F50D}"}</span>
+        </div>
+
+        <div style={{display:"flex",justifyContent:"center",gap:"8px",marginBottom:"40px",flexWrap:"wrap"}}>
+          {BLOG_CATEGORIES.map(c=>(<button key={c} onClick={()=>setActiveCategory(c)} style={{padding:"8px 20px",borderRadius:"50px",border:activeCategory===c?"none":"1px solid rgba(0,0,0,0.1)",background:activeCategory===c?RED:"#fff",color:activeCategory===c?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"13px",cursor:"pointer",transition:"all 0.3s"}}>{c}</button>))}
+        </div>
+
+        {loading ? (
+          <div style={{textAlign:"center",padding:"60px 0"}}>
+            <p style={{...bs,color:GRAY}}>Loading posts...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{textAlign:"center",padding:"60px 0"}}>
+            <p style={{fontSize:"48px",marginBottom:"12px"}}>{"\u{1F4DD}"}</p>
+            <p style={{...bs,fontWeight:600,color:DARK}}>No posts found</p>
+            <p style={{...bs,fontSize:"14px"}}>{search ? "Try a different search term." : "Check back soon for new content!"}</p>
+          </div>
+        ) : (
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:"24px"}}>
+            {filtered.map(post => {
+              const date = new Date(post.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+              return (
+                <div key={post.id} style={{borderRadius:"20px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)",background:"#fff",transition:"box-shadow 0.3s",cursor:"pointer"}}
+                  onClick={()=>setViewingPost(post)}
+                  onMouseEnter={e=>{e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,0.08)";}}
+                  onMouseLeave={e=>{e.currentTarget.style.boxShadow="none";}}>
+                  {post.cover_image ? (
+                    <img src={post.cover_image} alt={post.title} style={{width:"100%",height:"200px",objectFit:"cover"}} />
+                  ) : (
+                    <div style={{width:"100%",height:"200px",background:"linear-gradient(135deg," + RED_BG + ",#fce7e7)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <span style={{fontSize:"48px"}}>{"\u{1F4F0}"}</span>
+                    </div>
+                  )}
+                  <div style={{padding:"24px 20px"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:"8px",marginBottom:"12px",flexWrap:"wrap"}}>
+                      <span style={{padding:"4px 12px",borderRadius:"50px",background:RED_BG,color:RED,fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700}}>{post.category}</span>
+                      <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:GRAY}}>{date}</span>
+                      {isAdmin && !post.published && (
+                        <span style={{padding:"4px 10px",borderRadius:"50px",background:"#FEF3C7",color:"#92400E",fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700}}>Draft</span>
+                      )}
+                    </div>
+                    <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"20px",fontWeight:800,color:DARK,marginBottom:"8px",lineHeight:1.3}}>{post.title}</h3>
+                    <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:GRAY,lineHeight:1.6,marginBottom:"16px",display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{post.excerpt}</p>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:RED}}>Read more {"\u2192"}</span>
+                      {isAdmin && (
+                        <div style={{display:"flex",gap:"8px"}} onClick={e=>e.stopPropagation()}>
+                          <button onClick={()=>setEditingPost(post)} style={{padding:"6px 12px",borderRadius:"8px",background:LIGHT_GRAY,border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:600,color:DARK}}>Edit</button>
+                          <button onClick={()=>handleDelete(post.id)} style={{padding:"6px 12px",borderRadius:"8px",background:"#FEE2E2",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:600,color:"#DC2626"}}>Delete</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ──────── MAIN SITE COMPONENTS ──────── */
 
 function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
   const [scrolled, setScrolled] = useState(false);
@@ -267,6 +590,7 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
   const links = [
     { label:"Home", action:()=>{setPage("home");window.scrollTo({top:0,behavior:"smooth"});} },
     { label:"Services", action:()=>{setPage("home");setTimeout(()=>document.getElementById("services")?.scrollIntoView({behavior:"smooth"}),50);} },
+    { label:"Blog", action:()=>{setPage("blog");window.scrollTo(0,0);} },
     { label:"Testimonials", action:()=>{setPage("home");setTimeout(()=>document.getElementById("testimonials")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"Our Team", action:()=>{setPage("home");setTimeout(()=>document.getElementById("our-team")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"About Us", action:()=>{setPage("home");setTimeout(()=>document.getElementById("about")?.scrollIntoView({behavior:"smooth"}),50);} },
@@ -277,7 +601,7 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"10px 32px":"16px 32px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
       <a onClick={()=>{setPage("home");window.scrollTo(0,0);}} style={{cursor:"pointer",flexShrink:0}}><img src={LOGO} alt="AC" style={{height:"40px"}} /></a>
       <div style={{display:"flex",gap:"24px",alignItems:"center",position:"absolute",left:"50%",transform:"translateX(-50%)"}} className="dt-nav">
-        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:page==="faq"&&l.label==="FAQ"?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
+        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:(page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
       </div>
       <div style={{display:"flex",gap:"12px",alignItems:"center",flexShrink:0}} className="dt-nav">
         {user ? (
@@ -522,7 +846,7 @@ function TestimonialsSection() {
   const canPrev=pg>0;
   const canNext=pg<totalPages-1;
   const switchCat=(i)=>{setAc(i);setPg(0);};
-  const arrowBtn=(dir,enabled,onClick)=>({
+  const arrowBtn=(dir,enabled)=>({
     width:"44px",height:"44px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",
     fontSize:"18px",fontWeight:800,cursor:enabled?"pointer":"default",transition:"all 0.3s",border:"none",
     background:enabled?(dir==="next"?RED:"#fff"):"rgba(0,0,0,0.05)",
@@ -652,6 +976,7 @@ export default function App() {
       <Navbar page={page} setPage={setPage} user={user} onLoginClick={()=>setShowAuth(true)} onLogout={handleLogout} />
       {page==="home"&&<HomePage/>}
       {page==="faq"&&<FAQPage/>}
+      {page==="blog"&&<BlogPage user={user}/>}
       <Footer/>
       <StickyWhatsApp/>
       {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
