@@ -595,12 +595,13 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
     { label:"About Us", action:()=>{setPage("home");setTimeout(()=>document.getElementById("about")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"FAQ", action:()=>{setPage("faq");window.scrollTo(0,0);} },
     { label:"Leaderboard", action:()=>{setPage("leaderboard");window.scrollTo(0,0);} },
+    { label:"Partners", action:()=>{setPage("partners");window.scrollTo(0,0);} },
   ];
   return (
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"10px 32px":"16px 32px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
       <a onClick={()=>{setPage("home");window.scrollTo(0,0);}} style={{cursor:"pointer",flexShrink:0}}><img src={LOGO} alt="AC" style={{height:"40px"}} /></a>
       <div style={{display:"flex",gap:"24px",alignItems:"center",position:"absolute",left:"50%",transform:"translateX(-50%)"}} className="dt-nav">
-        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:(page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
+        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:(page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Partners")?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
       </div>
       <div style={{display:"flex",gap:"12px",alignItems:"center",flexShrink:0}} className="dt-nav">
         {user ? (
@@ -1159,6 +1160,395 @@ function LeaderboardPage({ user }) {
   );
 }
 
+/* ── Accountability Matching Icons ── */
+function AccHeartIcon() {
+  return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>);
+}
+function AccCheckIcon() {
+  return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>);
+}
+function AccClockIcon() {
+  return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>);
+}
+function AccXIcon() {
+  return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>);
+}
+function AccSendIcon() {
+  return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>);
+}
+function AccEditIcon() {
+  return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>);
+}
+
+/* ── Accountability Matching Page ── */
+function AccountabilityPage({ user, onLoginClick }) {
+  var [tab, setTab] = useState("browse");
+  var [profiles, setProfiles] = useState([]);
+  var [connections, setConnections] = useState([]);
+  var [loading, setLoading] = useState(true);
+  var [myProfile, setMyProfile] = useState(null);
+  var [showProfileModal, setShowProfileModal] = useState(false);
+  var [profileForm, setProfileForm] = useState({ target_exam:"GMAT", target_score:"", exam_date:"", target_schools:"", study_style:"", bio:"" });
+  var [saving, setSaving] = useState(false);
+
+  // Fetch my profile
+  useEffect(function() {
+    if (!user) { setLoading(false); return; }
+    async function load() {
+      setLoading(true);
+      var { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      if (prof) {
+        setMyProfile(prof);
+        setProfileForm({ target_exam:prof.target_exam||"GMAT", target_score:prof.target_score||"", exam_date:prof.exam_date||"", target_schools:prof.target_schools||"", study_style:prof.study_style||"", bio:prof.bio||"" });
+      }
+      setLoading(false);
+    }
+    load();
+  }, [user]);
+
+  // Fetch browse profiles
+  useEffect(function() {
+    if (!user) return;
+    async function loadProfiles() {
+      var { data } = await supabase.from("profiles").select("*").neq("id", user.id).not("target_exam", "is", null);
+      setProfiles(data || []);
+    }
+    loadProfiles();
+  }, [user, myProfile]);
+
+  // Fetch connections
+  useEffect(function() {
+    if (!user) return;
+    async function loadConnections() {
+      var { data } = await supabase.from("connections").select("*, requester:requester_id(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:receiver_id(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
+      setConnections(data || []);
+    }
+    loadConnections();
+  }, [user]);
+
+  // Save profile
+  async function handleSaveProfile(e) {
+    e.preventDefault();
+    if (!user) return;
+    setSaving(true);
+    var payload = { id:user.id, target_exam:profileForm.target_exam, target_score:profileForm.target_score||null, exam_date:profileForm.exam_date||null, target_schools:profileForm.target_schools||null, study_style:profileForm.study_style||null, bio:profileForm.bio||null };
+    var { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
+    if (error) { alert("Error saving profile: " + error.message); }
+    else {
+      var { data: updated } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      if (updated) setMyProfile(updated);
+      setShowProfileModal(false);
+    }
+    setSaving(false);
+  }
+
+  // Send connection request
+  async function sendRequest(receiverId) {
+    if (!user) return;
+    var existing = connections.find(function(c) {
+      return (c.requester_id === user.id && c.receiver_id === receiverId) || (c.receiver_id === user.id && c.requester_id === receiverId);
+    });
+    if (existing) { alert("You already have a connection with this person."); return; }
+    var { error } = await supabase.from("connections").insert([{ requester_id: user.id, receiver_id: receiverId, status: "pending" }]);
+    if (error) { alert("Error sending request: " + error.message); }
+    else {
+      var { data } = await supabase.from("connections").select("*, requester:requester_id(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:receiver_id(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
+      setConnections(data || []);
+    }
+  }
+
+  // Accept/reject connection
+  async function updateConnection(connId, status) {
+    var { error } = await supabase.from("connections").update({ status: status }).eq("id", connId);
+    if (!error) {
+      var { data } = await supabase.from("connections").select("*, requester:requester_id(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:receiver_id(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
+      setConnections(data || []);
+    }
+  }
+
+  // Compute suggested matches
+  function getSuggestedProfiles() {
+    if (!myProfile || !myProfile.target_exam) return [];
+    var myExamDate = myProfile.exam_date ? new Date(myProfile.exam_date) : null;
+    var scored = profiles.map(function(p) {
+      var score = 0;
+      if (p.target_exam === myProfile.target_exam) score += 50;
+      if (myExamDate && p.exam_date) {
+        var diff = Math.abs(new Date(p.exam_date) - myExamDate) / (1000*60*60*24);
+        if (diff <= 14) score += 40;
+        else if (diff <= 30) score += 20;
+        else if (diff <= 60) score += 10;
+      }
+      if (p.study_style && myProfile.study_style && p.study_style === myProfile.study_style) score += 10;
+      return { profile: p, score: score };
+    });
+    scored.sort(function(a, b) { return b.score - a.score; });
+    return scored.filter(function(s) { return s.score > 0; });
+  }
+
+  function getConnectionStatus(profileId) {
+    var conn = connections.find(function(c) {
+      return (c.requester_id === profileId || c.receiver_id === profileId);
+    });
+    if (!conn) return null;
+    return { status: conn.status, id: conn.id, isRequester: conn.requester_id === user.id };
+  }
+
+  function formatDate(d) {
+    if (!d) return "Not set";
+    return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  var accInputStyle = { width:"100%", padding:"12px 16px", border:"1px solid #E5E7EB", borderRadius:"10px", fontSize:"14px", fontFamily:"'DM Sans',sans-serif", outline:"none", background:"#FAFAFA", boxSizing:"border-box" };
+
+  // Not logged in
+  if (!user) {
+    return (
+      <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
+        <div style={{maxWidth:600,margin:"0 auto",padding:"80px 20px",textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:16}}>&#129309;</div>
+          <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:700,color:"#111827",marginBottom:12}}>Find Your Study Partner</h1>
+          <p style={{fontSize:15,color:"#6B7280",lineHeight:1.7,fontFamily:"'DM Sans',sans-serif",maxWidth:450,margin:"0 auto 24px"}}>Get matched with fellow aspirants preparing for the same exam around the same time. Hold each other accountable and stay on track.</p>
+          <button onClick={onLoginClick} style={{padding:"14px 36px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Sign In to Get Started</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Profile not set up
+  if (!loading && user && (!myProfile || !myProfile.target_exam)) {
+    return (
+      <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
+        <div style={{maxWidth:600,margin:"0 auto",padding:"80px 20px",textAlign:"center"}}>
+          <div style={{fontSize:48,marginBottom:16}}>&#128221;</div>
+          <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:700,color:"#111827",marginBottom:12}}>Complete Your Profile</h1>
+          <p style={{fontSize:15,color:"#6B7280",lineHeight:1.7,fontFamily:"'DM Sans',sans-serif",maxWidth:450,margin:"0 auto 24px"}}>Tell us about your exam goals so we can match you with the right study partners.</p>
+          <button onClick={function(){setShowProfileModal(true);}} style={{padding:"14px 36px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Set Up Profile</button>
+          {renderProfileModal()}
+        </div>
+      </div>
+    );
+  }
+
+  function renderProfileModal() {
+    if (!showProfileModal) return null;
+    return (
+      <div onClick={function(){setShowProfileModal(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,padding:20}}>
+        <div onClick={function(e){e.stopPropagation();}} style={{background:"white",borderRadius:20,padding:36,width:"100%",maxWidth:520,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 25px 60px rgba(0,0,0,0.15)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
+            <h2 style={{fontSize:22,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>Your Study Profile</h2>
+            <button onClick={function(){setShowProfileModal(false);}} style={{background:"none",border:"none",fontSize:24,color:"#9CA3AF",cursor:"pointer"}}>&#10005;</button>
+          </div>
+          <form onSubmit={handleSaveProfile}>
+            <div style={{marginBottom:16}}>
+              <label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Target Exam *</label>
+              <select style={accInputStyle} value={profileForm.target_exam} onChange={function(e){setProfileForm(Object.assign({},profileForm,{target_exam:e.target.value}));}}>
+                <option value="GMAT">GMAT</option>
+                <option value="GRE">GRE</option>
+              </select>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Target Score</label><input type="number" style={accInputStyle} placeholder={profileForm.target_exam==="GMAT"?"e.g. 720":"e.g. 325"} value={profileForm.target_score} onChange={function(e){setProfileForm(Object.assign({},profileForm,{target_score:e.target.value}));}}/></div>
+              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Exam Date</label><input type="date" style={accInputStyle} value={profileForm.exam_date} onChange={function(e){setProfileForm(Object.assign({},profileForm,{exam_date:e.target.value}));}}/></div>
+            </div>
+            <div style={{marginBottom:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Target Schools</label><input type="text" style={accInputStyle} placeholder="e.g. ISB, INSEAD, LBS" value={profileForm.target_schools} onChange={function(e){setProfileForm(Object.assign({},profileForm,{target_schools:e.target.value}));}}/></div>
+            <div style={{marginBottom:16}}>
+              <label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Study Style</label>
+              <select style={accInputStyle} value={profileForm.study_style} onChange={function(e){setProfileForm(Object.assign({},profileForm,{study_style:e.target.value}));}}>
+                <option value="">Select...</option>
+                <option value="morning">Morning person</option>
+                <option value="evening">Evening person</option>
+                <option value="night">Night owl</option>
+                <option value="flexible">Flexible</option>
+              </select>
+            </div>
+            <div style={{marginBottom:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Short Bio</label><textarea style={{...accInputStyle,resize:"vertical"}} rows={3} placeholder="Tell potential study partners about yourself..." value={profileForm.bio} onChange={function(e){setProfileForm(Object.assign({},profileForm,{bio:e.target.value}));}}/></div>
+            <button type="submit" disabled={saving||!profileForm.target_exam} style={{width:"100%",padding:14,background:saving?"#D1D5DB":RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:saving?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>{saving?"Saving...":"Save Profile"}</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  var suggested = getSuggestedProfiles();
+  var pendingReceived = connections.filter(function(c){ return c.receiver_id===user.id && c.status==="pending"; });
+  var pendingSent = connections.filter(function(c){ return c.requester_id===user.id && c.status==="pending"; });
+  var accepted = connections.filter(function(c){ return c.status==="accepted"; });
+
+  return (
+    <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
+      <div style={{maxWidth:1100,margin:"0 auto",padding:"0 20px"}}>
+
+        {/* Header */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,marginBottom:24}}>
+          <div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,4vw,36px)",fontWeight:700,color:"#111827",margin:0}}>Accountability Partners</h1>
+            <p style={{fontSize:15,color:"#6B7280",marginTop:6,marginBottom:0,fontFamily:"'DM Sans',sans-serif"}}>Find study partners preparing for the same exam around the same time.</p>
+          </div>
+          <button onClick={function(){setShowProfileModal(true);}} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"10px 20px",background:"white",color:"#374151",border:"1px solid #E5E7EB",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccEditIcon/> Edit Profile</button>
+        </div>
+
+        {/* My Profile Card */}
+        {myProfile && (
+          <div style={{background:"white",borderRadius:16,border:"1px solid #E5E7EB",padding:"20px 24px",marginBottom:24,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+            <div style={{width:48,height:48,borderRadius:"50%",background:RED,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18,color:"white"}}>{(myProfile.full_name||"M").charAt(0).toUpperCase()}</div>
+            <div style={{flex:1,minWidth:200}}>
+              <div style={{fontSize:16,fontWeight:600,color:"#111827",fontFamily:"'DM Sans',sans-serif"}}>{myProfile.full_name||"You"}</div>
+              <div style={{fontSize:13,color:"#6B7280",marginTop:2}}>{myProfile.target_exam||"--"} | Target: {myProfile.target_score||"--"} | Exam: {formatDate(myProfile.exam_date)}</div>
+            </div>
+            <div style={{display:"flex",gap:12,fontSize:13,color:"#6B7280"}}>
+              <span style={{background:"#FEF2F2",color:RED,padding:"4px 12px",borderRadius:20,fontWeight:600}}>{accepted.length + " partner" + (accepted.length !== 1 ? "s" : "")}</span>
+              {pendingReceived.length > 0 && (<span style={{background:"#FEF3C7",color:"#92400E",padding:"4px 12px",borderRadius:20,fontWeight:600}}>{pendingReceived.length + " pending"}</span>)}
+            </div>
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div style={{display:"flex",borderBottom:"2px solid #F3F4F6",gap:0,marginBottom:24}}>
+          {[{key:"browse",label:"Browse Profiles"},{key:"suggested",label:"Suggested Matches" + (suggested.length>0?" ("+suggested.length+")":"")},{key:"connections",label:"My Connections" + (pendingReceived.length>0?" ("+pendingReceived.length+" new)":"")}].map(function(t){
+            return (<button key={t.key} onClick={function(){setTab(t.key);}} style={{padding:"10px 20px",border:"none",background:"transparent",cursor:"pointer",fontSize:14,fontWeight:tab===t.key?600:500,color:tab===t.key?RED:"#6B7280",borderBottom:tab===t.key?"3px solid "+RED:"3px solid transparent",fontFamily:"'DM Sans',sans-serif"}}>{t.label}</button>);
+          })}
+        </div>
+
+        {/* Browse Tab */}
+        {tab==="browse" && (
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16,marginBottom:60}}>
+            {profiles.length===0 && (<div style={{gridColumn:"1/-1",textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}><div style={{fontSize:40,marginBottom:12}}>&#128100;</div><p style={{fontSize:14}}>No profiles found yet. Be the first to set up your study profile.</p></div>)}
+            {profiles.map(function(p){
+              var connStatus = getConnectionStatus(p.id);
+              var initials = (p.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+              var colors=["#B91C1C","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
+              var color = colors[p.full_name ? p.full_name.length % colors.length : 0];
+              return (
+                <div key={p.id} style={{background:"white",borderRadius:16,border:"1px solid #E5E7EB",padding:24,display:"flex",flexDirection:"column",gap:12}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{width:44,height:44,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16,color:"white",flexShrink:0}}>{initials}</div>
+                    <div>
+                      <div style={{fontSize:15,fontWeight:600,color:"#111827"}}>{p.full_name||"Anonymous"}</div>
+                      <div style={{fontSize:12,color:"#6B7280"}}>{p.target_exam||"--"} | Target: {p.target_score||"--"}</div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                    {p.exam_date && (<span style={{fontSize:12,padding:"4px 10px",borderRadius:20,background:"#F3F4F6",color:"#374151"}}>Exam: {formatDate(p.exam_date)}</span>)}
+                    {p.target_schools && (<span style={{fontSize:12,padding:"4px 10px",borderRadius:20,background:"#F3F4F6",color:"#374151"}}>{p.target_schools}</span>)}
+                    {p.study_style && (<span style={{fontSize:12,padding:"4px 10px",borderRadius:20,background:"#F3F4F6",color:"#374151"}}>{p.study_style}</span>)}
+                  </div>
+                  {p.bio && (<p style={{fontSize:13,color:"#6B7280",margin:0,lineHeight:1.5}}>{p.bio}</p>)}
+                  <div style={{marginTop:"auto",paddingTop:8}}>
+                    {!connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
+                    {connStatus && connStatus.status==="pending" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> {connStatus.isRequester?"Request Sent":"Pending"}</span>)}
+                    {connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Suggested Tab */}
+        {tab==="suggested" && (
+          <div style={{marginBottom:60}}>
+            {suggested.length===0 && (<div style={{textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}><div style={{fontSize:40,marginBottom:12}}>&#128269;</div><p style={{fontSize:14}}>No suggested matches yet. Complete your profile with exam date and target score for better matching.</p></div>)}
+            {suggested.map(function(s,idx){
+              var p = s.profile;
+              var matchPct = Math.min(Math.round(s.score), 100);
+              var connStatus = getConnectionStatus(p.id);
+              var initials = (p.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+              var colors=["#B91C1C","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
+              var color = colors[idx % colors.length];
+              return (
+                <div key={p.id} style={{background:"white",borderRadius:16,border:"1px solid #E5E7EB",padding:24,marginBottom:12,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+                  <div style={{width:48,height:48,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18,color:"white",flexShrink:0}}>{initials}</div>
+                  <div style={{flex:1,minWidth:200}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{fontSize:15,fontWeight:600,color:"#111827"}}>{p.full_name||"Anonymous"}</span>
+                      <span style={{fontSize:11,fontWeight:700,color:matchPct>=70?RED:"#D97706",background:matchPct>=70?"#FEF2F2":"#FEF3C7",padding:"2px 8px",borderRadius:10}}>{matchPct + "% match"}</span>
+                    </div>
+                    <div style={{fontSize:13,color:"#6B7280",marginTop:2}}>{p.target_exam} | Target: {p.target_score||"--"} | Exam: {formatDate(p.exam_date)}</div>
+                    {p.bio && (<p style={{fontSize:13,color:"#9CA3AF",margin:"6px 0 0",lineHeight:1.5}}>{p.bio}</p>)}
+                  </div>
+                  <div>
+                    {!connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
+                    {connStatus && connStatus.status==="pending" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> {connStatus.isRequester?"Sent":"Pending"}</span>)}
+                    {connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Connections Tab */}
+        {tab==="connections" && (
+          <div style={{marginBottom:60}}>
+            {/* Pending Received */}
+            {pendingReceived.length > 0 && (<div style={{marginBottom:32}}>
+              <h3 style={{fontSize:16,fontWeight:600,color:"#111827",marginBottom:12,fontFamily:"'Playfair Display',serif"}}>Pending Requests</h3>
+              {pendingReceived.map(function(c){
+                var other = c.requester;
+                var initials = (other.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+                return (
+                  <div key={c.id} style={{background:"#FEF3C7",borderRadius:12,padding:"16px 20px",marginBottom:8,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+                    <div style={{width:40,height:40,borderRadius:"50%",background:"#D97706",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color:"white"}}>{initials}</div>
+                    <div style={{flex:1,minWidth:180}}>
+                      <div style={{fontSize:14,fontWeight:600,color:"#111827"}}>{other.full_name||"Anonymous"}</div>
+                      <div style={{fontSize:12,color:"#6B7280"}}>{other.target_exam||"--"} | Target: {other.target_score||"--"} | Exam: {formatDate(other.exam_date)}</div>
+                    </div>
+                    <div style={{display:"flex",gap:8}}>
+                      <button onClick={function(){updateConnection(c.id,"accepted");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"#059669",color:"white",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer"}}><AccCheckIcon/> Accept</button>
+                      <button onClick={function(){updateConnection(c.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer"}}><AccXIcon/> Decline</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>)}
+
+            {/* Accepted */}
+            <h3 style={{fontSize:16,fontWeight:600,color:"#111827",marginBottom:12,fontFamily:"'Playfair Display',serif"}}>Your Partners</h3>
+            {accepted.length===0 && (<div style={{textAlign:"center",padding:"40px 20px",color:"#9CA3AF",background:"white",borderRadius:12,border:"1px solid #E5E7EB"}}><p style={{fontSize:14,margin:0}}>No accountability partners yet. Browse profiles and send connection requests to get started.</p></div>)}
+            {accepted.map(function(c){
+              var other = c.requester_id===user.id ? c.receiver : c.requester;
+              var initials = (other.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+              var colors=["#B91C1C","#2563EB","#059669","#7C3AED","#D97706"];
+              var color = colors[(other.full_name||"A").length % colors.length];
+              return (
+                <div key={c.id} style={{background:"white",borderRadius:12,border:"1px solid #E5E7EB",padding:"16px 20px",marginBottom:8,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+                  <div style={{width:40,height:40,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color:"white"}}>{initials}</div>
+                  <div style={{flex:1,minWidth:180}}>
+                    <div style={{fontSize:14,fontWeight:600,color:"#111827"}}>{other.full_name||"Anonymous"}</div>
+                    <div style={{fontSize:12,color:"#6B7280"}}>{other.target_exam||"--"} | Target: {other.target_score||"--"} | Exam: {formatDate(other.exam_date)}</div>
+                  </div>
+                  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 14px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:12,fontWeight:600}}><AccHeartIcon/> Partner</span>
+                </div>
+              );
+            })}
+
+            {/* Pending Sent */}
+            {pendingSent.length > 0 && (<div style={{marginTop:32}}>
+              <h3 style={{fontSize:16,fontWeight:600,color:"#111827",marginBottom:12,fontFamily:"'Playfair Display',serif"}}>Sent Requests</h3>
+              {pendingSent.map(function(c){
+                var other = c.receiver;
+                var initials = (other.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+                return (
+                  <div key={c.id} style={{background:"white",borderRadius:12,border:"1px solid #E5E7EB",padding:"16px 20px",marginBottom:8,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap",opacity:0.7}}>
+                    <div style={{width:40,height:40,borderRadius:"50%",background:"#9CA3AF",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color:"white"}}>{initials}</div>
+                    <div style={{flex:1,minWidth:180}}>
+                      <div style={{fontSize:14,fontWeight:600,color:"#111827"}}>{other.full_name||"Anonymous"}</div>
+                      <div style={{fontSize:12,color:"#6B7280"}}>{other.target_exam||"--"} | Exam: {formatDate(other.exam_date)}</div>
+                    </div>
+                    <span style={{fontSize:12,color:"#9CA3AF",fontWeight:600}}>Awaiting response...</span>
+                  </div>
+                );
+              })}
+            </div>)}
+          </div>
+        )}
+      </div>
+      {renderProfileModal()}
+    </div>
+  );
+}
+
 function HomePage() {
   return (<><Hero/><SchoolLogos/><NotTypical/><CommunityProof/><LinkedInFeatures/><HowItWorks/><ServicesSection/><AdmissionsSection/><CommunitySection/><TeamSection/><TestimonialsSection/><CTA/></>);
 }
@@ -1190,6 +1580,7 @@ export default function App() {
       {page==="faq"&&<FAQPage/>}
       {page==="blog"&&<BlogPage user={user}/>}
       {page==="leaderboard"&&<LeaderboardPage user={user}/>}
+      {page==="partners"&&<AccountabilityPage user={user} onLoginClick={()=>setShowAuth(true)}/>}
       <Footer/>
       <StickyWhatsApp/>
       {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
