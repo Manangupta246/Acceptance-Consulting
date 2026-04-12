@@ -1572,14 +1572,14 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     if (!user || !isOpen) return;
     async function loadRooms() {
       setLoadingRooms(true);
-      var { data: memberships } = await supabase.from("chat_members").select("room_id, chat_rooms(id, name, is_group, created_at)").eq("user_id", user.id);
+      var { data: memberships } = await supabase.from("chat_members").select("room_id, chat_rooms(id, name, room_type, max_members, created_at)").eq("user_id", user.id);
       if (memberships) {
         var roomList = memberships.map(function(m) { return m.chat_rooms; }).filter(Boolean);
         // For DMs, get the other person name
         var enriched = [];
         for (var i = 0; i < roomList.length; i++) {
           var r = roomList[i];
-          if (!r.is_group) {
+          if (r.room_type !== "group") {
             var { data: members } = await supabase.from("chat_members").select("user_id, profiles(full_name)").eq("room_id", r.id).neq("user_id", user.id);
             r.display_name = (members && members[0] && members[0].profiles) ? members[0].profiles.full_name : "Chat";
             r.other_user_id = (members && members[0]) ? members[0].user_id : null;
@@ -1600,7 +1600,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     if (!user || !isOpen || !initialDmUserId) return;
     async function openDm() {
       // Check if DM room already exists
-      var existing = rooms.find(function(r) { return !r.is_group && r.other_user_id === initialDmUserId; });
+      var existing = rooms.find(function(r) { return r.room_type !== "group" && r.other_user_id === initialDmUserId; });
       if (existing) {
         setActiveRoom(existing.id);
         setActiveRoomName(existing.display_name);
@@ -1608,7 +1608,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
         return;
       }
       // Create new DM room
-      var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: null, is_group: false, created_by: user.id }]).select().single();
+      var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: null, room_type: "dm", created_by: user.id }]).select().single();
       if (error || !room) return;
       await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }, { room_id: room.id, user_id: initialDmUserId }]);
       room.display_name = initialDmUserName || "Chat";
@@ -1625,7 +1625,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
   useEffect(function() {
     if (!activeRoom) return;
     async function loadMessages() {
-      var { data } = await supabase.from("chat_messages").select("*, profiles(full_name)").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
+      var { data } = await supabase.from("chat_messages").select("*, profiles:sender_id(full_name)").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
       setMessages(data || []);
       setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
     }
@@ -1636,7 +1636,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     var channel = supabase.channel("room-" + activeRoom).on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: "room_id=eq." + activeRoom }, function(payload) {
       var newMsg = payload.new;
       // Fetch profile name for the new message
-      supabase.from("profiles").select("full_name").eq("id", newMsg.user_id).single().then(function(res) {
+      supabase.from("profiles").select("full_name").eq("id", newMsg.sender_id).single().then(function(res) {
         newMsg.profiles = res.data || { full_name: "Unknown" };
         setMessages(function(prev) { return prev.concat([newMsg]); });
         setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
@@ -1652,7 +1652,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     e.preventDefault();
     if (!newMessage.trim() || !activeRoom || !user) return;
     setSending(true);
-    await supabase.from("chat_messages").insert([{ room_id: activeRoom, user_id: user.id, content: newMessage.trim() }]);
+    await supabase.from("chat_messages").insert([{ room_id: activeRoom, sender_id: user.id, content: newMessage.trim() }]);
     setNewMessage("");
     setSending(false);
   }
@@ -1661,7 +1661,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
   async function handleCreateGroup(e) {
     e.preventDefault();
     if (!groupName.trim() || !user) return;
-    var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: groupName.trim(), is_group: true, created_by: user.id }]).select().single();
+    var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: groupName.trim(), room_type: "group", created_by: user.id }]).select().single();
     if (error || !room) { alert("Error creating group."); return; }
     await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }]);
     room.display_name = room.name;
@@ -1719,13 +1719,13 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
           {rooms.map(function(r) {
             var initials = (r.display_name || "C").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
             var colors = ["#B91C1C","#2563EB","#059669","#7C3AED","#D97706"];
-            var color = r.is_group ? "#7C3AED" : colors[(r.display_name||"C").length % colors.length];
+            var color = r.room_type === "group" ? "#7C3AED" : colors[(r.display_name||"C").length % colors.length];
             return (
               <div key={r.id} onClick={function(){setActiveRoom(r.id);setActiveRoomName(r.display_name);setView("chat");}} style={{padding:"14px 20px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",borderBottom:"1px solid #F3F4F6",transition:"background 0.15s"}}>
-                <div style={{width:40,height:40,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color:"white",flexShrink:0}}>{r.is_group?"G":initials}</div>
+                <div style={{width:40,height:40,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color:"white",flexShrink:0}}>{r.room_type==="group"?"G":initials}</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:14,fontWeight:600,color:"#111827",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.display_name}</div>
-                  <div style={{fontSize:12,color:"#9CA3AF"}}>{r.is_group?"Study Group":"Direct Message"}</div>
+                  <div style={{fontSize:12,color:"#9CA3AF"}}>{r.room_type==="group"?"Study Group":"Direct Message"}</div>
                 </div>
               </div>
             );
@@ -1740,7 +1740,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
           <div style={{flex:1,overflowY:"auto",padding:"16px 20px",display:"flex",flexDirection:"column",gap:8}}>
             {messages.length===0 && (<div style={{textAlign:"center",padding:"40px 0",color:"#9CA3AF",fontSize:13}}>No messages yet. Say hello!</div>)}
             {messages.map(function(msg, idx) {
-              var isMe = msg.user_id === user.id;
+              var isMe = msg.sender_id === user.id;
               var senderName = msg.profiles ? msg.profiles.full_name : "Unknown";
               var time = new Date(msg.created_at).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" });
               return (
