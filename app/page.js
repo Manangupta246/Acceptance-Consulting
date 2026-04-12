@@ -1,5 +1,12 @@
 'use client';
 import { useState, useEffect, useRef } from "react";
+import { createClient } from '@supabase/supabase-js';
+
+/* ── Supabase ── */
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
 /* ── Config ── */
 const WHATSAPP_COMMUNITY = "https://chat.whatsapp.com/L6upA5MYtSEGOYLU8UTBs1";
@@ -46,11 +53,11 @@ const schools = [
   { name: "& Other Top Schools", color: RED },
 ];
 const services = [
-  { icon: "\u{1F50D}", title: "Profile Deep-Dive & School Selection", desc: "We sit with your story, decode your strengths, & help you pick schools where you'll truly belong." },
+  { icon: "\u{1F50D}", title: "Profile Deep-Dive & School Selection", desc: "We sit with your story, decode your strengths, & help you pick schools where you will truly belong." },
   { icon: "\u{1F4C4}", title: "Resume Tailored to School Style", desc: "We help translate your experiences into a format that speaks the language of B-schools." },
   { icon: "\u{1F4DD}", title: "Essay Brainstorming & Unlimited Edits", desc: "We help you make sense of your story & build essays that make admissions teams remember you." },
   { icon: "\u{1F3A4}", title: "Mock Interviews Tailored to School Style", desc: "From traditional panels to case-style and behavioral interviews, we prepare you for the real thing." },
-  { icon: "\u{2709}\u{FE0F}", title: "LOR + Application Strategy", desc: "Your application isn't just about what you say - it's also about what others say about you." },
+  { icon: "\u{2709}\u{FE0F}", title: "LOR + Application Strategy", desc: "Your application is not just about what you say - it is also about what others say about you." },
   { icon: "\u{1F393}", title: "Maximize Your Scholarship", desc: "We dig into optional essays, diversity angles, and need/merit tactics." },
 ];
 const isbServices = ["Profile Deep-Dive & YL/PGP Track Guidance","Resume Tailoring","Essay Brainstorming & Unlimited Edits","Application Form Strategy","Mock Interview with Real ISB Questions","Reapplicant Strategy"];
@@ -62,32 +69,32 @@ const howItWorks = [
 ];
 const team = [
   { name: "Tanya Mehta", image: avatar("TanyaMehta"), bio: "Tanya Mehta is an MBA graduate, Chartered Accountant (CA) and CFA Level 1 who secured admits from top global business schools and ISB, giving her a well-rounded understanding of MBA admissions worldwide. She also teaches strategy to MBA students, further strengthening her insights into what top schools seek in candidates." },
-  { name: "Manan Gupta", image: avatar("MananGupta"), bio: "Manan Gupta is an MBA graduate from ISB and a management consultant with 4+ years of work experience at Bain and Kepler Cannon. He brings a wealth of experience in storytelling and career mentorship. With an insider's perspective on top-tier MBA programs, he has guided 100+ candidates in crafting high-impact applications that stand out." },
+  { name: "Manan Gupta", image: avatar("MananGupta"), bio: "Manan Gupta is an MBA graduate from ISB and a management consultant with 4+ years of work experience at Bain and Kepler Cannon. He brings a wealth of experience in storytelling and career mentorship. With an insider perspective on top-tier MBA programs, he has guided 100+ candidates in crafting high-impact applications that stand out." },
 ];
 const testimonialCategories = [
   { category: "Overall Journey", icon: "\u{1F31F}", items: [
     { name: "Nandeta Agrawala", school: "ISB Co'26", image: avatar("Nandeta"), text: "One thing I can say with 100% confidence is that the level of belief and confidence Tanya and Manan instill in their mentees is beyond extraordinary and I genuinely owe a large part of my success to them. Their mentorship felt personal, thoughtful, and deeply committed." },
-    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("Rhythm"), text: "With just a week left to apply, I was overwhelmed and full of doubt. That's when Tanya and Manan stepped in - not just as consultants, but as true mentors. What meant the most was how much they believed in me, especially in moments I couldn't believe in myself." },
+    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("Rhythm"), text: "With just a week left to apply, I was overwhelmed and full of doubt. That is when Tanya and Manan stepped in - not just as consultants, but as true mentors. What meant the most was how much they believed in me, especially in moments I could not believe in myself." },
     { name: "Shiv Bhasin", school: "ISB Co'26", image: avatar("ShivAll"), text: "They had prepared me for every scenario and it is because of them that I could handle the entire process and secure an admit. The biggest thank you for my application journey goes to them!" },
   ]},
   { category: "Interview Prep", icon: "\u{1F3A4}", items: [
-    { name: "Rachit Shukla", school: "ISB Co'26", image: avatar("Rachit"), text: "She didn't just help me prepare answers but also guided me to understand why my story mattered and how to bring it out authentically. The clarity, structure, and confidence I walked into the actual interview with had a lot to do with those mocks." },
+    { name: "Rachit Shukla", school: "ISB Co'26", image: avatar("Rachit"), text: "She did not just help me prepare answers but also guided me to understand why my story mattered and how to bring it out authentically. The clarity, structure, and confidence I walked into the actual interview with had a lot to do with those mocks." },
     { name: "Shiv Bhasin", school: "ISB Co'26", image: avatar("ShivB"), text: "Initially, I was a bit overconfident about the interview but an initial call with Manan made me realise how wrong my approach was. Post that, Tanya put in a huge amount of effort to help me polish and structure my answers." },
     { name: "Nandeta Agrawala", school: "ISB Co'26", image: avatar("NandetaI"), text: "The mock interviews they conducted were not just rehearsals, they were transformative learning experiences. I made it a point to incorporate their feedback every time and it made all the difference." },
   ]},
   { category: "Essays & Applications", icon: "\u{1F4DD}", items: [
-    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("RhythmE"), text: "They helped me dig deep, reflect on my journey, and bring out stories I didn't even realise were worth telling. Every single essay went through multiple rounds, not to make it sound fancy, but to make it sound authentic." },
-    { name: "Nandeta Agrawala", school: "ISB Co'26", image: avatar("NandetaE"), text: "Their ability to break things down helped me understand my own story better. They never treated me like just another candidate. I can say without a doubt that if it weren't for them, I wouldn't be at ISB today." },
-    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("RhythmE2"), text: "From essay and resume edits to interview prep, they were there for every step of the process, often more invested in my application than I was. If you're looking for people who actually care, you won't find a better team." },
+    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("RhythmE"), text: "They helped me dig deep, reflect on my journey, and bring out stories I did not even realise were worth telling. Every single essay went through multiple rounds, not to make it sound fancy, but to make it sound authentic." },
+    { name: "Nandeta Agrawala", school: "ISB Co'26", image: avatar("NandetaE"), text: "Their ability to break things down helped me understand my own story better. They never treated me like just another candidate. I can say without a doubt that if it were not for them, I would not be at ISB today." },
+    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("RhythmE2"), text: "From essay and resume edits to interview prep, they were there for every step of the process, often more invested in my application than I was. If you are looking for people who actually care, you will not find a better team." },
   ]},
 ];
 const faqs = [
-  { q: "When should I start preparing?", a: "The earlier the better - but it's never too late. Ideally, start 4-6 months before your target deadline. That gives us time to do a proper profile deep-dive, work through multiple essay drafts, and run thorough mock interviews. That said, we've helped people with just a week left. Whenever you start, we'll make it work." },
-  { q: "Do you help with reapplications?", a: "Absolutely - and we're proud to say we have a 100% reapplicant success rate. If you were rejected before, we tear apart what went wrong, rebuild your narrative from scratch, and position you differently. A rejection isn't the end of your story. It's just a plot twist." },
-  { q: "What if I don't get in?", a: "We won't sugarcoat it - no one can guarantee an admit. But with a 96% acceptance rate, the odds are strongly in your favour when you work with us. If things don't go as planned, we stick around. We help you reapply, rethink your strategy, or explore alternate schools. We don't disappear after the result." },
-  { q: "How is this different from other consultants?", a: "Most consultants give you templates and checklists. We give you ourselves. We're not a factory - we take on a limited number of applicants each cycle so we can go deep with each one. You get direct access to us (yes, even midnight voice notes), unlimited essay revisions, and mentors who genuinely care whether you get in." },
-  { q: "How many schools can I apply to with your help?", a: "There's no fixed limit. Most applicants work with us on 2-5 schools, but we've supported people applying to 8+ programs in a single cycle. Each school gets tailored attention - we don't copy-paste essays or recycle strategies." },
-  { q: "Can I just get interview prep without the full package?", a: "Yes! We offer standalone interview prep - mock interviews tailored to the specific school's format and question style. Whether it's ISB's panel format, INSEAD's alumni interviews, or a case-style discussion, we've got you covered." },
+  { q: "When should I start preparing?", a: "The earlier the better - but it is never too late. Ideally, start 4-6 months before your target deadline. That gives us time to do a proper profile deep-dive, work through multiple essay drafts, and run thorough mock interviews. That said, we have helped people with just a week left. Whenever you start, we will make it work." },
+  { q: "Do you help with reapplications?", a: "Absolutely - and we are proud to say we have a 100% reapplicant success rate. If you were rejected before, we tear apart what went wrong, rebuild your narrative from scratch, and position you differently. A rejection is not the end of your story. It is just a plot twist." },
+  { q: "What if I do not get in?", a: "We will not sugarcoat it - no one can guarantee an admit. But with a 96% acceptance rate, the odds are strongly in your favour when you work with us. If things do not go as planned, we stick around. We help you reapply, rethink your strategy, or explore alternate schools. We do not disappear after the result." },
+  { q: "How is this different from other consultants?", a: "Most consultants give you templates and checklists. We give you ourselves. We are not a factory - we take on a limited number of applicants each cycle so we can go deep with each one. You get direct access to us (yes, even midnight voice notes), unlimited essay revisions, and mentors who genuinely care whether you get in." },
+  { q: "How many schools can I apply to with your help?", a: "There is no fixed limit. Most applicants work with us on 2-5 schools, but we have supported people applying to 8+ programs in a single cycle. Each school gets tailored attention - we do not copy-paste essays or recycle strategies." },
+  { q: "Can I just get interview prep without the full package?", a: "Yes! We offer standalone interview prep - mock interviews tailored to the specific school format and question style. Whether it is ISB panel format, INSEAD alumni interviews, or a case-style discussion, we have got you covered." },
 ];
 const communityProof = [
   { type: "chat", caption: "Late-night essay brainstorming in the community group", placeholder: "Community WhatsApp Screenshot" },
@@ -100,7 +107,7 @@ const communityProof = [
 const linkedinPosts = [
   { title: "How we helped 50+ applicants get into ISB in one cycle", placeholder: "LinkedIn Post Screenshot 1" },
   { title: "The reapplicant who turned rejection into an admit", placeholder: "LinkedIn Post Screenshot 2" },
-  { title: "Why your MBA essay probably isn't working", placeholder: "LinkedIn Post Screenshot 3" },
+  { title: "Why your MBA essay probably is not working", placeholder: "LinkedIn Post Screenshot 3" },
 ];
 
 /* ── Styles ── */
@@ -112,9 +119,144 @@ const bos = { ...bps, background:"transparent", color:RED, border:`2px solid ${R
 const mws = { maxWidth:"1100px", margin:"0 auto" };
 const sps = { padding:"100px 24px" };
 
+/* ── Auth Modal ── */
+function AuthModal({ onClose, onAuth }) {
+  const [mode, setMode] = useState("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleEmailAuth = async () => {
+    setError(""); setSuccess(""); setLoading(true);
+    try {
+      if (mode === "signup") {
+        const { data, error: err } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: name } }
+        });
+        if (err) throw err;
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          setError("An account with this email already exists. Please log in instead.");
+        } else {
+          setSuccess("Check your email for a confirmation link to complete signup.");
+        }
+      } else {
+        const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+        if (err) throw err;
+        if (data.user) { onAuth(data.user); onClose(); }
+      }
+    } catch (err) {
+      setError(err.message || "Something went wrong. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const handleGoogle = async () => {
+    setError(""); setLoading(true);
+    try {
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin + "/auth/callback" }
+      });
+      if (err) throw err;
+    } catch (err) {
+      setError(err.message || "Google sign-in failed.");
+      setLoading(false);
+    }
+  };
+
+  const inputStyle = {
+    width: "100%", padding: "14px 16px", borderRadius: "12px",
+    border: "1px solid rgba(0,0,0,0.12)", fontFamily: "'DM Sans',sans-serif",
+    fontSize: "15px", outline: "none", boxSizing: "border-box",
+    transition: "border-color 0.2s"
+  };
+
+  return (
+    <div onClick={onClose} style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"24px",padding:"40px 32px",maxWidth:"420px",width:"100%",position:"relative",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}}>
+        <button onClick={onClose} style={{position:"absolute",top:"16px",right:"20px",background:"none",border:"none",fontSize:"22px",color:GRAY,cursor:"pointer"}}>{"\u2715"}</button>
+
+        <div style={{textAlign:"center",marginBottom:"28px"}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"22px",color:DARK,marginBottom:"4px"}}><span style={{color:RED}}>Acceptance</span> Consulting</div>
+          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:GRAY,margin:0}}>{mode==="login"?"Welcome back!":"Create your account"}</p>
+        </div>
+
+        <button onClick={handleGoogle} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:"12px",border:"1px solid rgba(0,0,0,0.12)",background:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"15px",color:DARK,marginBottom:"20px",transition:"background 0.2s"}}>
+          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+          Continue with Google
+        </button>
+
+        <div style={{display:"flex",alignItems:"center",gap:"12px",margin:"20px 0"}}>
+          <div style={{flex:1,height:"1px",background:"rgba(0,0,0,0.1)"}}></div>
+          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:GRAY}}>or</span>
+          <div style={{flex:1,height:"1px",background:"rgba(0,0,0,0.1)"}}></div>
+        </div>
+
+        <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+          {mode==="signup" && (
+            <input type="text" placeholder="Full Name" value={name} onChange={e=>setName(e.target.value)} style={inputStyle} />
+          )}
+          <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} style={inputStyle} />
+          <input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} style={inputStyle}
+            onKeyDown={e=>{if(e.key==="Enter")handleEmailAuth();}} />
+        </div>
+
+        {error && <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:"#DC2626",margin:"12px 0 0",textAlign:"center"}}>{error}</p>}
+        {success && <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:"#16A34A",margin:"12px 0 0",textAlign:"center"}}>{success}</p>}
+
+        <button onClick={handleEmailAuth} disabled={loading} style={{...bps,width:"100%",marginTop:"20px",textAlign:"center",opacity:loading?0.6:1}}>
+          {loading ? "Please wait..." : (mode==="login" ? "Log In" : "Sign Up")}
+        </button>
+
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:GRAY,textAlign:"center",margin:"20px 0 0"}}>
+          {mode==="login" ? "Do not have an account? " : "Already have an account? "}
+          <span onClick={()=>{setMode(mode==="login"?"signup":"login");setError("");setSuccess("");}} style={{color:RED,fontWeight:700,cursor:"pointer"}}>
+            {mode==="login" ? "Sign Up" : "Log In"}
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ── User Menu (dropdown) ── */
+function UserMenu({ user, onLogout }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+  const initials = displayName.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} style={{position:"relative",flexShrink:0}}>
+      <button onClick={()=>setOpen(!open)} style={{width:"40px",height:"40px",borderRadius:"50%",background:RED,color:"#fff",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"14px",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        {initials}
+      </button>
+      {open && (
+        <div style={{position:"absolute",top:"48px",right:0,background:"#fff",borderRadius:"16px",boxShadow:"0 8px 30px rgba(0,0,0,0.12)",border:"1px solid rgba(0,0,0,0.06)",padding:"16px 20px",minWidth:"200px",zIndex:1100}}>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"15px",color:DARK,marginBottom:"4px"}}>{displayName}</div>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:GRAY,marginBottom:"16px",wordBreak:"break-all"}}>{user.email}</div>
+          <div style={{height:"1px",background:"rgba(0,0,0,0.08)",margin:"0 -20px",marginBottom:"12px"}}></div>
+          <button onClick={()=>{setOpen(false);onLogout();}} style={{width:"100%",padding:"10px 0",background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",color:RED,textAlign:"left"}}>Log Out</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ──────── COMPONENTS ──────── */
 
-function Navbar({ page, setPage }) {
+function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
@@ -137,11 +279,23 @@ function Navbar({ page, setPage }) {
       <div style={{display:"flex",gap:"24px",alignItems:"center",position:"absolute",left:"50%",transform:"translateX(-50%)"}} className="dt-nav">
         {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:page==="faq"&&l.label==="FAQ"?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
       </div>
-      <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bps,flexShrink:0}} className="dt-nav">Join Community</a>
+      <div style={{display:"flex",gap:"12px",alignItems:"center",flexShrink:0}} className="dt-nav">
+        {user ? (
+          <UserMenu user={user} onLogout={onLogout} />
+        ) : (
+          <button onClick={onLoginClick} style={{...bps,padding:"12px 28px",fontSize:"13px"}}>Log In</button>
+        )}
+        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,padding:"12px 28px",fontSize:"13px"}}>Join Community</a>
+      </div>
       <button onClick={()=>setMenuOpen(!menuOpen)} className="mob-btn" style={{display:"none",background:"none",border:"none",fontSize:"28px",color:RED,cursor:"pointer"}}>{menuOpen?"\u2715":"\u2630"}</button>
       {menuOpen&&(<div style={{position:"fixed",top:"65px",left:0,right:0,bottom:0,background:"rgba(255,255,255,0.99)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"28px",zIndex:999}}>
         {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:DARK,textDecoration:"none",fontSize:"20px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer"}}>{l.label}</a>))}
-        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bps}>Join Community</a>
+        {user ? (
+          <button onClick={()=>{setMenuOpen(false);onLogout();}} style={{...bos,padding:"14px 36px"}}>Log Out</button>
+        ) : (
+          <button onClick={()=>{setMenuOpen(false);onLoginClick();}} style={bps}>Log In</button>
+        )}
+        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bos}>Join Community</a>
       </div>)}
     </nav>
   );
@@ -475,13 +629,32 @@ function HomePage() {
 
 export default function App() {
   const [page,setPage]=useState("home");
+  const [user,setUser]=useState(null);
+  const [showAuth,setShowAuth]=useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
   return (
     <div style={{background:"#fff",minHeight:"100vh",color:DARK,overflowX:"hidden"}}>
-      <Navbar page={page} setPage={setPage}/>
+      <Navbar page={page} setPage={setPage} user={user} onLoginClick={()=>setShowAuth(true)} onLogout={handleLogout} />
       {page==="home"&&<HomePage/>}
       {page==="faq"&&<FAQPage/>}
       <Footer/>
       <StickyWhatsApp/>
+      {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
     </div>
   );
 }
