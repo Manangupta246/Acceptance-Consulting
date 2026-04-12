@@ -1579,7 +1579,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
         var enriched = [];
         for (var i = 0; i < roomList.length; i++) {
           var r = roomList[i];
-          if (r.room_type !== "group") {
+          if (r.room_type === "direct") {
             var { data: members } = await supabase.from("chat_members").select("user_id, profiles(full_name)").eq("room_id", r.id).neq("user_id", user.id);
             r.display_name = (members && members[0] && members[0].profiles) ? members[0].profiles.full_name : "Chat";
             r.other_user_id = (members && members[0]) ? members[0].user_id : null;
@@ -1600,7 +1600,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     if (!user || !isOpen || !initialDmUserId) return;
     async function openDm() {
       // Check if DM room already exists
-      var existing = rooms.find(function(r) { return r.room_type !== "group" && r.other_user_id === initialDmUserId; });
+      var existing = rooms.find(function(r) { return r.room_type === "direct" && r.other_user_id === initialDmUserId; });
       if (existing) {
         setActiveRoom(existing.id);
         setActiveRoomName(existing.display_name);
@@ -1608,7 +1608,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
         return;
       }
       // Create new DM room
-      var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: null, room_type: "dm", created_by: user.id }]).select().single();
+      var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: null, room_type: "direct", created_by: user.id }]).select().single();
       if (error || !room) return;
       await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }, { room_id: room.id, user_id: initialDmUserId }]);
       room.display_name = initialDmUserName || "Chat";
@@ -1662,7 +1662,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     e.preventDefault();
     if (!groupName.trim() || !user) return;
     var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: groupName.trim(), room_type: "group", created_by: user.id }]).select().single();
-    if (error || !room) { alert("Error creating group."); return; }
+    if (error || !room) { alert("Error creating group: " + (error ? error.message : "Unknown error")); return; }
     await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }]);
     room.display_name = room.name;
     setRooms(function(prev) { return [room].concat(prev); });
