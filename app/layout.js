@@ -1,5 +1,4 @@
 import './globals.css';
-
 export const metadata = {
   title: 'Acceptance Consulting | Personalized ISB and Foreign B-School Admissions Consulting',
   description: 'Affordable, personalised, and proven MBA admissions consulting. We help you get accepted to ISB, INSEAD, LBS, Wharton, Stanford GSB, and more.',
@@ -12,7 +11,6 @@ export const metadata = {
     type: 'website',
   },
 };
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
