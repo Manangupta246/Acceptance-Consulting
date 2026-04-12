@@ -595,13 +595,14 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
     { label:"Our Team", action:()=>{setPage("home");setTimeout(()=>document.getElementById("our-team")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"About Us", action:()=>{setPage("home");setTimeout(()=>document.getElementById("about")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"FAQ", action:()=>{setPage("faq");window.scrollTo(0,0);} },
+    { label:"Leaderboard", action:()=>{setPage("leaderboard");window.scrollTo(0,0);} },
     { label:"Contact", action:()=>{setPage("home");setTimeout(()=>document.getElementById("contact")?.scrollIntoView({behavior:"smooth"}),50);} },
   ];
   return (
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"10px 32px":"16px 32px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
       <a onClick={()=>{setPage("home");window.scrollTo(0,0);}} style={{cursor:"pointer",flexShrink:0}}><img src={LOGO} alt="AC" style={{height:"40px"}} /></a>
       <div style={{display:"flex",gap:"24px",alignItems:"center",position:"absolute",left:"50%",transform:"translateX(-50%)"}} className="dt-nav">
-        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:(page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
+        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:(page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
       </div>
       <div style={{display:"flex",gap:"12px",alignItems:"center",flexShrink:0}} className="dt-nav">
         {user ? (
@@ -947,6 +948,219 @@ function FAQPage() {
   );
 }
 
+/* ── Leaderboard Icons ── */
+function LbTrophyIcon({ color }) {
+  return (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color||"currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>);
+}
+function LbFireIcon() {
+  return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>);
+}
+function LbTargetIcon() {
+  return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>);
+}
+function LbChartIcon() {
+  return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>);
+}
+function LbUserIcon() {
+  return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>);
+}
+function LbPlusIcon() {
+  return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>);
+}
+
+function lbGetDateRange(period) {
+  var now = new Date();
+  var start;
+  if (period === "daily") { start = new Date(now.getFullYear(), now.getMonth(), now.getDate()); }
+  else if (period === "weekly") { var day = now.getDay(); start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day); }
+  else if (period === "monthly") { start = new Date(now.getFullYear(), now.getMonth(), 1); }
+  else { start = new Date(2020, 0, 1); }
+  return start.toISOString().split("T")[0];
+}
+
+function lbFormatScore(val) {
+  if (val === null || val === undefined || isNaN(val)) return "--";
+  return Number(val).toFixed(1);
+}
+
+function lbGetMedalStyle(index) {
+  if (index === 0) return { bg: "#FEF3C7", border: "#F59E0B", text: "#92400E", icon: "#F59E0B" };
+  if (index === 1) return { bg: "#F3F4F6", border: "#9CA3AF", text: "#4B5563", icon: "#9CA3AF" };
+  if (index === 2) return { bg: "#FED7AA", border: "#EA580C", text: "#9A3412", icon: "#EA580C" };
+  return { bg: "transparent", border: "#E5E7EB", text: "#374151", icon: "#6B7280" };
+}
+
+/* ── Leaderboard Page ── */
+function LeaderboardPage({ user }) {
+  var [examType, setExamType] = useState("GMAT");
+  var [period, setPeriod] = useState("weekly");
+  var [leaderboardData, setLeaderboardData] = useState([]);
+  var [loading, setLoading] = useState(true);
+  var [showScoreModal, setShowScoreModal] = useState(false);
+  var [submitting, setSubmitting] = useState(false);
+  var [scoreForm, setScoreForm] = useState({ quant_score:"", verbal_score:"", total_score:"", questions_attempted:"", questions_correct:"", study_hours:"", notes:"" });
+
+  var fetchLeaderboard = useCallback(async function() {
+    setLoading(true);
+    var startDate = lbGetDateRange(period);
+    try {
+      var { data, error } = await supabase.from("daily_scores").select("*, profiles(full_name, avatar_url, target_exam)").eq("exam_type", examType).gte("score_date", startDate).order("total_score", { ascending: false });
+      if (error) { console.error("Leaderboard fetch error:", error); setLeaderboardData([]); }
+      else {
+        var userMap = {};
+        (data || []).forEach(function(row) {
+          var uid = row.user_id;
+          if (!userMap[uid]) { userMap[uid] = { user_id: uid, full_name: row.profiles ? row.profiles.full_name : "Anonymous", avatar_url: row.profiles ? row.profiles.avatar_url : null, total_scores: [], quant_scores: [], verbal_scores: [], questions_attempted: 0, questions_correct: 0, study_hours: 0, days_active: 0 }; }
+          if (row.total_score) userMap[uid].total_scores.push(row.total_score);
+          if (row.quant_score) userMap[uid].quant_scores.push(row.quant_score);
+          if (row.verbal_score) userMap[uid].verbal_scores.push(row.verbal_score);
+          userMap[uid].questions_attempted += row.questions_attempted || 0;
+          userMap[uid].questions_correct += row.questions_correct || 0;
+          userMap[uid].study_hours += row.study_hours || 0;
+          userMap[uid].days_active += 1;
+        });
+        var aggregated = Object.values(userMap).map(function(u) {
+          var avgTotal = u.total_scores.length > 0 ? u.total_scores.reduce(function(a,b){return a+b;},0)/u.total_scores.length : 0;
+          var avgQuant = u.quant_scores.length > 0 ? u.quant_scores.reduce(function(a,b){return a+b;},0)/u.quant_scores.length : 0;
+          var avgVerbal = u.verbal_scores.length > 0 ? u.verbal_scores.reduce(function(a,b){return a+b;},0)/u.verbal_scores.length : 0;
+          var accuracy = u.questions_attempted > 0 ? (u.questions_correct/u.questions_attempted)*100 : 0;
+          var composite = (avgTotal*0.4)+(accuracy*0.25)+(Math.min(u.days_active*10,100)*0.2)+(Math.min(u.questions_attempted*0.5,100)*0.15);
+          return { user_id:u.user_id, full_name:u.full_name, avatar_url:u.avatar_url, questions_attempted:u.questions_attempted, study_hours:u.study_hours, days_active:u.days_active, avg_total:avgTotal, avg_quant:avgQuant, avg_verbal:avgVerbal, accuracy:accuracy, composite:composite };
+        });
+        aggregated.sort(function(a,b){ return b.composite - a.composite; });
+        setLeaderboardData(aggregated);
+      }
+    } catch(err) { console.error("Fetch error:", err); setLeaderboardData([]); }
+    setLoading(false);
+  }, [examType, period]);
+
+  useEffect(function(){ fetchLeaderboard(); }, [fetchLeaderboard]);
+
+  async function handleSubmitScore(e) {
+    e.preventDefault();
+    if (!user) { alert("Please sign in to submit a score."); return; }
+    setSubmitting(true);
+    var today = new Date().toISOString().split("T")[0];
+    var payload = { user_id:user.id, exam_type:examType, score_date:today, quant_score:scoreForm.quant_score?Number(scoreForm.quant_score):null, verbal_score:scoreForm.verbal_score?Number(scoreForm.verbal_score):null, total_score:scoreForm.total_score?Number(scoreForm.total_score):null, questions_attempted:scoreForm.questions_attempted?Number(scoreForm.questions_attempted):null, questions_correct:scoreForm.questions_correct?Number(scoreForm.questions_correct):null, study_hours:scoreForm.study_hours?Number(scoreForm.study_hours):null, notes:scoreForm.notes||null };
+    var { error } = await supabase.from("daily_scores").insert([payload]);
+    if (error) { alert("Error submitting score. You may have already logged today, or please check your inputs."); }
+    else { setShowScoreModal(false); setScoreForm({ quant_score:"", verbal_score:"", total_score:"", questions_attempted:"", questions_correct:"", study_hours:"", notes:"" }); fetchLeaderboard(); }
+    setSubmitting(false);
+  }
+
+  var lbInputStyle = { width:"100%", padding:"12px 16px", border:"1px solid #E5E7EB", borderRadius:"10px", fontSize:"14px", fontFamily:"'DM Sans',sans-serif", outline:"none", background:"#FAFAFA", boxSizing:"border-box" };
+
+  return (
+    <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
+      <div style={{maxWidth:1100,margin:"0 auto",padding:"0 20px"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,marginBottom:24}}>
+          <div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,4vw,36px)",fontWeight:700,color:"#111827",margin:0}}>Prep Leaderboard</h1>
+            <p style={{fontSize:15,color:"#6B7280",marginTop:6,marginBottom:0,fontFamily:"'DM Sans',sans-serif"}}>{"Track your "+examType+" prep progress. Compete with fellow aspirants."}</p>
+          </div>
+          {user && (<button onClick={function(){setShowScoreModal(true);}} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"12px 24px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><LbPlusIcon/> {"Log Today's Score"}</button>)}
+        </div>
+
+        {/* Exam Tabs */}
+        <div style={{display:"flex",borderBottom:"2px solid #F3F4F6",gap:0}}>
+          {["GMAT","GRE"].map(function(exam){return (<button key={exam} onClick={function(){setExamType(exam);}} style={{padding:"10px 20px",border:"none",background:"transparent",cursor:"pointer",fontSize:15,fontWeight:examType===exam?600:500,color:examType===exam?RED:"#6B7280",borderBottom:examType===exam?"3px solid "+RED:"3px solid transparent",fontFamily:"'DM Sans',sans-serif"}}>{exam+" Leaderboard"}</button>);})}
+        </div>
+
+        {/* Period Filter */}
+        <div style={{display:"flex",gap:8,marginTop:20,flexWrap:"wrap"}}>
+          {[{key:"daily",label:"Today"},{key:"weekly",label:"This Week"},{key:"monthly",label:"This Month"},{key:"all",label:"All Time"}].map(function(p){return (<button key={p.key} onClick={function(){setPeriod(p.key);}} style={{padding:"8px 18px",border:"1px solid "+(period===p.key?RED:"#E5E7EB"),background:period===p.key?RED:"white",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:500,color:period===p.key?"white":"#6B7280",fontFamily:"'DM Sans',sans-serif"}}>{p.label}</button>);})}
+        </div>
+
+        {/* Loading */}
+        {loading && (<div style={{marginTop:32}}>{[1,2,3,4,5].map(function(i){return <div key={i} style={{background:"linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%)",backgroundSize:"200% 100%",animation:"lbShimmer 1.5s infinite",borderRadius:8,height:60,marginBottom:8}}/>;})}<style>{"@keyframes lbShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}"}</style></div>)}
+
+        {/* Empty */}
+        {!loading && leaderboardData.length===0 && (<div style={{textAlign:"center",padding:"80px 20px",color:"#9CA3AF"}}><div style={{fontSize:48,marginBottom:16}}>&#128202;</div><h3 style={{fontSize:20,color:"#374151",marginBottom:8,fontFamily:"'Playfair Display',serif"}}>No scores yet for this period</h3><p style={{fontSize:14,maxWidth:400,margin:"0 auto",lineHeight:1.6,fontFamily:"'DM Sans',sans-serif"}}>{"Be the first to log your "+examType+" practice score and claim the top spot."}</p>{user&&(<button onClick={function(){setShowScoreModal(true);}} style={{marginTop:20,padding:"12px 28px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Log Your First Score</button>)}</div>)}
+
+        {/* Top 3 Podium */}
+        {!loading && leaderboardData.length>0 && (<div>
+          <div style={{display:"flex",gap:16,marginTop:32,justifyContent:"center",flexWrap:"wrap"}}>
+            {leaderboardData.slice(0,Math.min(3,leaderboardData.length)).map(function(entry,idx){
+              var medal=lbGetMedalStyle(idx);
+              var initials=(entry.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+              return (<div key={entry.user_id} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"28px 20px",borderRadius:16,border:"2px solid "+medal.border,backgroundColor:medal.bg,flex:idx===0?"1.2":"1",minWidth:200,maxWidth:300,position:"relative"}}>
+                <div style={{position:"absolute",top:12,left:12,width:28,height:28,borderRadius:"50%",background:medal.border,color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700}}>{idx+1}</div>
+                <LbTrophyIcon color={medal.icon}/>
+                <div style={{width:idx===0?56:48,height:idx===0?56:48,borderRadius:"50%",background:medal.border,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:idx===0?20:18,color:"white",marginTop:12}}>{initials}</div>
+                <h3 style={{fontSize:idx===0?18:16,fontWeight:600,color:medal.text,marginTop:10,marginBottom:4,textAlign:"center",fontFamily:"'Playfair Display',serif"}}>{entry.full_name||"Anonymous"}</h3>
+                <div style={{fontSize:26,fontWeight:800,color:medal.text,fontFamily:"'Playfair Display',serif"}}>{lbFormatScore(entry.avg_total)}</div>
+                <div style={{fontSize:11,color:"#9CA3AF",marginBottom:12}}>avg score</div>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>
+                  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:20,fontSize:12,fontWeight:500,background:"#F9FAFB",color:"#6B7280"}}><LbTargetIcon/> {lbFormatScore(entry.accuracy)+"%"}</span>
+                  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:20,fontSize:12,fontWeight:500,background:"#F9FAFB",color:"#6B7280"}}><LbFireIcon/> {entry.days_active+"d streak"}</span>
+                </div>
+              </div>);
+            })}
+          </div>
+
+          {/* Table */}
+          <div style={{marginTop:32,background:"white",borderRadius:16,border:"1px solid #E5E7EB",overflow:"hidden",marginBottom:32}}>
+            <div style={{display:"grid",gridTemplateColumns:"60px 1fr 100px 100px 100px 80px",alignItems:"center",padding:"12px 24px",fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.05em",color:"#9CA3AF",borderBottom:"2px solid #F3F4F6",fontFamily:"'DM Sans',sans-serif"}}><span>Rank</span><span>Name</span><span>Avg Score</span><span>Quant</span><span>Verbal</span><span>Accuracy</span></div>
+            {leaderboardData.map(function(entry,idx){
+              var initials=(entry.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+              var isMe=user&&entry.user_id===user.id;
+              var colors=["#B91C1C","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
+              return (<div key={entry.user_id} style={{display:"grid",gridTemplateColumns:"60px 1fr 100px 100px 100px 80px",alignItems:"center",padding:"16px 24px",borderBottom:"1px solid #F3F4F6",backgroundColor:isMe?"#FEF2F2":"transparent",borderLeft:isMe?"3px solid "+RED:"3px solid transparent"}}>
+                <span style={{fontSize:15,fontWeight:700,color:idx<3?lbGetMedalStyle(idx).icon:"#9CA3AF"}}>{idx+1}</span>
+                <div style={{display:"flex",alignItems:"center",gap:12}}>
+                  <div style={{width:36,height:36,borderRadius:"50%",background:colors[idx%colors.length],display:"flex",alignItems:"center",justifyContent:"center",fontWeight:600,fontSize:14,color:"white",flexShrink:0}}>{initials}</div>
+                  <div><div style={{fontSize:14,fontWeight:600,color:"#111827",fontFamily:"'DM Sans',sans-serif"}}>{entry.full_name||"Anonymous"}{isMe&&(<span style={{marginLeft:8,fontSize:10,fontWeight:600,background:RED,color:"white",padding:"2px 8px",borderRadius:10}}>YOU</span>)}</div><div style={{fontSize:12,color:"#9CA3AF"}}>{entry.study_hours+"h studied"}</div></div>
+                </div>
+                <span style={{fontSize:15,fontWeight:700,color:"#111827"}}>{lbFormatScore(entry.avg_total)}</span>
+                <span style={{fontSize:14,color:"#374151"}}>{lbFormatScore(entry.avg_quant)}</span>
+                <span style={{fontSize:14,color:"#374151"}}>{lbFormatScore(entry.avg_verbal)}</span>
+                <span style={{fontSize:14,color:"#374151"}}>{lbFormatScore(entry.accuracy)+"%"}</span>
+              </div>);
+            })}
+          </div>
+        </div>)}
+
+        {/* How Rankings Work */}
+        <div style={{marginTop:16,marginBottom:60,padding:28,background:"white",borderRadius:16,border:"1px solid #E5E7EB"}}>
+          <h3 style={{fontSize:18,fontWeight:600,color:"#111827",marginTop:0,marginBottom:16,fontFamily:"'Playfair Display',serif"}}>How Rankings Work</h3>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
+            {[{icon:<LbChartIcon/>,label:"Average Score",weight:"40%",desc:"Your mean practice test score"},{icon:<LbTargetIcon/>,label:"Accuracy",weight:"25%",desc:"Questions correct / attempted"},{icon:<LbFireIcon/>,label:"Consistency",weight:"20%",desc:"Number of days you logged scores"},{icon:<LbUserIcon/>,label:"Volume",weight:"15%",desc:"Total questions you attempted"}].map(function(item,i){
+              return (<div key={i} style={{padding:16,background:"#F9FAFB",borderRadius:12,display:"flex",flexDirection:"column",gap:6}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,color:RED}}>{item.icon}<span style={{fontSize:14,fontWeight:600,color:"#111827"}}>{item.label}</span><span style={{marginLeft:"auto",fontSize:12,fontWeight:700,color:RED,background:"#FEF2F2",padding:"2px 8px",borderRadius:10}}>{item.weight}</span></div>
+                <span style={{fontSize:12,color:"#6B7280"}}>{item.desc}</span>
+              </div>);
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Score Modal */}
+      {showScoreModal && (<div onClick={function(){setShowScoreModal(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,padding:20}}>
+        <div onClick={function(e){e.stopPropagation();}} style={{background:"white",borderRadius:20,padding:36,width:"100%",maxWidth:520,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 25px 60px rgba(0,0,0,0.15)"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
+            <h2 style={{fontSize:22,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>{"Log "+examType+" Score"}</h2>
+            <button onClick={function(){setShowScoreModal(false);}} style={{background:"none",border:"none",fontSize:24,color:"#9CA3AF",cursor:"pointer"}}>&#10005;</button>
+          </div>
+          <form onSubmit={handleSubmitScore}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Quant Score</label><input type="number" style={lbInputStyle} placeholder={examType==="GMAT"?"60-90":"130-170"} value={scoreForm.quant_score} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{quant_score:e.target.value}));}}/></div>
+              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Verbal Score</label><input type="number" style={lbInputStyle} placeholder={examType==="GMAT"?"60-90":"130-170"} value={scoreForm.verbal_score} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{verbal_score:e.target.value}));}}/></div>
+            </div>
+            <div style={{marginTop:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Total Score *</label><input type="number" style={lbInputStyle} placeholder={examType==="GMAT"?"205-805":"260-340"} value={scoreForm.total_score} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{total_score:e.target.value}));}} required/></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginTop:16}}>
+              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Questions Attempted</label><input type="number" style={lbInputStyle} placeholder="e.g. 50" value={scoreForm.questions_attempted} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{questions_attempted:e.target.value}));}}/></div>
+              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Questions Correct</label><input type="number" style={lbInputStyle} placeholder="e.g. 38" value={scoreForm.questions_correct} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{questions_correct:e.target.value}));}}/></div>
+            </div>
+            <div style={{marginTop:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Study Hours Today</label><input type="number" step="0.5" style={lbInputStyle} placeholder="e.g. 3.5" value={scoreForm.study_hours} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{study_hours:e.target.value}));}}/></div>
+            <div style={{marginTop:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Notes (optional)</label><textarea style={{...lbInputStyle,resize:"vertical"}} rows={3} placeholder="What did you practice today?" value={scoreForm.notes} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{notes:e.target.value}));}}/></div>
+            <button type="submit" disabled={submitting||!scoreForm.total_score} style={{width:"100%",padding:14,background:submitting||!scoreForm.total_score?"#D1D5DB":RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:submitting?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif",marginTop:24}}>{submitting?"Submitting...":"Submit Score"}</button>
+          </form>
+        </div>
+      </div>)}
+    </div>
+  );
+}
+
 function HomePage() {
   return (<><Hero/><SchoolLogos/><NotTypical/><CommunityProof/><LinkedInFeatures/><HowItWorks/><ServicesSection/><AdmissionsSection/><CommunitySection/><TeamSection/><TestimonialsSection/><CTA/></>);
 }
@@ -977,6 +1191,7 @@ export default function App() {
       {page==="home"&&<HomePage/>}
       {page==="faq"&&<FAQPage/>}
       {page==="blog"&&<BlogPage user={user}/>}
+      {page==="leaderboard"&&<LeaderboardPage user={user}/>}
       <Footer/>
       <StickyWhatsApp/>
       {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
