@@ -592,16 +592,16 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
     { label:"Blog", action:()=>{setPage("blog");window.scrollTo(0,0);} },
     { label:"Testimonials", action:()=>{setPage("home");setTimeout(()=>document.getElementById("testimonials")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"Our Team", action:()=>{setPage("home");setTimeout(()=>document.getElementById("our-team")?.scrollIntoView({behavior:"smooth"}),50);} },
-    { label:"About Us", action:()=>{setPage("home");setTimeout(()=>document.getElementById("about")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"FAQ", action:()=>{setPage("faq");window.scrollTo(0,0);} },
     { label:"Leaderboard", action:()=>{setPage("leaderboard");window.scrollTo(0,0);} },
     { label:"Partners", action:()=>{setPage("partners");window.scrollTo(0,0);} },
+    { label:"Forum", action:()=>{setPage("forum");window.scrollTo(0,0);} },
   ];
   return (
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"10px 32px":"16px 32px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
       <a onClick={()=>{setPage("home");window.scrollTo(0,0);}} style={{cursor:"pointer",flexShrink:0}}><img src={LOGO} alt="AC" style={{height:"40px"}} /></a>
       <div style={{display:"flex",gap:"24px",alignItems:"center",position:"absolute",left:"50%",transform:"translateX(-50%)"}} className="dt-nav">
-        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:(page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Partners")?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
+        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:(page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Partners")||(page==="forum"&&l.label==="Forum")?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
       </div>
       <div style={{display:"flex",gap:"12px",alignItems:"center",flexShrink:0}} className="dt-nav">
         {user ? (
@@ -1552,6 +1552,374 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
   );
 }
 
+/* ── Forum Icons ── */
+function FmUpIcon() { return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>); }
+function FmDownIcon() { return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg>); }
+function FmCommentIcon() { return (<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>); }
+function FmPinIcon() { return (<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg>); }
+function FmBackIcon() { return (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>); }
+
+/* ── Forum Page ── */
+function ForumPage({ user, onLoginClick }) {
+  var [categories, setCategories] = useState([]);
+  var [posts, setPosts] = useState([]);
+  var [selectedCategory, setSelectedCategory] = useState(null);
+  var [selectedPost, setSelectedPost] = useState(null);
+  var [comments, setComments] = useState([]);
+  var [myVotes, setMyVotes] = useState({});
+  var [loading, setLoading] = useState(true);
+  var [showNewPost, setShowNewPost] = useState(false);
+  var [postForm, setPostForm] = useState({ title:"", content:"", category_id:"" });
+  var [newComment, setNewComment] = useState("");
+  var [replyTo, setReplyTo] = useState(null);
+  var [replyContent, setReplyContent] = useState("");
+  var [submitting, setSubmitting] = useState(false);
+  var [sortBy, setSortBy] = useState("newest");
+
+  // Load categories
+  useEffect(function() {
+    async function load() {
+      var { data } = await supabase.from("forum_categories").select("*").order("sort_order");
+      setCategories(data || []);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  // Load posts
+  useEffect(function() {
+    async function loadPosts() {
+      setLoading(true);
+      var query = supabase.from("forum_posts").select("*, profiles:author_id(full_name, avatar_url), forum_categories(name, slug, icon)");
+      if (selectedCategory) query = query.eq("category_id", selectedCategory);
+      if (sortBy === "newest") query = query.order("is_pinned", { ascending: false }).order("created_at", { ascending: false });
+      else if (sortBy === "popular") query = query.order("is_pinned", { ascending: false }).order("upvotes", { ascending: false });
+      else if (sortBy === "discussed") query = query.order("is_pinned", { ascending: false }).order("comment_count", { ascending: false });
+      var { data } = await query.limit(50);
+      setPosts(data || []);
+      setLoading(false);
+    }
+    if (!selectedPost) loadPosts();
+  }, [selectedCategory, sortBy, selectedPost]);
+
+  // Load my votes
+  useEffect(function() {
+    if (!user) return;
+    async function loadVotes() {
+      var { data } = await supabase.from("forum_votes").select("*").eq("user_id", user.id);
+      var voteMap = {};
+      (data || []).forEach(function(v) {
+        if (v.post_id) voteMap["post_" + v.post_id] = v.vote_type;
+        if (v.comment_id) voteMap["comment_" + v.comment_id] = v.vote_type;
+      });
+      setMyVotes(voteMap);
+    }
+    loadVotes();
+  }, [user, selectedPost]);
+
+  // Load comments for selected post
+  useEffect(function() {
+    if (!selectedPost) { setComments([]); return; }
+    async function loadComments() {
+      var { data } = await supabase.from("forum_comments").select("*, profiles:author_id(full_name, avatar_url)").eq("post_id", selectedPost.id).order("created_at", { ascending: true });
+      setComments(data || []);
+    }
+    loadComments();
+  }, [selectedPost]);
+
+  // Vote on post or comment
+  async function handleVote(type, id, direction) {
+    if (!user) { onLoginClick(); return; }
+    var key = type + "_" + id;
+    var current = myVotes[key] || 0;
+    if (current === direction) {
+      // Remove vote
+      await supabase.from("forum_votes").delete().eq("user_id", user.id).eq(type === "post" ? "post_id" : "comment_id", id);
+      var newVotes = Object.assign({}, myVotes);
+      delete newVotes[key];
+      setMyVotes(newVotes);
+      // Update count
+      if (type === "post") {
+        await supabase.from("forum_posts").update({ upvotes: (posts.find(function(p){return p.id===id;})||{upvotes:0}).upvotes - direction }).eq("id", id);
+        setPosts(function(prev) { return prev.map(function(p) { return p.id === id ? Object.assign({}, p, { upvotes: p.upvotes - direction }) : p; }); });
+        if (selectedPost && selectedPost.id === id) setSelectedPost(function(prev) { return Object.assign({}, prev, { upvotes: prev.upvotes - direction }); });
+      } else {
+        await supabase.from("forum_comments").update({ upvotes: (comments.find(function(c){return c.id===id;})||{upvotes:0}).upvotes - direction }).eq("id", id);
+        setComments(function(prev) { return prev.map(function(c) { return c.id === id ? Object.assign({}, c, { upvotes: c.upvotes - direction }) : c; }); });
+      }
+    } else {
+      var diff = current === 0 ? direction : direction * 2;
+      await supabase.from("forum_votes").upsert({ user_id: user.id, [type === "post" ? "post_id" : "comment_id"]: id, vote_type: direction }, { onConflict: type === "post" ? "user_id,post_id" : "user_id,comment_id" });
+      setMyVotes(Object.assign({}, myVotes, { [key]: direction }));
+      if (type === "post") {
+        var post = posts.find(function(p){return p.id===id;});
+        if (post) {
+          await supabase.from("forum_posts").update({ upvotes: post.upvotes + diff }).eq("id", id);
+          setPosts(function(prev) { return prev.map(function(p) { return p.id === id ? Object.assign({}, p, { upvotes: p.upvotes + diff }) : p; }); });
+          if (selectedPost && selectedPost.id === id) setSelectedPost(function(prev) { return Object.assign({}, prev, { upvotes: prev.upvotes + diff }); });
+        }
+      } else {
+        var cmt = comments.find(function(c){return c.id===id;});
+        if (cmt) {
+          await supabase.from("forum_comments").update({ upvotes: cmt.upvotes + diff }).eq("id", id);
+          setComments(function(prev) { return prev.map(function(c) { return c.id === id ? Object.assign({}, c, { upvotes: c.upvotes + diff }) : c; }); });
+        }
+      }
+    }
+  }
+
+  // Create post
+  async function handleCreatePost(e) {
+    e.preventDefault();
+    if (!user) { onLoginClick(); return; }
+    if (!postForm.title.trim() || !postForm.content.trim() || !postForm.category_id) return;
+    setSubmitting(true);
+    var { data, error } = await supabase.from("forum_posts").insert([{ title: postForm.title.trim(), content: postForm.content.trim(), category_id: postForm.category_id, author_id: user.id }]).select("*, profiles:author_id(full_name, avatar_url), forum_categories(name, slug, icon)").single();
+    if (error) { alert("Error creating post: " + error.message); }
+    else { setPosts(function(prev) { return [data].concat(prev); }); setShowNewPost(false); setPostForm({ title:"", content:"", category_id:"" }); }
+    setSubmitting(false);
+  }
+
+  // Add comment
+  async function handleAddComment(e) {
+    e.preventDefault();
+    if (!user) { onLoginClick(); return; }
+    if (!newComment.trim() || !selectedPost) return;
+    setSubmitting(true);
+    var { data, error } = await supabase.from("forum_comments").insert([{ post_id: selectedPost.id, author_id: user.id, content: newComment.trim(), parent_id: null }]).select("*, profiles:author_id(full_name, avatar_url)").single();
+    if (error) { alert("Error adding comment: " + error.message); }
+    else {
+      setComments(function(prev) { return prev.concat([data]); });
+      setNewComment("");
+      await supabase.from("forum_posts").update({ comment_count: (selectedPost.comment_count || 0) + 1 }).eq("id", selectedPost.id);
+      setSelectedPost(function(prev) { return Object.assign({}, prev, { comment_count: (prev.comment_count || 0) + 1 }); });
+    }
+    setSubmitting(false);
+  }
+
+  // Reply to comment
+  async function handleReply(e) {
+    e.preventDefault();
+    if (!user || !replyContent.trim() || !replyTo || !selectedPost) return;
+    setSubmitting(true);
+    var { data, error } = await supabase.from("forum_comments").insert([{ post_id: selectedPost.id, author_id: user.id, content: replyContent.trim(), parent_id: replyTo }]).select("*, profiles:author_id(full_name, avatar_url)").single();
+    if (error) { alert("Error adding reply: " + error.message); }
+    else {
+      setComments(function(prev) { return prev.concat([data]); });
+      setReplyTo(null);
+      setReplyContent("");
+      await supabase.from("forum_posts").update({ comment_count: (selectedPost.comment_count || 0) + 1 }).eq("id", selectedPost.id);
+      setSelectedPost(function(prev) { return Object.assign({}, prev, { comment_count: (prev.comment_count || 0) + 1 }); });
+    }
+    setSubmitting(false);
+  }
+
+  function timeAgo(dateStr) {
+    var diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+    if (diff < 60) return "just now";
+    if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+    if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
+    if (diff < 604800) return Math.floor(diff / 86400) + "d ago";
+    return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
+  var fmInputStyle = { width:"100%", padding:"12px 16px", border:"1px solid #E5E7EB", borderRadius:10, fontSize:14, fontFamily:"'DM Sans',sans-serif", outline:"none", background:"#FAFAFA", boxSizing:"border-box" };
+
+  // Post detail view
+  if (selectedPost) {
+    var topComments = comments.filter(function(c) { return !c.parent_id; });
+    return (
+      <div style={{paddingTop:120,minHeight:"100vh",background:"#FAFAFA"}}>
+        <div style={{maxWidth:800,margin:"0 auto",padding:"0 20px 60px"}}>
+          <button onClick={function(){setSelectedPost(null);}} style={{display:"inline-flex",alignItems:"center",gap:6,background:"none",border:"none",color:"#6B7280",fontSize:14,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",padding:0,marginBottom:20}}><FmBackIcon/> Back to Forum</button>
+
+          {/* Post */}
+          <div style={{background:"white",borderRadius:16,border:"1px solid #E5E7EB",padding:28,marginBottom:24}}>
+            <div style={{display:"flex",gap:16}}>
+              {/* Vote */}
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,flexShrink:0}}>
+                <button onClick={function(){handleVote("post",selectedPost.id,1);}} style={{background:"none",border:"none",cursor:"pointer",color:myVotes["post_"+selectedPost.id]===1?RED:"#9CA3AF",padding:2}}><FmUpIcon/></button>
+                <span style={{fontSize:16,fontWeight:700,color:myVotes["post_"+selectedPost.id]?RED:"#374151"}}>{selectedPost.upvotes||0}</span>
+                <button onClick={function(){handleVote("post",selectedPost.id,-1);}} style={{background:"none",border:"none",cursor:"pointer",color:myVotes["post_"+selectedPost.id]===-1?"#2563EB":"#9CA3AF",padding:2}}><FmDownIcon/></button>
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                {selectedPost.is_pinned && (<span style={{display:"inline-flex",alignItems:"center",gap:4,fontSize:11,fontWeight:600,color:RED,marginBottom:8}}><FmPinIcon/> PINNED</span>)}
+                <h1 style={{fontSize:24,fontWeight:700,color:"#111827",margin:"0 0 8px",fontFamily:"'Playfair Display',serif",lineHeight:1.3}}>{selectedPost.title}</h1>
+                <div style={{fontSize:13,color:"#9CA3AF",marginBottom:16}}>
+                  {(selectedPost.profiles?selectedPost.profiles.full_name:"Anonymous") + " in " + (selectedPost.forum_categories?selectedPost.forum_categories.icon+" "+selectedPost.forum_categories.name:"General") + " - " + timeAgo(selectedPost.created_at)}
+                </div>
+                <div style={{fontSize:15,color:"#374151",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{selectedPost.content}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div style={{marginBottom:16}}>
+            <h3 style={{fontSize:16,fontWeight:600,color:"#111827",marginBottom:16,fontFamily:"'DM Sans',sans-serif"}}>{(selectedPost.comment_count||0) + " Comment" + ((selectedPost.comment_count||0)!==1?"s":"")}</h3>
+
+            {/* New comment */}
+            {user ? (
+              <form onSubmit={handleAddComment} style={{marginBottom:24,display:"flex",gap:8}}>
+                <input type="text" style={{...fmInputStyle,borderRadius:24}} placeholder="Add a comment..." value={newComment} onChange={function(e){setNewComment(e.target.value);}} />
+                <button type="submit" disabled={submitting||!newComment.trim()} style={{padding:"10px 20px",background:newComment.trim()?RED:"#E5E7EB",color:"white",border:"none",borderRadius:24,fontSize:13,fontWeight:600,cursor:newComment.trim()?"pointer":"default",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>Post</button>
+              </form>
+            ) : (
+              <div style={{padding:"16px 20px",background:"#FEF2F2",borderRadius:12,marginBottom:24,fontSize:13,color:RED}}>
+                <button onClick={onLoginClick} style={{background:"none",border:"none",color:RED,fontWeight:600,cursor:"pointer",textDecoration:"underline",fontFamily:"'DM Sans',sans-serif",fontSize:13,padding:0}}>Sign in</button> to join the discussion.
+              </div>
+            )}
+
+            {/* Comment list */}
+            {topComments.map(function(c) {
+              var replies = comments.filter(function(r) { return r.parent_id === c.id; });
+              return (
+                <div key={c.id} style={{marginBottom:16}}>
+                  <div style={{background:"white",borderRadius:12,border:"1px solid #E5E7EB",padding:"16px 20px"}}>
+                    <div style={{display:"flex",gap:12}}>
+                      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:0,flexShrink:0}}>
+                        <button onClick={function(){handleVote("comment",c.id,1);}} style={{background:"none",border:"none",cursor:"pointer",color:myVotes["comment_"+c.id]===1?RED:"#D1D5DB",padding:1}}><FmUpIcon/></button>
+                        <span style={{fontSize:13,fontWeight:700,color:myVotes["comment_"+c.id]?RED:"#6B7280"}}>{c.upvotes||0}</span>
+                        <button onClick={function(){handleVote("comment",c.id,-1);}} style={{background:"none",border:"none",cursor:"pointer",color:myVotes["comment_"+c.id]===-1?"#2563EB":"#D1D5DB",padding:1}}><FmDownIcon/></button>
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:12,color:"#9CA3AF",marginBottom:4}}>{(c.profiles?c.profiles.full_name:"Anonymous") + " - " + timeAgo(c.created_at)}</div>
+                        <div style={{fontSize:14,color:"#374151",lineHeight:1.6}}>{c.content}</div>
+                        {user && (<button onClick={function(){setReplyTo(replyTo===c.id?null:c.id);setReplyContent("");}} style={{background:"none",border:"none",color:"#9CA3AF",fontSize:12,fontWeight:600,cursor:"pointer",padding:"4px 0",fontFamily:"'DM Sans',sans-serif"}}>{replyTo===c.id?"Cancel":"Reply"}</button>)}
+                      </div>
+                    </div>
+                    {replyTo===c.id && (
+                      <form onSubmit={handleReply} style={{marginTop:12,marginLeft:40,display:"flex",gap:8}}>
+                        <input type="text" style={{...fmInputStyle,borderRadius:20,fontSize:13,padding:"8px 14px"}} placeholder="Write a reply..." value={replyContent} onChange={function(e){setReplyContent(e.target.value);}} />
+                        <button type="submit" disabled={submitting||!replyContent.trim()} style={{padding:"8px 16px",background:replyContent.trim()?RED:"#E5E7EB",color:"white",border:"none",borderRadius:20,fontSize:12,fontWeight:600,cursor:replyContent.trim()?"pointer":"default",flexShrink:0}}>Reply</button>
+                      </form>
+                    )}
+                  </div>
+                  {/* Replies */}
+                  {replies.length>0 && (
+                    <div style={{marginLeft:40,marginTop:8,display:"flex",flexDirection:"column",gap:8}}>
+                      {replies.map(function(r) {
+                        return (
+                          <div key={r.id} style={{background:"#F9FAFB",borderRadius:10,border:"1px solid #F3F4F6",padding:"12px 16px"}}>
+                            <div style={{fontSize:12,color:"#9CA3AF",marginBottom:4}}>{(r.profiles?r.profiles.full_name:"Anonymous") + " - " + timeAgo(r.created_at)}</div>
+                            <div style={{fontSize:13,color:"#374151",lineHeight:1.5}}>{r.content}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Forum listing view
+  return (
+    <div style={{paddingTop:120,minHeight:"100vh",background:"#FAFAFA"}}>
+      <div style={{maxWidth:900,margin:"0 auto",padding:"0 20px 60px"}}>
+        {/* Header */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,marginBottom:24}}>
+          <div>
+            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,4vw,36px)",fontWeight:700,color:"#111827",margin:0}}>Community Forum</h1>
+            <p style={{fontSize:15,color:"#6B7280",marginTop:6,marginBottom:0,fontFamily:"'DM Sans',sans-serif"}}>Ask questions, share experiences, help each other out.</p>
+          </div>
+          {user && (<button onClick={function(){setShowNewPost(true);}} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"12px 24px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ New Post</button>)}
+        </div>
+
+        {/* Category Pills */}
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:20}}>
+          <button onClick={function(){setSelectedCategory(null);}} style={{padding:"8px 16px",borderRadius:20,border:"1px solid "+(selectedCategory===null?RED:"#E5E7EB"),background:selectedCategory===null?RED:"white",color:selectedCategory===null?"white":"#6B7280",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>All</button>
+          {categories.map(function(cat) {
+            var isActive = selectedCategory === cat.id;
+            return (<button key={cat.id} onClick={function(){setSelectedCategory(isActive?null:cat.id);}} style={{padding:"8px 16px",borderRadius:20,border:"1px solid "+(isActive?RED:"#E5E7EB"),background:isActive?RED:"white",color:isActive?"white":"#6B7280",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{cat.icon + " " + cat.name}</button>);
+          })}
+        </div>
+
+        {/* Sort */}
+        <div style={{display:"flex",gap:8,marginBottom:20}}>
+          {[{key:"newest",label:"Newest"},{key:"popular",label:"Most Upvoted"},{key:"discussed",label:"Most Discussed"}].map(function(s) {
+            return (<button key={s.key} onClick={function(){setSortBy(s.key);}} style={{padding:"6px 14px",borderRadius:8,border:"none",background:sortBy===s.key?"#111827":"#F3F4F6",color:sortBy===s.key?"white":"#6B7280",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{s.label}</button>);
+          })}
+        </div>
+
+        {/* Loading */}
+        {loading && (<div style={{textAlign:"center",padding:60,color:"#9CA3AF"}}>Loading...</div>)}
+
+        {/* Posts */}
+        {!loading && posts.length===0 && (<div style={{textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}><div style={{fontSize:40,marginBottom:12}}>&#128490;</div><p style={{fontSize:14}}>No posts yet. Be the first to start a discussion.</p></div>)}
+
+        {!loading && posts.map(function(post) {
+          var authorName = post.profiles ? post.profiles.full_name : "Anonymous";
+          var catName = post.forum_categories ? post.forum_categories.icon + " " + post.forum_categories.name : "";
+          var initials = (authorName||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+          var colors = ["#B91C1C","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
+          var color = colors[(authorName||"A").length % colors.length];
+          return (
+            <div key={post.id} onClick={function(){setSelectedPost(post);}} style={{background:"white",borderRadius:12,border:"1px solid #E5E7EB",padding:"16px 20px",marginBottom:10,cursor:"pointer",display:"flex",gap:14,transition:"box-shadow 0.15s"}}>
+              {/* Vote */}
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:0,flexShrink:0,minWidth:36}} onClick={function(e){e.stopPropagation();}}>
+                <button onClick={function(){handleVote("post",post.id,1);}} style={{background:"none",border:"none",cursor:"pointer",color:myVotes["post_"+post.id]===1?RED:"#D1D5DB",padding:1}}><FmUpIcon/></button>
+                <span style={{fontSize:14,fontWeight:700,color:myVotes["post_"+post.id]?RED:"#6B7280"}}>{post.upvotes||0}</span>
+                <button onClick={function(){handleVote("post",post.id,-1);}} style={{background:"none",border:"none",cursor:"pointer",color:myVotes["post_"+post.id]===-1?"#2563EB":"#D1D5DB",padding:1}}><FmDownIcon/></button>
+              </div>
+              {/* Content */}
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}}>
+                  {post.is_pinned && (<span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize:10,fontWeight:700,color:RED}}><FmPinIcon/> PINNED</span>)}
+                  {catName && (<span style={{fontSize:11,color:"#9CA3AF",fontWeight:500}}>{catName}</span>)}
+                </div>
+                <h3 style={{fontSize:16,fontWeight:600,color:"#111827",margin:"0 0 6px",lineHeight:1.3,fontFamily:"'DM Sans',sans-serif"}}>{post.title}</h3>
+                <p style={{fontSize:13,color:"#6B7280",margin:0,lineHeight:1.5,overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{post.content}</p>
+                <div style={{display:"flex",alignItems:"center",gap:12,marginTop:10,fontSize:12,color:"#9CA3AF"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}>
+                    <div style={{width:20,height:20,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:"white"}}>{initials}</div>
+                    {authorName}
+                  </div>
+                  <span>{timeAgo(post.created_at)}</span>
+                  <span style={{display:"inline-flex",alignItems:"center",gap:4}}><FmCommentIcon/> {post.comment_count||0}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* New Post Modal */}
+      {showNewPost && (
+        <div onClick={function(){setShowNewPost(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,padding:20}}>
+          <div onClick={function(e){e.stopPropagation();}} style={{background:"white",borderRadius:20,padding:36,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 25px 60px rgba(0,0,0,0.15)"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
+              <h2 style={{fontSize:22,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>New Discussion</h2>
+              <button onClick={function(){setShowNewPost(false);}} style={{background:"none",border:"none",fontSize:24,color:"#9CA3AF",cursor:"pointer"}}>&#10005;</button>
+            </div>
+            <form onSubmit={handleCreatePost}>
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Category *</label>
+                <select style={fmInputStyle} value={postForm.category_id} onChange={function(e){setPostForm(Object.assign({},postForm,{category_id:e.target.value}));}} required>
+                  <option value="">Select a category...</option>
+                  {categories.map(function(cat) { return (<option key={cat.id} value={cat.id}>{cat.icon + " " + cat.name}</option>); })}
+                </select>
+              </div>
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Title *</label>
+                <input type="text" style={fmInputStyle} placeholder="What do you want to discuss?" value={postForm.title} onChange={function(e){setPostForm(Object.assign({},postForm,{title:e.target.value}));}} required />
+              </div>
+              <div style={{marginBottom:16}}>
+                <label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Content *</label>
+                <textarea style={{...fmInputStyle,resize:"vertical"}} rows={6} placeholder="Share your thoughts, questions, or experiences..." value={postForm.content} onChange={function(e){setPostForm(Object.assign({},postForm,{content:e.target.value}));}} required />
+              </div>
+              <button type="submit" disabled={submitting||!postForm.title.trim()||!postForm.content.trim()||!postForm.category_id} style={{width:"100%",padding:14,background:submitting?"#D1D5DB":RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:submitting?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>{submitting?"Posting...":"Post Discussion"}</button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Chat Panel ── */
 function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }) {
   var [rooms, setRooms] = useState([]);
@@ -1808,6 +2176,7 @@ export default function App() {
       {page==="blog"&&<BlogPage user={user}/>}
       {page==="leaderboard"&&<LeaderboardPage user={user}/>}
       {page==="partners"&&<AccountabilityPage user={user} onLoginClick={()=>setShowAuth(true)} onOpenChat={openChat}/>}
+      {page==="forum"&&<ForumPage user={user} onLoginClick={()=>setShowAuth(true)}/>}
       <Footer/>
       <StickyWhatsApp/>
       {user && !chatOpen && (
