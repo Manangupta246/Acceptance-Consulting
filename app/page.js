@@ -1181,7 +1181,7 @@ function AccEditIcon() {
 }
 
 /* ── Accountability Matching Page ── */
-function AccountabilityPage({ user, onLoginClick }) {
+function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
   var [tab, setTab] = useState("browse");
   var [profiles, setProfiles] = useState([]);
   var [connections, setConnections] = useState([]);
@@ -1518,7 +1518,10 @@ function AccountabilityPage({ user, onLoginClick }) {
                     <div style={{fontSize:14,fontWeight:600,color:"#111827"}}>{other.full_name||"Anonymous"}</div>
                     <div style={{fontSize:12,color:"#6B7280"}}>{other.target_exam||"--"} | Target: {other.target_score||"--"} | Exam: {formatDate(other.exam_date)}</div>
                   </div>
-                  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 14px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:12,fontWeight:600}}><AccHeartIcon/> Partner</span>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <button onClick={function(){if(typeof onOpenChat==="function")onOpenChat(other.id,other.full_name);}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 14px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>&#128172; Message</button>
+                    <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 14px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:12,fontWeight:600}}><AccHeartIcon/> Partner</span>
+                  </div>
                 </div>
               );
             })}
@@ -1549,6 +1552,221 @@ function AccountabilityPage({ user, onLoginClick }) {
   );
 }
 
+/* ── Chat Panel ── */
+function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }) {
+  var [rooms, setRooms] = useState([]);
+  var [activeRoom, setActiveRoom] = useState(null);
+  var [activeRoomName, setActiveRoomName] = useState("");
+  var [messages, setMessages] = useState([]);
+  var [newMessage, setNewMessage] = useState("");
+  var [sending, setSending] = useState(false);
+  var [view, setView] = useState("rooms");
+  var [showNewGroup, setShowNewGroup] = useState(false);
+  var [groupName, setGroupName] = useState("");
+  var [loadingRooms, setLoadingRooms] = useState(true);
+  var messagesEndRef = useRef(null);
+  var subscriptionRef = useRef(null);
+
+  // Load rooms
+  useEffect(function() {
+    if (!user || !isOpen) return;
+    async function loadRooms() {
+      setLoadingRooms(true);
+      var { data: memberships } = await supabase.from("chat_members").select("room_id, chat_rooms(id, name, is_group, created_at)").eq("user_id", user.id);
+      if (memberships) {
+        var roomList = memberships.map(function(m) { return m.chat_rooms; }).filter(Boolean);
+        // For DMs, get the other person name
+        var enriched = [];
+        for (var i = 0; i < roomList.length; i++) {
+          var r = roomList[i];
+          if (!r.is_group) {
+            var { data: members } = await supabase.from("chat_members").select("user_id, profiles(full_name)").eq("room_id", r.id).neq("user_id", user.id);
+            r.display_name = (members && members[0] && members[0].profiles) ? members[0].profiles.full_name : "Chat";
+            r.other_user_id = (members && members[0]) ? members[0].user_id : null;
+          } else {
+            r.display_name = r.name || "Study Group";
+          }
+          enriched.push(r);
+        }
+        setRooms(enriched);
+      }
+      setLoadingRooms(false);
+    }
+    loadRooms();
+  }, [user, isOpen]);
+
+  // Handle initial DM open
+  useEffect(function() {
+    if (!user || !isOpen || !initialDmUserId) return;
+    async function openDm() {
+      // Check if DM room already exists
+      var existing = rooms.find(function(r) { return !r.is_group && r.other_user_id === initialDmUserId; });
+      if (existing) {
+        setActiveRoom(existing.id);
+        setActiveRoomName(existing.display_name);
+        setView("chat");
+        return;
+      }
+      // Create new DM room
+      var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: null, is_group: false, created_by: user.id }]).select().single();
+      if (error || !room) return;
+      await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }, { room_id: room.id, user_id: initialDmUserId }]);
+      room.display_name = initialDmUserName || "Chat";
+      room.other_user_id = initialDmUserId;
+      setRooms(function(prev) { return [room].concat(prev); });
+      setActiveRoom(room.id);
+      setActiveRoomName(room.display_name);
+      setView("chat");
+    }
+    openDm();
+  }, [user, isOpen, initialDmUserId, rooms.length]);
+
+  // Load messages for active room
+  useEffect(function() {
+    if (!activeRoom) return;
+    async function loadMessages() {
+      var { data } = await supabase.from("chat_messages").select("*, profiles(full_name)").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
+      setMessages(data || []);
+      setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
+    }
+    loadMessages();
+
+    // Real-time subscription
+    if (subscriptionRef.current) { supabase.removeChannel(subscriptionRef.current); }
+    var channel = supabase.channel("room-" + activeRoom).on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: "room_id=eq." + activeRoom }, function(payload) {
+      var newMsg = payload.new;
+      // Fetch profile name for the new message
+      supabase.from("profiles").select("full_name").eq("id", newMsg.user_id).single().then(function(res) {
+        newMsg.profiles = res.data || { full_name: "Unknown" };
+        setMessages(function(prev) { return prev.concat([newMsg]); });
+        setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
+      });
+    }).subscribe();
+    subscriptionRef.current = channel;
+
+    return function() { if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current); };
+  }, [activeRoom]);
+
+  // Send message
+  async function handleSend(e) {
+    e.preventDefault();
+    if (!newMessage.trim() || !activeRoom || !user) return;
+    setSending(true);
+    await supabase.from("chat_messages").insert([{ room_id: activeRoom, user_id: user.id, content: newMessage.trim() }]);
+    setNewMessage("");
+    setSending(false);
+  }
+
+  // Create study group
+  async function handleCreateGroup(e) {
+    e.preventDefault();
+    if (!groupName.trim() || !user) return;
+    var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: groupName.trim(), is_group: true, created_by: user.id }]).select().single();
+    if (error || !room) { alert("Error creating group."); return; }
+    await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }]);
+    room.display_name = room.name;
+    setRooms(function(prev) { return [room].concat(prev); });
+    setGroupName("");
+    setShowNewGroup(false);
+    setActiveRoom(room.id);
+    setActiveRoomName(room.display_name);
+    setView("chat");
+  }
+
+  // Join group
+  async function joinGroup(roomId) {
+    await supabase.from("chat_members").insert([{ room_id: roomId, user_id: user.id }]);
+    setActiveRoom(roomId);
+    var r = rooms.find(function(rm) { return rm.id === roomId; });
+    setActiveRoomName(r ? r.display_name : "Group");
+    setView("chat");
+  }
+
+  if (!isOpen || !user) return null;
+
+  var chatInputStyle = { flex:1, padding:"12px 16px", border:"1px solid #E5E7EB", borderRadius:24, fontSize:14, fontFamily:"'DM Sans',sans-serif", outline:"none", background:"#F9FAFB" };
+
+  return (
+    <div style={{position:"fixed",right:0,top:0,bottom:0,width:"min(420px,100vw)",background:"white",boxShadow:"-4px 0 30px rgba(0,0,0,0.1)",zIndex:1200,display:"flex",flexDirection:"column",fontFamily:"'DM Sans',sans-serif"}}>
+      {/* Header */}
+      <div style={{padding:"16px 20px",borderBottom:"1px solid #E5E7EB",display:"flex",alignItems:"center",gap:12,background:"white",flexShrink:0}}>
+        {view==="chat" && (<button onClick={function(){setView("rooms");setActiveRoom(null);}} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#6B7280",padding:0}}>&#8592;</button>)}
+        <div style={{flex:1}}>
+          <div style={{fontSize:16,fontWeight:700,color:"#111827"}}>{view==="chat"?activeRoomName:"Messages"}</div>
+          {view==="rooms" && (<div style={{fontSize:12,color:"#9CA3AF"}}>{rooms.length + " conversation" + (rooms.length !== 1 ? "s" : "")}</div>)}
+        </div>
+        <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#9CA3AF",padding:0}}>&#10005;</button>
+      </div>
+
+      {/* Rooms List */}
+      {view==="rooms" && (
+        <div style={{flex:1,overflowY:"auto"}}>
+          <div style={{padding:"12px 16px",display:"flex",gap:8}}>
+            <button onClick={function(){setShowNewGroup(true);}} style={{flex:1,padding:"10px",background:"#FEF2F2",color:RED,border:"1px solid #FECACA",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ New Study Group</button>
+          </div>
+
+          {showNewGroup && (
+            <form onSubmit={handleCreateGroup} style={{padding:"0 16px 12px",display:"flex",gap:8}}>
+              <input type="text" placeholder="Group name..." value={groupName} onChange={function(e){setGroupName(e.target.value);}} style={{...chatInputStyle,borderRadius:10}} />
+              <button type="submit" style={{padding:"10px 16px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer"}}>Create</button>
+            </form>
+          )}
+
+          {loadingRooms && (<div style={{padding:40,textAlign:"center",color:"#9CA3AF"}}>Loading...</div>)}
+
+          {!loadingRooms && rooms.length === 0 && (<div style={{padding:"40px 20px",textAlign:"center",color:"#9CA3AF"}}><div style={{fontSize:32,marginBottom:8}}>&#128172;</div><p style={{fontSize:13,margin:0}}>No conversations yet. Connect with a study partner to start chatting.</p></div>)}
+
+          {rooms.map(function(r) {
+            var initials = (r.display_name || "C").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+            var colors = ["#B91C1C","#2563EB","#059669","#7C3AED","#D97706"];
+            var color = r.is_group ? "#7C3AED" : colors[(r.display_name||"C").length % colors.length];
+            return (
+              <div key={r.id} onClick={function(){setActiveRoom(r.id);setActiveRoomName(r.display_name);setView("chat");}} style={{padding:"14px 20px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",borderBottom:"1px solid #F3F4F6",transition:"background 0.15s"}}>
+                <div style={{width:40,height:40,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color:"white",flexShrink:0}}>{r.is_group?"G":initials}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:14,fontWeight:600,color:"#111827",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.display_name}</div>
+                  <div style={{fontSize:12,color:"#9CA3AF"}}>{r.is_group?"Study Group":"Direct Message"}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Chat View */}
+      {view==="chat" && (
+        <div style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
+          {/* Messages */}
+          <div style={{flex:1,overflowY:"auto",padding:"16px 20px",display:"flex",flexDirection:"column",gap:8}}>
+            {messages.length===0 && (<div style={{textAlign:"center",padding:"40px 0",color:"#9CA3AF",fontSize:13}}>No messages yet. Say hello!</div>)}
+            {messages.map(function(msg, idx) {
+              var isMe = msg.user_id === user.id;
+              var senderName = msg.profiles ? msg.profiles.full_name : "Unknown";
+              var time = new Date(msg.created_at).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" });
+              return (
+                <div key={msg.id || idx} style={{display:"flex",flexDirection:"column",alignItems:isMe?"flex-end":"flex-start",maxWidth:"80%",alignSelf:isMe?"flex-end":"flex-start"}}>
+                  {!isMe && (<span style={{fontSize:11,color:"#9CA3AF",marginBottom:2,paddingLeft:4}}>{senderName}</span>)}
+                  <div style={{padding:"10px 16px",borderRadius:isMe?"16px 16px 4px 16px":"16px 16px 16px 4px",background:isMe?RED:"#F3F4F6",color:isMe?"white":"#111827",fontSize:14,lineHeight:1.5,wordBreak:"break-word"}}>
+                    {msg.content}
+                  </div>
+                  <span style={{fontSize:10,color:"#9CA3AF",marginTop:2,paddingLeft:4,paddingRight:4}}>{time}</span>
+                </div>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <form onSubmit={handleSend} style={{padding:"12px 16px",borderTop:"1px solid #E5E7EB",display:"flex",gap:8,background:"white",flexShrink:0}}>
+            <input type="text" placeholder="Type a message..." value={newMessage} onChange={function(e){setNewMessage(e.target.value);}} style={chatInputStyle} />
+            <button type="submit" disabled={sending||!newMessage.trim()} style={{width:42,height:42,borderRadius:"50%",background:newMessage.trim()?RED:"#E5E7EB",color:"white",border:"none",cursor:newMessage.trim()?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:16}}>&#10148;</button>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function HomePage() {
   return (<><Hero/><SchoolLogos/><NotTypical/><CommunityProof/><LinkedInFeatures/><HowItWorks/><ServicesSection/><AdmissionsSection/><CommunitySection/><TeamSection/><TestimonialsSection/><CTA/></>);
 }
@@ -1557,6 +1775,9 @@ export default function App() {
   const [page,setPage]=useState("home");
   const [user,setUser]=useState(null);
   const [showAuth,setShowAuth]=useState(false);
+  const [chatOpen,setChatOpen]=useState(false);
+  const [chatDmUserId,setChatDmUserId]=useState(null);
+  const [chatDmUserName,setChatDmUserName]=useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -1573,6 +1794,12 @@ export default function App() {
     setUser(null);
   };
 
+  const openChat = (userId, userName) => {
+    setChatDmUserId(userId || null);
+    setChatDmUserName(userName || null);
+    setChatOpen(true);
+  };
+
   return (
     <div style={{background:"#fff",minHeight:"100vh",color:DARK,overflowX:"hidden"}}>
       <Navbar page={page} setPage={setPage} user={user} onLoginClick={()=>setShowAuth(true)} onLogout={handleLogout} />
@@ -1580,9 +1807,13 @@ export default function App() {
       {page==="faq"&&<FAQPage/>}
       {page==="blog"&&<BlogPage user={user}/>}
       {page==="leaderboard"&&<LeaderboardPage user={user}/>}
-      {page==="partners"&&<AccountabilityPage user={user} onLoginClick={()=>setShowAuth(true)}/>}
+      {page==="partners"&&<AccountabilityPage user={user} onLoginClick={()=>setShowAuth(true)} onOpenChat={openChat}/>}
       <Footer/>
       <StickyWhatsApp/>
+      {user && !chatOpen && (
+        <button onClick={()=>setChatOpen(true)} style={{position:"fixed",bottom:28,right:100,zIndex:900,width:56,height:56,borderRadius:"50%",background:RED,color:"white",border:"none",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(185,28,28,0.35)",cursor:"pointer",fontSize:24}}>&#128172;</button>
+      )}
+      <ChatPanel user={user} isOpen={chatOpen} onClose={()=>{setChatOpen(false);setChatDmUserId(null);setChatDmUserName(null);}} initialDmUserId={chatDmUserId} initialDmUserName={chatDmUserName} />
       {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
     </div>
   );
