@@ -2070,11 +2070,21 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     if (subscriptionRef.current) { supabase.removeChannel(subscriptionRef.current); }
     var channel = supabase.channel("room-" + activeRoom).on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: "room_id=eq." + activeRoom }, function(payload) {
       var newMsg = payload.new;
-      // Fetch profile name for the new message
-      supabase.from("profiles").select("full_name").eq("id", newMsg.sender_id).single().then(function(res) {
-        newMsg.profiles = res.data || { full_name: "Unknown" };
-        setMessages(function(prev) { return prev.concat([newMsg]); });
-        setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
+      // Only add if not already in messages (prevents duplicate from optimistic update)
+      setMessages(function(prev) {
+        var exists = prev.find(function(m) { return m.id === newMsg.id; });
+        if (exists) return prev;
+        // Fetch profile name for the new message
+        supabase.from("profiles").select("full_name").eq("id", newMsg.sender_id).single().then(function(res) {
+          newMsg.profiles = res.data || { full_name: "Unknown" };
+          setMessages(function(prev2) {
+            var exists2 = prev2.find(function(m) { return m.id === newMsg.id; });
+            if (exists2) return prev2;
+            return prev2.concat([newMsg]);
+          });
+          setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
+        });
+        return prev;
       });
     }).subscribe();
     subscriptionRef.current = channel;
@@ -2086,9 +2096,32 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
   async function handleSend(e) {
     e.preventDefault();
     if (!newMessage.trim() || !activeRoom || !user) return;
-    setSending(true);
-    await supabase.from("chat_messages").insert([{ room_id: activeRoom, sender_id: user.id, content: newMessage.trim() }]);
+    var msgText = newMessage.trim();
     setNewMessage("");
+    setSending(true);
+
+    // Optimistic update - show message immediately
+    var tempMsg = {
+      id: "temp-" + Date.now(),
+      room_id: activeRoom,
+      sender_id: user.id,
+      content: msgText,
+      created_at: new Date().toISOString(),
+      profiles: { full_name: user.user_metadata ? user.user_metadata.full_name || "You" : "You" }
+    };
+    setMessages(function(prev) { return prev.concat([tempMsg]); });
+    setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 50);
+
+    // Actually insert
+    var { data, error } = await supabase.from("chat_messages").insert([{ room_id: activeRoom, sender_id: user.id, content: msgText }]).select("*, profiles:sender_id(full_name)").single();
+    if (data) {
+      // Replace temp message with real one
+      setMessages(function(prev) { return prev.map(function(m) { return m.id === tempMsg.id ? data : m; }); });
+    } else if (error) {
+      // Remove temp message on error
+      setMessages(function(prev) { return prev.filter(function(m) { return m.id !== tempMsg.id; }); });
+      alert("Error sending message: " + error.message);
+    }
     setSending(false);
   }
 
