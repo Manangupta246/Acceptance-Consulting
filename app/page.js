@@ -1252,7 +1252,13 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
     });
     if (existing) { alert("You already have a connection with this person."); return; }
     var { error } = await supabase.from("connections").insert([{ requester_id: user.id, receiver_id: receiverId, status: "pending" }]);
-    if (error) { alert("Error sending request: " + error.message); }
+    if (error) {
+      if (error.message && error.message.indexOf("duplicate") !== -1) {
+        alert("You already have a pending or existing connection with this person.");
+      } else {
+        alert("Error sending request: " + error.message);
+      }
+    }
     else {
       var { data } = await supabase.from("connections").select("*, requester:requester_id(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:receiver_id(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
       setConnections(data || []);
