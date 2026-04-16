@@ -2056,12 +2056,35 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     openDm();
   }, [user, isOpen, initialDmUserId, rooms.length]);
 
+  // Profile name cache
+  var [profileNames, setProfileNames] = useState({});
+
+  async function enrichMessagesWithNames(msgs) {
+    var uniqueIds = [];
+    msgs.forEach(function(m) {
+      if (m.sender_id && !profileNames[m.sender_id] && uniqueIds.indexOf(m.sender_id) === -1) {
+        uniqueIds.push(m.sender_id);
+      }
+    });
+    if (uniqueIds.length > 0) {
+      var { data } = await supabase.from("profiles").select("id, full_name").in("id", uniqueIds);
+      if (data) {
+        var newNames = Object.assign({}, profileNames);
+        data.forEach(function(p) { newNames[p.id] = p.full_name || "Anonymous"; });
+        setProfileNames(newNames);
+      }
+    }
+  }
+
   // Load messages for active room
   useEffect(function() {
     if (!activeRoom) return;
     async function loadMessages() {
-      var { data } = await supabase.from("chat_messages").select("*, profiles:sender_id(full_name)").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
-      setMessages(data || []);
+      var { data } = await supabase.from("chat_messages").select("*").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
+      if (data) {
+        setMessages(data);
+        enrichMessagesWithNames(data);
+      }
       setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
     }
     loadMessages();
@@ -2070,25 +2093,44 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     if (subscriptionRef.current) { supabase.removeChannel(subscriptionRef.current); }
     var channel = supabase.channel("room-" + activeRoom).on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: "room_id=eq." + activeRoom }, function(payload) {
       var newMsg = payload.new;
-      setMessages(function(prev) {
-        // Skip if already exists
-        if (prev.find(function(m) { return m.id === newMsg.id; })) return prev;
-        // Fetch sender name then add
-        supabase.from("profiles").select("full_name").eq("id", newMsg.sender_id).single().then(function(res) {
-          newMsg.profiles = res.data || { full_name: "Unknown" };
-          setMessages(function(prev2) {
-            if (prev2.find(function(m) { return m.id === newMsg.id; })) return prev2;
-            var updated = prev2.concat([newMsg]);
-            setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
+      // Fetch sender name
+      supabase.from("profiles").select("full_name").eq("id", newMsg.sender_id).single().then(function(res) {
+        if (res.data) {
+          setProfileNames(function(prev) {
+            var updated = Object.assign({}, prev);
+            updated[newMsg.sender_id] = res.data.full_name || "Anonymous";
             return updated;
           });
+        }
+        setMessages(function(prev) {
+          if (prev.find(function(m) { return m.id === newMsg.id; })) return prev;
+          return prev.concat([newMsg]);
         });
-        return prev;
+        setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
       });
     }).subscribe();
     subscriptionRef.current = channel;
 
     return function() { if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current); };
+  }, [activeRoom]);
+
+  // Poll for new messages every 3 seconds as fallback for real-time
+  useEffect(function() {
+    if (!activeRoom) return;
+    var interval = setInterval(async function() {
+      var { data } = await supabase.from("chat_messages").select("*").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
+      if (data) {
+        setMessages(function(prev) {
+          if (data.length !== prev.length) {
+            enrichMessagesWithNames(data);
+            setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
+            return data;
+          }
+          return prev;
+        });
+      }
+    }, 3000);
+    return function() { clearInterval(interval); };
   }, [activeRoom]);
 
   // Send message
@@ -2099,16 +2141,20 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     setNewMessage("");
     setSending(true);
 
-    // Insert and get back the full message with profile
-    var { data, error } = await supabase.from("chat_messages").insert([{ room_id: activeRoom, sender_id: user.id, content: msgText }]).select("*, profiles:sender_id(full_name)").single();
-    if (data) {
-      setMessages(function(prev) {
-        if (prev.find(function(m) { return m.id === data.id; })) return prev;
-        return prev.concat([data]);
-      });
-      setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 50);
-    } else if (error) {
+    // Insert the message
+    var { error } = await supabase.from("chat_messages").insert([{ room_id: activeRoom, sender_id: user.id, content: msgText }]);
+    if (error) {
       alert("Error sending message: " + error.message);
+      setSending(false);
+      return;
+    }
+
+    // Reload all messages
+    var { data } = await supabase.from("chat_messages").select("*").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
+    if (data) {
+      setMessages(data);
+      enrichMessagesWithNames(data);
+      setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 50);
     }
     setSending(false);
   }
@@ -2197,7 +2243,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
             {messages.length===0 && (<div style={{textAlign:"center",padding:"40px 0",color:"#9CA3AF",fontSize:13}}>No messages yet. Say hello!</div>)}
             {messages.map(function(msg, idx) {
               var isMe = msg.sender_id === user.id;
-              var senderName = msg.profiles ? msg.profiles.full_name : "Unknown";
+              var senderName = profileNames[msg.sender_id] || "User";
               var time = new Date(msg.created_at).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" });
               return (
                 <div key={msg.id || idx} style={{display:"flex",flexDirection:"column",alignItems:isMe?"flex-end":"flex-start",maxWidth:"80%",alignSelf:isMe?"flex-end":"flex-start"}}>
