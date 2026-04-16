@@ -2001,6 +2001,10 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
   var [groupMembers, setGroupMembers] = useState([]);
   var [contacts, setContacts] = useState([]);
   var [loadingRooms, setLoadingRooms] = useState(true);
+  var [chatSearch, setChatSearch] = useState("");
+  var [showEditMembers, setShowEditMembers] = useState(false);
+  var [editRoomId, setEditRoomId] = useState(null);
+  var [editMembers, setEditMembers] = useState([]);
   var messagesEndRef = useRef(null);
   var subscriptionRef = useRef(null);
 
@@ -2280,18 +2284,61 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     <div style={{position:"fixed",right:0,top:0,bottom:0,width:"min(420px,100vw)",background:"white",boxShadow:"-4px 0 30px rgba(0,0,0,0.1)",zIndex:1200,display:"flex",flexDirection:"column",fontFamily:"'DM Sans',sans-serif"}}>
       {/* Header */}
       <div style={{padding:"16px 20px",borderBottom:"1px solid #E5E7EB",display:"flex",alignItems:"center",gap:12,background:"white",flexShrink:0}}>
-        {view==="chat" && (<button onClick={function(){setView("rooms");setActiveRoom(null);}} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#6B7280",padding:0}}>&#8592;</button>)}
+        {view==="chat" && (<button onClick={function(){setView("rooms");setActiveRoom(null);setShowEditMembers(false);}} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#6B7280",padding:0}}>&#8592;</button>)}
         <div style={{flex:1}}>
           <div style={{fontSize:16,fontWeight:700,color:"#111827"}}>{view==="chat"?activeRoomName:"Messages"}</div>
           {view==="rooms" && (<div style={{fontSize:12,color:"#9CA3AF"}}>{rooms.length + " conversation" + (rooms.length !== 1 ? "s" : "")}</div>)}
         </div>
+        {view==="chat" && rooms.find(function(rm){return rm.id===activeRoom && rm.room_type==="group";}) && (
+          <button onClick={function(){
+            setShowEditMembers(!showEditMembers);
+            if (!showEditMembers && activeRoom) {
+              supabase.from("chat_members").select("user_id").eq("room_id", activeRoom).then(function(res) {
+                setEditMembers((res.data || []).map(function(m){return m.user_id;}));
+                setEditRoomId(activeRoom);
+              });
+            }
+          }} style={{background:"none",border:"none",fontSize:13,color:RED,cursor:"pointer",fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>{showEditMembers ? "Done" : "Members"}</button>
+        )}
         <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#9CA3AF",padding:0}}>&#10005;</button>
       </div>
+
+      {/* Edit Members Panel */}
+      {showEditMembers && view==="chat" && (
+        <div style={{padding:"12px 16px",borderBottom:"1px solid #F3F4F6",maxHeight:200,overflowY:"auto",background:"#F9FAFB"}}>
+          <div style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:8}}>{"Group members (" + editMembers.length + "/5):"}</div>
+          {contacts.map(function(c) {
+            var isMember = editMembers.indexOf(c.id) !== -1;
+            var initials = (c.full_name || "A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+            return (
+              <div key={c.id} onClick={async function(){
+                if (isMember) {
+                  if (editMembers.length <= 2) { alert("A group needs at least 2 members."); return; }
+                  await supabase.from("chat_members").delete().eq("room_id", editRoomId).eq("user_id", c.id);
+                  setEditMembers(function(prev){return prev.filter(function(id){return id!==c.id;});});
+                } else {
+                  if (editMembers.length >= 5) { alert("Maximum 5 members per group."); return; }
+                  await supabase.from("chat_members").insert([{room_id: editRoomId, user_id: c.id}]);
+                  setEditMembers(function(prev){return prev.concat([c.id]);});
+                }
+              }} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderRadius:8,cursor:"pointer",background:isMember?"#fdf0f0":"transparent",border:isMember?"1px solid "+RED:"1px solid transparent",marginBottom:4}}>
+                <div style={{width:28,height:28,borderRadius:"50%",background:isMember?RED:"#D1D5DB",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white"}}>{isMember?"\u2713":initials}</div>
+                <span style={{fontSize:13,fontWeight:isMember?600:400,color:isMember?"#111827":"#6B7280"}}>{c.full_name || "Anonymous"}</span>
+                <span style={{marginLeft:"auto",fontSize:11,color:"#9CA3AF"}}>{isMember?"Remove":"Add"}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Rooms List */}
       {view==="rooms" && (
         <div style={{flex:1,overflowY:"auto"}}>
-          <div style={{padding:"12px 16px",display:"flex",gap:8}}>
+          {/* Search */}
+          <div style={{padding:"12px 16px 0"}}>
+            <input type="text" placeholder="Search conversations..." value={chatSearch} onChange={function(e){setChatSearch(e.target.value);}} style={{width:"100%",padding:"10px 14px",border:"1px solid #E5E7EB",borderRadius:10,fontSize:13,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#F9FAFB",boxSizing:"border-box"}} />
+          </div>
+          <div style={{padding:"10px 16px",display:"flex",gap:8}}>
             <button onClick={function(){setShowNewGroup(true);}} style={{flex:1,padding:"10px",background:"#fdf0f0",color:RED,border:"1px solid #f9c9c9",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ New Study Group</button>
           </div>
 
@@ -2309,7 +2356,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
                   var initials = (c.full_name || "A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
                   return (
                     <div key={c.id} onClick={function(){toggleGroupMember(c.id);}} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderRadius:8,cursor:"pointer",background:selected?"#fdf0f0":"transparent",border:selected?"1px solid "+RED:"1px solid transparent",marginBottom:4}}>
-                      <div style={{width:28,height:28,borderRadius:"50%",background:selected?RED:"#D1D5DB",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white"}}>{selected?"&#10003;":initials}</div>
+                      <div style={{width:28,height:28,borderRadius:"50%",background:selected?RED:"#D1D5DB",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white"}}>{selected?"\u2713":initials}</div>
                       <span style={{fontSize:13,fontWeight:selected?600:400,color:selected?"#111827":"#6B7280"}}>{c.full_name || "Anonymous"}</span>
                     </div>
                   );
@@ -2323,7 +2370,10 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
 
           {!loadingRooms && rooms.length === 0 && (<div style={{padding:"40px 20px",textAlign:"center",color:"#9CA3AF"}}><div style={{fontSize:32,marginBottom:8}}>&#128172;</div><p style={{fontSize:13,margin:0}}>No conversations yet. Connect with a study partner to start chatting.</p></div>)}
 
-          {rooms.map(function(r) {
+          {rooms.filter(function(r) {
+            if (!chatSearch.trim()) return true;
+            return (r.display_name || "").toLowerCase().indexOf(chatSearch.toLowerCase()) !== -1;
+          }).map(function(r) {
             var initials = (r.display_name || "C").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
             var colors = ["#ec8283","#2563EB","#059669","#7C3AED","#D97706"];
             var color = r.room_type === "group" ? "#7C3AED" : colors[(r.display_name||"C").length % colors.length];
