@@ -1255,7 +1255,13 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
     var existing = connections.find(function(c) {
       return (c.requester_id === user.id && c.receiver_id === receiverId) || (c.receiver_id === user.id && c.requester_id === receiverId);
     });
-    if (existing) { alert("You already have a connection with this person."); return; }
+    if (existing && existing.status === "rejected") {
+      // Delete the old rejected connection first so we can send a fresh request
+      await supabase.from("connections").delete().eq("id", existing.id);
+    } else if (existing) {
+      alert("You already have a connection with this person.");
+      return;
+    }
     var { error } = await supabase.from("connections").insert([{ requester_id: user.id, receiver_id: receiverId, status: "pending" }]);
     if (error) {
       if (error.message && error.message.indexOf("duplicate") !== -1) {
@@ -1323,7 +1329,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
 
   function getConnectionStatus(profileId) {
     var conn = connections.find(function(c) {
-      return (c.requester_id === profileId || c.receiver_id === profileId);
+      return (c.requester_id === profileId || c.receiver_id === profileId) && c.status !== "rejected";
     });
     if (!conn) return null;
     return { status: conn.status, id: conn.id, isRequester: conn.requester_id === user.id };
