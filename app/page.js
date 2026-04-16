@@ -13,12 +13,13 @@ const ADMIN_EMAIL = "manangupta246@gmail.com";
 const WHATSAPP_COMMUNITY = "https://chat.whatsapp.com/L6upA5MYtSEGOYLU8UTBs1";
 const WHATSAPP_CONNECT = "https://wa.me/+919813866629?text=";
 const LOGO = "https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=375,fit=crop,q=95/A0xw1L5325CZlXWJ/picture9-m5KL5O2506Fzx5RM.png";
-const RED = "#B91C1C";
-const RED_BG = "#FEF2F2";
+const RED = "#ec8283";
+const RED_DARK = "#d45d5e";
+const RED_BG = "#fdf0f0";
 const DARK = "#1a1a1a";
 const GRAY = "#555";
 const LIGHT_GRAY = "#f8f8f8";
-const avatar = (n) => `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(n)}&backgroundColor=fecaca`;
+const avatar = (n) => `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(n)}&backgroundColor=fce4e4`;
 
 /* ── Counter ── */
 function AnimatedCounter({ target, suffix = "" }) {
@@ -117,7 +118,7 @@ const BLOG_CATEGORIES = ["All","MBA Strategy","ISB Admissions","International B-
 const hs = (sz="clamp(32px,5vw,48px)") => ({ fontFamily:"'Playfair Display',serif", fontSize:sz, fontWeight:800, color:DARK, lineHeight:1.15, margin:0 });
 const bs = { fontFamily:"'DM Sans',sans-serif", fontSize:"16px", color:GRAY, lineHeight:1.75 };
 const lbs = { fontFamily:"'DM Sans',sans-serif", fontSize:"12px", fontWeight:700, color:RED, letterSpacing:"3px", textTransform:"uppercase", marginBottom:"12px" };
-const bps = { display:"inline-block", padding:"16px 40px", borderRadius:"50px", fontWeight:700, fontSize:"14px", textDecoration:"none", fontFamily:"'DM Sans',sans-serif", letterSpacing:"0.5px", textTransform:"uppercase", transition:"all 0.3s", cursor:"pointer", border:"none", background:RED, color:"#fff", boxShadow:"0 4px 20px rgba(185,28,28,0.25)" };
+const bps = { display:"inline-block", padding:"16px 40px", borderRadius:"50px", fontWeight:700, fontSize:"14px", textDecoration:"none", fontFamily:"'DM Sans',sans-serif", letterSpacing:"0.5px", textTransform:"uppercase", transition:"all 0.3s", cursor:"pointer", border:"none", background:RED, color:"#fff", boxShadow:"0 4px 20px rgba(236,130,131,0.25)" };
 const bos = { ...bps, background:"transparent", color:RED, border:`2px solid ${RED}`, boxShadow:"none" };
 const mws = { maxWidth:"1100px", margin:"0 auto" };
 const sps = { padding:"100px 24px" };
@@ -597,19 +598,20 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
     { label:"Partners", action:()=>{setPage("partners");window.scrollTo(0,0);} },
     { label:"Forum", action:()=>{setPage("forum");window.scrollTo(0,0);} },
   ];
+  const isActive = (l) => (page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Partners")||(page==="forum"&&l.label==="Forum");
   return (
-    <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"10px 32px":"16px 32px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-      <a onClick={()=>{setPage("home");window.scrollTo(0,0);}} style={{cursor:"pointer",flexShrink:0}}><img src={LOGO} alt="AC" style={{height:"40px"}} /></a>
-      <div style={{display:"flex",gap:"24px",alignItems:"center",position:"absolute",left:"50%",transform:"translateX(-50%)"}} className="dt-nav">
-        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:(page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Partners")||(page==="forum"&&l.label==="Forum")?RED:GRAY,textDecoration:"none",fontSize:"13px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
+    <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"8px 24px":"12px 24px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",alignItems:"center",gap:"16px"}}>
+      <a onClick={()=>{setPage("home");window.scrollTo(0,0);}} style={{cursor:"pointer",flexShrink:0}}><img src={LOGO} alt="AC" style={{height:"36px"}} /></a>
+      <div style={{flex:1,display:"flex",justifyContent:"center",gap:"16px",alignItems:"center",overflow:"hidden"}} className="dt-nav">
+        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:isActive(l)?RED:GRAY,textDecoration:"none",fontSize:"11.5px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
       </div>
-      <div style={{display:"flex",gap:"12px",alignItems:"center",flexShrink:0}} className="dt-nav">
+      <div style={{display:"flex",gap:"10px",alignItems:"center",flexShrink:0}} className="dt-nav">
         {user ? (
           <UserMenu user={user} onLogout={onLogout} />
         ) : (
-          <button onClick={onLoginClick} style={{...bps,padding:"12px 28px",fontSize:"13px"}}>Log In</button>
+          <button onClick={onLoginClick} style={{...bps,padding:"10px 22px",fontSize:"11.5px"}}>Log In</button>
         )}
-        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,padding:"12px 28px",fontSize:"13px"}}>Join Community</a>
+        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,padding:"10px 22px",fontSize:"11.5px"}}>Join Community</a>
       </div>
       <button onClick={()=>setMenuOpen(!menuOpen)} className="mob-btn" style={{display:"none",background:"none",border:"none",fontSize:"28px",color:RED,cursor:"pointer"}}>{menuOpen?"\u2715":"\u2630"}</button>
       {menuOpen&&(<div style={{position:"fixed",top:"65px",left:0,right:0,bottom:0,background:"rgba(255,255,255,0.99)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"28px",zIndex:999}}>
@@ -628,7 +630,7 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
 function Hero() {
   return (
     <section id="home" style={{minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center",padding:"140px 24px 80px",background:`linear-gradient(180deg,${RED_BG} 0%,#fff 60%)`}}>
-      <div style={{display:"inline-block",padding:"8px 20px",borderRadius:"50px",border:"1px solid rgba(185,28,28,0.2)",background:"rgba(185,28,28,0.05)",marginBottom:"28px"}}>
+      <div style={{display:"inline-block",padding:"8px 20px",borderRadius:"50px",border:"1px solid rgba(236,130,131,0.2)",background:"rgba(236,130,131,0.05)",marginBottom:"28px"}}>
         <span style={{...lbs,marginBottom:0,fontSize:"11px"}}>ISB . INSEAD . LBS . Wharton . & More</span>
       </div>
       <h1 style={{...hs("clamp(40px,7vw,80px)"),maxWidth:"850px",marginBottom:"20px"}}>Get Accepted to Your <span style={{color:RED}}>Dream B-School</span></h1>
@@ -735,9 +737,9 @@ function HowItWorks() {
           <p style={{...bs,maxWidth:"500px",margin:"12px auto 0"}}>Three steps. Zero complexity. One goal - getting you in.</p>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:"28px"}}>
-          {howItWorks.map((hi,i)=>(<div key={i} style={{padding:"36px 28px",borderRadius:"20px",background:i===1?RED:"#fff",border:i===1?"none":"1px solid rgba(0,0,0,0.06)",boxShadow:i===1?"0 12px 40px rgba(185,28,28,0.15)":"0 2px 12px rgba(0,0,0,0.03)",textAlign:"center",position:"relative"}}>
+          {howItWorks.map((hi,i)=>(<div key={i} style={{padding:"36px 28px",borderRadius:"20px",background:i===1?RED:"#fff",border:i===1?"none":"1px solid rgba(0,0,0,0.06)",boxShadow:i===1?"0 12px 40px rgba(236,130,131,0.15)":"0 2px 12px rgba(0,0,0,0.03)",textAlign:"center",position:"relative"}}>
             <div style={{fontSize:"36px",marginBottom:"12px"}}>{hi.icon}</div>
-            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"48px",fontWeight:900,color:i===1?"rgba(255,255,255,0.15)":"rgba(185,28,28,0.08)",position:"absolute",top:"16px",right:"20px"}}>{hi.step}</div>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"48px",fontWeight:900,color:i===1?"rgba(255,255,255,0.15)":"rgba(236,130,131,0.08)",position:"absolute",top:"16px",right:"20px"}}>{hi.step}</div>
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"22px",fontWeight:800,color:i===1?"#fff":DARK,marginBottom:"12px"}}>{hi.title}</h3>
             <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"15px",color:i===1?"rgba(255,255,255,0.85)":GRAY,lineHeight:1.7}}>{hi.desc}</p>
           </div>))}
@@ -758,7 +760,7 @@ function ServicesSection() {
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
           {services.map((s,i)=>(<div key={i} style={{padding:"32px 28px",borderRadius:"16px",background:"#fff",border:"1px solid rgba(0,0,0,0.06)",transition:"border-color 0.3s,box-shadow 0.3s"}}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor=RED;e.currentTarget.style.boxShadow="0 8px 30px rgba(185,28,28,0.08)";}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=RED;e.currentTarget.style.boxShadow="0 8px 30px rgba(236,130,131,0.08)";}}
             onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(0,0,0,0.06)";e.currentTarget.style.boxShadow="none";}}>
             <div style={{fontSize:"28px",marginBottom:"14px"}}>{s.icon}</div>
             <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"18px",fontWeight:700,color:DARK,marginBottom:"10px"}}>{s.title}</h3>
@@ -851,7 +853,7 @@ function TestimonialsSection() {
     fontSize:"18px",fontWeight:800,cursor:enabled?"pointer":"default",transition:"all 0.3s",border:"none",
     background:enabled?(dir==="next"?RED:"#fff"):"rgba(0,0,0,0.05)",
     color:enabled?(dir==="next"?"#fff":RED):"rgba(0,0,0,0.2)",
-    boxShadow:enabled?(dir==="next"?"0 2px 12px rgba(185,28,28,0.3)":"0 2px 12px rgba(0,0,0,0.1)"):"none",
+    boxShadow:enabled?(dir==="next"?"0 2px 12px rgba(236,130,131,0.3)":"0 2px 12px rgba(0,0,0,0.1)"):"none",
     ...(dir==="prev"&&enabled?{border:`2px solid ${RED}`}:{}),
   });
   return (
@@ -862,7 +864,7 @@ function TestimonialsSection() {
           <h2 style={hs()}>The Impact We Are Proud Of</h2>
         </div>
         <div style={{display:"flex",justifyContent:"center",gap:"10px",marginBottom:"36px",flexWrap:"wrap"}}>
-          {testimonialCategories.map((c,i)=>(<button key={i} onClick={()=>switchCat(i)} style={{padding:"10px 24px",borderRadius:"50px",border:ac===i?"none":"1px solid rgba(0,0,0,0.1)",background:ac===i?RED:"#fff",color:ac===i?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",cursor:"pointer",transition:"all 0.3s",boxShadow:ac===i?"0 4px 16px rgba(185,28,28,0.2)":"none",display:"flex",alignItems:"center",gap:"8px"}}><span>{c.icon}</span>{c.category}</button>))}
+          {testimonialCategories.map((c,i)=>(<button key={i} onClick={()=>switchCat(i)} style={{padding:"10px 24px",borderRadius:"50px",border:ac===i?"none":"1px solid rgba(0,0,0,0.1)",background:ac===i?RED:"#fff",color:ac===i?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",cursor:"pointer",transition:"all 0.3s",boxShadow:ac===i?"0 4px 16px rgba(236,130,131,0.2)":"none",display:"flex",alignItems:"center",gap:"8px"}}><span>{c.icon}</span>{c.category}</button>))}
         </div>
         <div style={{position:"relative"}}>
           {totalPages>1&&(<button onClick={()=>canPrev&&setPg(pg-1)} style={{...arrowBtn("prev",canPrev),position:"absolute",left:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2190"}</button>)}
@@ -1103,8 +1105,8 @@ function LeaderboardPage({ user }) {
             {leaderboardData.map(function(entry,idx){
               var initials=(entry.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
               var isMe=user&&entry.user_id===user.id;
-              var colors=["#B91C1C","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
-              return (<div key={entry.user_id} style={{display:"grid",gridTemplateColumns:"60px 1fr 100px 100px 100px 80px",alignItems:"center",padding:"16px 24px",borderBottom:"1px solid #F3F4F6",backgroundColor:isMe?"#FEF2F2":"transparent",borderLeft:isMe?"3px solid "+RED:"3px solid transparent"}}>
+              var colors=["#ec8283","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
+              return (<div key={entry.user_id} style={{display:"grid",gridTemplateColumns:"60px 1fr 100px 100px 100px 80px",alignItems:"center",padding:"16px 24px",borderBottom:"1px solid #F3F4F6",backgroundColor:isMe?"#fdf0f0":"transparent",borderLeft:isMe?"3px solid "+RED:"3px solid transparent"}}>
                 <span style={{fontSize:15,fontWeight:700,color:idx<3?lbGetMedalStyle(idx).icon:"#9CA3AF"}}>{idx+1}</span>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
                   <div style={{width:36,height:36,borderRadius:"50%",background:colors[idx%colors.length],display:"flex",alignItems:"center",justifyContent:"center",fontWeight:600,fontSize:14,color:"white",flexShrink:0}}>{initials}</div>
@@ -1125,7 +1127,7 @@ function LeaderboardPage({ user }) {
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
             {[{icon:<LbChartIcon/>,label:"Average Score",weight:"40%",desc:"Your mean practice test score"},{icon:<LbTargetIcon/>,label:"Accuracy",weight:"25%",desc:"Questions correct / attempted"},{icon:<LbFireIcon/>,label:"Consistency",weight:"20%",desc:"Number of days you logged scores"},{icon:<LbUserIcon/>,label:"Volume",weight:"15%",desc:"Total questions you attempted"}].map(function(item,i){
               return (<div key={i} style={{padding:16,background:"#F9FAFB",borderRadius:12,display:"flex",flexDirection:"column",gap:6}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,color:RED}}>{item.icon}<span style={{fontSize:14,fontWeight:600,color:"#111827"}}>{item.label}</span><span style={{marginLeft:"auto",fontSize:12,fontWeight:700,color:RED,background:"#FEF2F2",padding:"2px 8px",borderRadius:10}}>{item.weight}</span></div>
+                <div style={{display:"flex",alignItems:"center",gap:8,color:RED}}>{item.icon}<span style={{fontSize:14,fontWeight:600,color:"#111827"}}>{item.label}</span><span style={{marginLeft:"auto",fontSize:12,fontWeight:700,color:RED,background:"#fdf0f0",padding:"2px 8px",borderRadius:10}}>{item.weight}</span></div>
                 <span style={{fontSize:12,color:"#6B7280"}}>{item.desc}</span>
               </div>);
             })}
@@ -1397,7 +1399,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
               <div style={{fontSize:13,color:"#6B7280",marginTop:2}}>{myProfile.target_exam||"--"} | Target: {myProfile.target_score||"--"} | Exam: {formatDate(myProfile.exam_date)}</div>
             </div>
             <div style={{display:"flex",gap:12,fontSize:13,color:"#6B7280"}}>
-              <span style={{background:"#FEF2F2",color:RED,padding:"4px 12px",borderRadius:20,fontWeight:600}}>{accepted.length + " partner" + (accepted.length !== 1 ? "s" : "")}</span>
+              <span style={{background:"#fdf0f0",color:RED,padding:"4px 12px",borderRadius:20,fontWeight:600}}>{accepted.length + " partner" + (accepted.length !== 1 ? "s" : "")}</span>
               {pendingReceived.length > 0 && (<span style={{background:"#FEF3C7",color:"#92400E",padding:"4px 12px",borderRadius:20,fontWeight:600}}>{pendingReceived.length + " pending"}</span>)}
             </div>
           </div>
@@ -1417,7 +1419,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
             {profiles.map(function(p){
               var connStatus = getConnectionStatus(p.id);
               var initials = (p.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
-              var colors=["#B91C1C","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
+              var colors=["#ec8283","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
               var color = colors[p.full_name ? p.full_name.length % colors.length : 0];
               return (
                 <div key={p.id} style={{background:"white",borderRadius:16,border:"1px solid #E5E7EB",padding:24,display:"flex",flexDirection:"column",gap:12}}>
@@ -1454,7 +1456,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
               var matchPct = Math.min(Math.round(s.score), 100);
               var connStatus = getConnectionStatus(p.id);
               var initials = (p.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
-              var colors=["#B91C1C","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
+              var colors=["#ec8283","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
               var color = colors[idx % colors.length];
               return (
                 <div key={p.id} style={{background:"white",borderRadius:16,border:"1px solid #E5E7EB",padding:24,marginBottom:12,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
@@ -1462,7 +1464,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                   <div style={{flex:1,minWidth:200}}>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       <span style={{fontSize:15,fontWeight:600,color:"#111827"}}>{p.full_name||"Anonymous"}</span>
-                      <span style={{fontSize:11,fontWeight:700,color:matchPct>=70?RED:"#D97706",background:matchPct>=70?"#FEF2F2":"#FEF3C7",padding:"2px 8px",borderRadius:10}}>{matchPct + "% match"}</span>
+                      <span style={{fontSize:11,fontWeight:700,color:matchPct>=70?RED:"#D97706",background:matchPct>=70?"#fdf0f0":"#FEF3C7",padding:"2px 8px",borderRadius:10}}>{matchPct + "% match"}</span>
                     </div>
                     <div style={{fontSize:13,color:"#6B7280",marginTop:2}}>{p.target_exam} | Target: {p.target_score||"--"} | Exam: {formatDate(p.exam_date)}</div>
                     {p.bio && (<p style={{fontSize:13,color:"#9CA3AF",margin:"6px 0 0",lineHeight:1.5}}>{p.bio}</p>)}
@@ -1509,7 +1511,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
             {accepted.map(function(c){
               var other = c.requester_id===user.id ? c.receiver : c.requester;
               var initials = (other.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
-              var colors=["#B91C1C","#2563EB","#059669","#7C3AED","#D97706"];
+              var colors=["#ec8283","#2563EB","#059669","#7C3AED","#D97706"];
               var color = colors[(other.full_name||"A").length % colors.length];
               return (
                 <div key={c.id} style={{background:"white",borderRadius:12,border:"1px solid #E5E7EB",padding:"16px 20px",marginBottom:8,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
@@ -1764,7 +1766,7 @@ function ForumPage({ user, onLoginClick }) {
                 <button type="submit" disabled={submitting||!newComment.trim()} style={{padding:"10px 20px",background:newComment.trim()?RED:"#E5E7EB",color:"white",border:"none",borderRadius:24,fontSize:13,fontWeight:600,cursor:newComment.trim()?"pointer":"default",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>Post</button>
               </form>
             ) : (
-              <div style={{padding:"16px 20px",background:"#FEF2F2",borderRadius:12,marginBottom:24,fontSize:13,color:RED}}>
+              <div style={{padding:"16px 20px",background:"#fdf0f0",borderRadius:12,marginBottom:24,fontSize:13,color:RED}}>
                 <button onClick={onLoginClick} style={{background:"none",border:"none",color:RED,fontWeight:600,cursor:"pointer",textDecoration:"underline",fontFamily:"'DM Sans',sans-serif",fontSize:13,padding:0}}>Sign in</button> to join the discussion.
               </div>
             )}
@@ -1855,7 +1857,7 @@ function ForumPage({ user, onLoginClick }) {
           var authorName = post.profiles ? post.profiles.full_name : "Anonymous";
           var catName = post.forum_categories ? post.forum_categories.icon + " " + post.forum_categories.name : "";
           var initials = (authorName||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
-          var colors = ["#B91C1C","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
+          var colors = ["#ec8283","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
           var color = colors[(authorName||"A").length % colors.length];
           return (
             <div key={post.id} onClick={function(){setSelectedPost(post);}} style={{background:"white",borderRadius:12,border:"1px solid #E5E7EB",padding:"16px 20px",marginBottom:10,cursor:"pointer",display:"flex",gap:14,transition:"box-shadow 0.15s"}}>
@@ -2070,7 +2072,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
       {view==="rooms" && (
         <div style={{flex:1,overflowY:"auto"}}>
           <div style={{padding:"12px 16px",display:"flex",gap:8}}>
-            <button onClick={function(){setShowNewGroup(true);}} style={{flex:1,padding:"10px",background:"#FEF2F2",color:RED,border:"1px solid #FECACA",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ New Study Group</button>
+            <button onClick={function(){setShowNewGroup(true);}} style={{flex:1,padding:"10px",background:"#fdf0f0",color:RED,border:"1px solid #f9c9c9",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ New Study Group</button>
           </div>
 
           {showNewGroup && (
@@ -2086,7 +2088,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
 
           {rooms.map(function(r) {
             var initials = (r.display_name || "C").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
-            var colors = ["#B91C1C","#2563EB","#059669","#7C3AED","#D97706"];
+            var colors = ["#ec8283","#2563EB","#059669","#7C3AED","#D97706"];
             var color = r.room_type === "group" ? "#7C3AED" : colors[(r.display_name||"C").length % colors.length];
             return (
               <div key={r.id} onClick={function(){setActiveRoom(r.id);setActiveRoomName(r.display_name);setView("chat");}} style={{padding:"14px 20px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",borderBottom:"1px solid #F3F4F6",transition:"background 0.15s"}}>
@@ -2180,7 +2182,7 @@ export default function App() {
       <Footer/>
       <StickyWhatsApp/>
       {user && !chatOpen && (
-        <button onClick={()=>setChatOpen(true)} style={{position:"fixed",bottom:28,right:100,zIndex:900,width:56,height:56,borderRadius:"50%",background:RED,color:"white",border:"none",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(185,28,28,0.35)",cursor:"pointer",fontSize:24}}>&#128172;</button>
+        <button onClick={()=>setChatOpen(true)} style={{position:"fixed",bottom:28,right:100,zIndex:900,width:56,height:56,borderRadius:"50%",background:RED,color:"white",border:"none",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(236,130,131,0.35)",cursor:"pointer",fontSize:24}}>&#128172;</button>
       )}
       <ChatPanel user={user} isOpen={chatOpen} onClose={()=>{setChatOpen(false);setChatDmUserId(null);setChatDmUserName(null);}} initialDmUserId={chatDmUserId} initialDmUserName={chatDmUserName} />
       {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
