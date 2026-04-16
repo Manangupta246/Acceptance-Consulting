@@ -2010,17 +2010,14 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
       var { data: memberships } = await supabase.from("chat_members").select("room_id, chat_rooms(id, name, room_type, max_members, created_at)").eq("user_id", user.id);
       if (memberships) {
         var roomList = memberships.map(function(m) { return m.chat_rooms; }).filter(Boolean);
-        // For DMs, get the other person name
         var enriched = [];
         for (var i = 0; i < roomList.length; i++) {
           var r = roomList[i];
           if (r.room_type === "direct") {
-            // Get other member's user_id
             var { data: members } = await supabase.from("chat_members").select("user_id").eq("room_id", r.id).neq("user_id", user.id);
             var otherUserId = (members && members[0]) ? members[0].user_id : null;
             r.other_user_id = otherUserId;
             if (otherUserId) {
-              // Fetch name directly from profiles
               var { data: profile } = await supabase.from("profiles").select("full_name").eq("id", otherUserId).single();
               r.display_name = (profile && profile.full_name) ? profile.full_name : "Chat";
             } else {
@@ -2029,8 +2026,24 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
           } else {
             r.display_name = r.name || "Study Group";
           }
+          // Fetch last message for preview
+          var { data: lastMsgs } = await supabase.from("chat_messages").select("content, created_at, sender_id").eq("room_id", r.id).order("created_at", { ascending: false }).limit(1);
+          if (lastMsgs && lastMsgs[0]) {
+            r.last_message = lastMsgs[0].content;
+            r.last_message_time = lastMsgs[0].created_at;
+            r.last_message_sender = lastMsgs[0].sender_id;
+          } else {
+            r.last_message = null;
+            r.last_message_time = null;
+          }
           enriched.push(r);
         }
+        // Sort by last message time (most recent first)
+        enriched.sort(function(a, b) {
+          var ta = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
+          var tb = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
+          return tb - ta;
+        });
         setRooms(enriched);
       }
       setLoadingRooms(false);
@@ -2176,13 +2189,20 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     setView("chat");
   }
 
-  // Delete chat
+  // Leave/delete chat
   async function deleteChat(roomId, e) {
     if (e) e.stopPropagation();
-    if (!confirm("Delete this conversation? All messages will be permanently removed.")) return;
-    await supabase.from("chat_messages").delete().eq("room_id", roomId);
-    await supabase.from("chat_members").delete().eq("room_id", roomId);
-    await supabase.from("chat_rooms").delete().eq("id", roomId);
+    if (!confirm("Leave this conversation? You will no longer see messages from this chat.")) return;
+    // Remove current user from the room
+    var { error: leaveErr } = await supabase.from("chat_members").delete().eq("room_id", roomId).eq("user_id", user.id);
+    if (leaveErr) { console.error("Leave chat error:", leaveErr); alert("Could not leave chat: " + leaveErr.message); return; }
+    // Check if anyone else is still in the room
+    var { data: remaining } = await supabase.from("chat_members").select("user_id").eq("room_id", roomId);
+    if (!remaining || remaining.length === 0) {
+      // No one left - delete messages and room entirely
+      await supabase.from("chat_messages").delete().eq("room_id", roomId);
+      await supabase.from("chat_rooms").delete().eq("id", roomId);
+    }
     setRooms(function(prev) { return prev.filter(function(r) { return r.id !== roomId; }); });
     if (activeRoom === roomId) { setActiveRoom(null); setView("rooms"); }
   }
@@ -2234,12 +2254,24 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
             var initials = (r.display_name || "C").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
             var colors = ["#ec8283","#2563EB","#059669","#7C3AED","#D97706"];
             var color = r.room_type === "group" ? "#7C3AED" : colors[(r.display_name||"C").length % colors.length];
+            var preview = r.last_message ? (r.last_message.length > 35 ? r.last_message.slice(0, 35) + "..." : r.last_message) : "No messages yet";
+            var timeStr = "";
+            if (r.last_message_time) {
+              var diff = (Date.now() - new Date(r.last_message_time).getTime()) / 1000;
+              if (diff < 60) timeStr = "now";
+              else if (diff < 3600) timeStr = Math.floor(diff / 60) + "m";
+              else if (diff < 86400) timeStr = Math.floor(diff / 3600) + "h";
+              else timeStr = Math.floor(diff / 86400) + "d";
+            }
             return (
               <div key={r.id} onClick={function(){setActiveRoom(r.id);setActiveRoomName(r.display_name);setView("chat");}} style={{padding:"14px 20px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",borderBottom:"1px solid #F3F4F6",transition:"background 0.15s"}}>
-                <div style={{width:40,height:40,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color:"white",flexShrink:0}}>{r.room_type==="group"?"G":initials}</div>
+                <div style={{width:44,height:44,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:15,color:"white",flexShrink:0}}>{r.room_type==="group"?"G":initials}</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:14,fontWeight:600,color:"#111827",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.display_name}</div>
-                  <div style={{fontSize:12,color:"#9CA3AF"}}>{r.room_type==="group"?"Study Group":"Direct Message"}</div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontSize:14,fontWeight:600,color:"#111827",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.display_name}</div>
+                    {timeStr && (<span style={{fontSize:11,color:"#9CA3AF",flexShrink:0,marginLeft:8}}>{timeStr}</span>)}
+                  </div>
+                  <div style={{fontSize:12,color:"#9CA3AF",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:2}}>{preview}</div>
                 </div>
                 <button onClick={function(e){deleteChat(r.id,e);}} style={{background:"none",border:"none",color:"#D1D5DB",cursor:"pointer",padding:4,flexShrink:0,fontSize:14}} title="Delete chat">&#128465;</button>
               </div>
