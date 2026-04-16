@@ -2176,6 +2176,17 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     setView("chat");
   }
 
+  // Delete chat
+  async function deleteChat(roomId, e) {
+    if (e) e.stopPropagation();
+    if (!confirm("Delete this conversation? All messages will be permanently removed.")) return;
+    await supabase.from("chat_messages").delete().eq("room_id", roomId);
+    await supabase.from("chat_members").delete().eq("room_id", roomId);
+    await supabase.from("chat_rooms").delete().eq("id", roomId);
+    setRooms(function(prev) { return prev.filter(function(r) { return r.id !== roomId; }); });
+    if (activeRoom === roomId) { setActiveRoom(null); setView("rooms"); }
+  }
+
   // Join group
   async function joinGroup(roomId) {
     await supabase.from("chat_members").insert([{ room_id: roomId, user_id: user.id }]);
@@ -2230,6 +2241,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
                   <div style={{fontSize:14,fontWeight:600,color:"#111827",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.display_name}</div>
                   <div style={{fontSize:12,color:"#9CA3AF"}}>{r.room_type==="group"?"Study Group":"Direct Message"}</div>
                 </div>
+                <button onClick={function(e){deleteChat(r.id,e);}} style={{background:"none",border:"none",color:"#D1D5DB",cursor:"pointer",padding:4,flexShrink:0,fontSize:14}} title="Delete chat">&#128465;</button>
               </div>
             );
           })}
