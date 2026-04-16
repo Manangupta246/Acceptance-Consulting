@@ -2015,9 +2015,17 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
         for (var i = 0; i < roomList.length; i++) {
           var r = roomList[i];
           if (r.room_type === "direct") {
-            var { data: members } = await supabase.from("chat_members").select("user_id, profiles(full_name)").eq("room_id", r.id).neq("user_id", user.id);
-            r.display_name = (members && members[0] && members[0].profiles) ? members[0].profiles.full_name : "Chat";
-            r.other_user_id = (members && members[0]) ? members[0].user_id : null;
+            // Get other member's user_id
+            var { data: members } = await supabase.from("chat_members").select("user_id").eq("room_id", r.id).neq("user_id", user.id);
+            var otherUserId = (members && members[0]) ? members[0].user_id : null;
+            r.other_user_id = otherUserId;
+            if (otherUserId) {
+              // Fetch name directly from profiles
+              var { data: profile } = await supabase.from("profiles").select("full_name").eq("id", otherUserId).single();
+              r.display_name = (profile && profile.full_name) ? profile.full_name : "Chat";
+            } else {
+              r.display_name = "Chat";
+            }
           } else {
             r.display_name = r.name || "Study Group";
           }
