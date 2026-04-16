@@ -2052,36 +2052,43 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
   }, [user, isOpen]);
 
   // Handle initial DM open
+  var dmProcessingRef = useRef(false);
   useEffect(function() {
-    if (!user || !isOpen || !initialDmUserId) return;
+    if (!user || !isOpen || !initialDmUserId || dmProcessingRef.current) return;
+    dmProcessingRef.current = true;
     async function openDm() {
-      // Check if DM room already exists by querying DB directly
-      var { data: myRooms } = await supabase.from("chat_members").select("room_id").eq("user_id", user.id);
-      var { data: theirRooms } = await supabase.from("chat_members").select("room_id").eq("user_id", initialDmUserId);
-      if (myRooms && theirRooms) {
-        var myRoomIds = myRooms.map(function(r) { return r.room_id; });
-        var sharedRoomIds = theirRooms.filter(function(r) { return myRoomIds.indexOf(r.room_id) !== -1; }).map(function(r) { return r.room_id; });
-        if (sharedRoomIds.length > 0) {
-          // Check which of these is a direct room
-          var { data: directRooms } = await supabase.from("chat_rooms").select("id, name, room_type").in("id", sharedRoomIds).eq("room_type", "direct");
-          if (directRooms && directRooms.length > 0) {
-            setActiveRoom(directRooms[0].id);
-            setActiveRoomName(initialDmUserName || "Chat");
-            setView("chat");
-            return;
+      try {
+        // Check if DM room already exists by querying DB directly
+        var { data: myRooms } = await supabase.from("chat_members").select("room_id").eq("user_id", user.id);
+        var { data: theirRooms } = await supabase.from("chat_members").select("room_id").eq("user_id", initialDmUserId);
+        if (myRooms && theirRooms) {
+          var myRoomIds = myRooms.map(function(r) { return r.room_id; });
+          var sharedRoomIds = theirRooms.filter(function(r) { return myRoomIds.indexOf(r.room_id) !== -1; }).map(function(r) { return r.room_id; });
+          if (sharedRoomIds.length > 0) {
+            var { data: directRooms } = await supabase.from("chat_rooms").select("id, name, room_type").in("id", sharedRoomIds).eq("room_type", "direct");
+            if (directRooms && directRooms.length > 0) {
+              setActiveRoom(directRooms[0].id);
+              setActiveRoomName(initialDmUserName || "Chat");
+              setView("chat");
+              dmProcessingRef.current = false;
+              return;
+            }
           }
         }
+        // Create new DM room only if none exists
+        var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: null, room_type: "direct", created_by: user.id }]).select().single();
+        if (error || !room) { dmProcessingRef.current = false; return; }
+        await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }, { room_id: room.id, user_id: initialDmUserId }]);
+        room.display_name = initialDmUserName || "Chat";
+        room.other_user_id = initialDmUserId;
+        setRooms(function(prev) { return [room].concat(prev); });
+        setActiveRoom(room.id);
+        setActiveRoomName(room.display_name);
+        setView("chat");
+      } catch(err) {
+        console.error("openDm error:", err);
       }
-      // Create new DM room
-      var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: null, room_type: "direct", created_by: user.id }]).select().single();
-      if (error || !room) return;
-      await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }, { room_id: room.id, user_id: initialDmUserId }]);
-      room.display_name = initialDmUserName || "Chat";
-      room.other_user_id = initialDmUserId;
-      setRooms(function(prev) { return [room].concat(prev); });
-      setActiveRoom(room.id);
-      setActiveRoomName(room.display_name);
-      setView("chat");
+      dmProcessingRef.current = false;
     }
     openDm();
   }, [user, isOpen, initialDmUserId]);
