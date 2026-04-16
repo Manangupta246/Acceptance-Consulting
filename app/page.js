@@ -1223,7 +1223,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
   useEffect(function() {
     if (!user) return;
     async function loadConnections() {
-      var { data, error } = await supabase.from("connections").select("*, requester:requester_id(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:receiver_id(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
+      var { data, error } = await supabase.from("connections").select("*, requester:profiles!connections_requester_id_profiles_fkey(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:profiles!connections_receiver_id_profiles_fkey(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
       if (error) console.error("Connections fetch error:", error);
       setConnections(data || []);
     }
