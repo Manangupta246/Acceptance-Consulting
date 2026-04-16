@@ -1294,6 +1294,13 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
     }
   }
 
+  // Unblock / delete connection entirely
+  async function deleteConnection(connId) {
+    var { error } = await supabase.from("connections").delete().eq("id", connId);
+    if (error) { alert("Error removing connection: " + error.message); }
+    else { setConnRefresh(function(prev) { return prev + 1; }); }
+  }
+
   // Compute suggested matches
   function getSuggestedProfiles() {
     if (!myProfile || !myProfile.target_exam) return [];
@@ -1574,7 +1581,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                       <div style={{fontSize:14,fontWeight:600,color:"#111827"}}>{other.full_name||"Anonymous"}</div>
                       <div style={{fontSize:12,color:"#9CA3AF"}}>Blocked</div>
                     </div>
-                    <button onClick={function(){updateConnection(c.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 14px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Unblock</button>
+                    <button onClick={function(){deleteConnection(c.id);}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 14px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Unblock</button>
                   </div>
                 );
               })}
