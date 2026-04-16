@@ -1998,9 +1998,27 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
   var [view, setView] = useState("rooms");
   var [showNewGroup, setShowNewGroup] = useState(false);
   var [groupName, setGroupName] = useState("");
+  var [groupMembers, setGroupMembers] = useState([]);
+  var [contacts, setContacts] = useState([]);
   var [loadingRooms, setLoadingRooms] = useState(true);
   var messagesEndRef = useRef(null);
   var subscriptionRef = useRef(null);
+
+  // Fetch accepted connections as contacts for group creation
+  useEffect(function() {
+    if (!user || !isOpen) return;
+    async function loadContacts() {
+      var { data } = await supabase.from("connections").select("*, requester:profiles!connections_requester_id_profiles_fkey(id, full_name), receiver:profiles!connections_receiver_id_profiles_fkey(id, full_name)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id).eq("status", "accepted");
+      if (data) {
+        var contactList = data.map(function(c) {
+          var other = c.requester_id === user.id ? c.receiver : c.requester;
+          return other;
+        }).filter(Boolean);
+        setContacts(contactList);
+      }
+    }
+    loadContacts();
+  }, [user, isOpen]);
 
   // Load rooms
   useEffect(function() {
@@ -2182,18 +2200,34 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
 
   // Create study group
   async function handleCreateGroup(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!groupName.trim() || !user) return;
+    if (groupMembers.length === 0) { alert("Please select at least one member for the group."); return; }
+    if (groupMembers.length > 4) { alert("Study groups can have a maximum of 5 members (including you)."); return; }
     var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: groupName.trim(), room_type: "group", created_by: user.id }]).select().single();
     if (error || !room) { alert("Error creating group: " + (error ? error.message : "Unknown error")); return; }
-    await supabase.from("chat_members").insert([{ room_id: room.id, user_id: user.id }]);
+    // Add creator and selected members
+    var memberInserts = [{ room_id: room.id, user_id: user.id }];
+    groupMembers.forEach(function(mid) { memberInserts.push({ room_id: room.id, user_id: mid }); });
+    await supabase.from("chat_members").insert(memberInserts);
     room.display_name = room.name;
     setRooms(function(prev) { return [room].concat(prev); });
     setGroupName("");
+    setGroupMembers([]);
     setShowNewGroup(false);
     setActiveRoom(room.id);
     setActiveRoomName(room.display_name);
     setView("chat");
+  }
+
+  function toggleGroupMember(memberId) {
+    setGroupMembers(function(prev) {
+      if (prev.indexOf(memberId) !== -1) {
+        return prev.filter(function(id) { return id !== memberId; });
+      }
+      if (prev.length >= 4) { alert("Maximum 4 additional members (5 total including you)."); return prev; }
+      return prev.concat([memberId]);
+    });
   }
 
   // Delete/clear chat
@@ -2262,10 +2296,27 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
           </div>
 
           {showNewGroup && (
-            <form onSubmit={handleCreateGroup} style={{padding:"0 16px 12px",display:"flex",gap:8}}>
-              <input type="text" placeholder="Group name..." value={groupName} onChange={function(e){setGroupName(e.target.value);}} style={{...chatInputStyle,borderRadius:10}} />
-              <button type="submit" style={{padding:"10px 16px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer"}}>Create</button>
-            </form>
+            <div style={{padding:"12px 16px",borderBottom:"1px solid #F3F4F6"}}>
+              <div style={{display:"flex",gap:8,marginBottom:12}}>
+                <input type="text" placeholder="Group name..." value={groupName} onChange={function(e){setGroupName(e.target.value);}} style={{...chatInputStyle,borderRadius:10,flex:1}} />
+                <button onClick={function(){setShowNewGroup(false);setGroupName("");setGroupMembers([]);}} style={{background:"none",border:"none",color:"#9CA3AF",cursor:"pointer",fontSize:18}}>&#10005;</button>
+              </div>
+              <div style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:8}}>{"Add members (" + groupMembers.length + "/4):"}</div>
+              {contacts.length === 0 && (<div style={{fontSize:12,color:"#9CA3AF",padding:"8px 0"}}>No connections yet. Connect with study partners first.</div>)}
+              <div style={{maxHeight:150,overflowY:"auto"}}>
+                {contacts.map(function(c) {
+                  var selected = groupMembers.indexOf(c.id) !== -1;
+                  var initials = (c.full_name || "A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+                  return (
+                    <div key={c.id} onClick={function(){toggleGroupMember(c.id);}} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderRadius:8,cursor:"pointer",background:selected?"#fdf0f0":"transparent",border:selected?"1px solid "+RED:"1px solid transparent",marginBottom:4}}>
+                      <div style={{width:28,height:28,borderRadius:"50%",background:selected?RED:"#D1D5DB",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white"}}>{selected?"&#10003;":initials}</div>
+                      <span style={{fontSize:13,fontWeight:selected?600:400,color:selected?"#111827":"#6B7280"}}>{c.full_name || "Anonymous"}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <button onClick={handleCreateGroup} disabled={!groupName.trim() || groupMembers.length === 0} style={{width:"100%",marginTop:10,padding:"10px",background:(!groupName.trim()||groupMembers.length===0)?"#E5E7EB":RED,color:"white",border:"none",borderRadius:10,fontSize:13,fontWeight:600,cursor:(!groupName.trim()||groupMembers.length===0)?"default":"pointer",fontFamily:"'DM Sans',sans-serif"}}>{"Create Group (" + (groupMembers.length + 1) + " members)"}</button>
+            </div>
           )}
 
           {loadingRooms && (<div style={{padding:40,textAlign:"center",color:"#9CA3AF"}}>Loading...</div>)}
