@@ -2005,6 +2005,10 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
   var [showEditMembers, setShowEditMembers] = useState(false);
   var [editRoomId, setEditRoomId] = useState(null);
   var [editMembers, setEditMembers] = useState([]);
+  var [editMemberProfiles, setEditMemberProfiles] = useState([]);
+  var [addMemberSearch, setAddMemberSearch] = useState("");
+  var [addMemberSelections, setAddMemberSelections] = useState([]);
+  var [showAddMember, setShowAddMember] = useState(false);
   var messagesEndRef = useRef(null);
   var subscriptionRef = useRef(null);
 
@@ -2290,13 +2294,25 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
           {view==="rooms" && (<div style={{fontSize:12,color:"#9CA3AF"}}>{rooms.length + " conversation" + (rooms.length !== 1 ? "s" : "")}</div>)}
         </div>
         {view==="chat" && rooms.find(function(rm){return rm.id===activeRoom && rm.room_type==="group";}) && (
-          <button onClick={function(){
-            setShowEditMembers(!showEditMembers);
-            if (!showEditMembers && activeRoom) {
-              supabase.from("chat_members").select("user_id").eq("room_id", activeRoom).then(function(res) {
-                setEditMembers((res.data || []).map(function(m){return m.user_id;}));
-                setEditRoomId(activeRoom);
-              });
+          <button onClick={async function(){
+            if (showEditMembers) {
+              setShowEditMembers(false);
+              setShowAddMember(false);
+              setAddMemberSelections([]);
+              setAddMemberSearch("");
+              return;
+            }
+            setShowEditMembers(true);
+            if (activeRoom) {
+              var { data: memberData } = await supabase.from("chat_members").select("user_id").eq("room_id", activeRoom);
+              var memberIds = (memberData || []).map(function(m){return m.user_id;});
+              setEditMembers(memberIds);
+              setEditRoomId(activeRoom);
+              // Fetch profile names for members
+              if (memberIds.length > 0) {
+                var { data: profiles } = await supabase.from("profiles").select("id, full_name").in("id", memberIds);
+                setEditMemberProfiles(profiles || []);
+              }
             }
           }} style={{background:"none",border:"none",fontSize:13,color:RED,cursor:"pointer",fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>{showEditMembers ? "Done" : "Members"}</button>
         )}
@@ -2305,29 +2321,78 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
 
       {/* Edit Members Panel */}
       {showEditMembers && view==="chat" && (
-        <div style={{padding:"12px 16px",borderBottom:"1px solid #F3F4F6",maxHeight:200,overflowY:"auto",background:"#F9FAFB"}}>
-          <div style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:8}}>{"Group members (" + editMembers.length + "/5):"}</div>
-          {contacts.map(function(c) {
-            var isMember = editMembers.indexOf(c.id) !== -1;
-            var initials = (c.full_name || "A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
-            return (
-              <div key={c.id} onClick={async function(){
-                if (isMember) {
-                  if (editMembers.length <= 2) { alert("A group needs at least 2 members."); return; }
-                  await supabase.from("chat_members").delete().eq("room_id", editRoomId).eq("user_id", c.id);
-                  setEditMembers(function(prev){return prev.filter(function(id){return id!==c.id;});});
-                } else {
-                  if (editMembers.length >= 5) { alert("Maximum 5 members per group."); return; }
-                  await supabase.from("chat_members").insert([{room_id: editRoomId, user_id: c.id}]);
-                  setEditMembers(function(prev){return prev.concat([c.id]);});
-                }
-              }} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderRadius:8,cursor:"pointer",background:isMember?"#fdf0f0":"transparent",border:isMember?"1px solid "+RED:"1px solid transparent",marginBottom:4}}>
-                <div style={{width:28,height:28,borderRadius:"50%",background:isMember?RED:"#D1D5DB",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:"white"}}>{isMember?"\u2713":initials}</div>
-                <span style={{fontSize:13,fontWeight:isMember?600:400,color:isMember?"#111827":"#6B7280"}}>{c.full_name || "Anonymous"}</span>
-                <span style={{marginLeft:"auto",fontSize:11,color:"#9CA3AF"}}>{isMember?"Remove":"Add"}</span>
+        <div style={{borderBottom:"1px solid #F3F4F6",background:"#F9FAFB",maxHeight:300,overflowY:"auto"}}>
+          {/* Current Members */}
+          <div style={{padding:"12px 16px 8px"}}>
+            <div style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:8}}>{"Current members (" + editMembers.length + "/5)"}</div>
+            {editMemberProfiles.filter(function(p){return editMembers.indexOf(p.id)!==-1;}).map(function(p) {
+              var isYou = p.id === user.id;
+              var initials = (p.full_name || "A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+              return (
+                <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 10px",borderRadius:8,marginBottom:4,background:"white",border:"1px solid #E5E7EB"}}>
+                  <div style={{width:26,height:26,borderRadius:"50%",background:RED,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:"white"}}>{initials}</div>
+                  <span style={{fontSize:13,fontWeight:500,color:"#111827",flex:1}}>{p.full_name || "Anonymous"}{isYou?" (You)":""}</span>
+                  {!isYou && (<button onClick={async function(){
+                    if (editMembers.length <= 2) { alert("A group needs at least 2 members."); return; }
+                    await supabase.from("chat_members").delete().eq("room_id", editRoomId).eq("user_id", p.id);
+                    setEditMembers(function(prev){return prev.filter(function(id){return id!==p.id;});});
+                    setEditMemberProfiles(function(prev){return prev.filter(function(pr){return pr.id!==p.id;});});
+                  }} style={{background:"none",border:"none",color:"#D1D5DB",cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>Remove</button>)}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add Members */}
+          <div style={{padding:"4px 16px 12px"}}>
+            {!showAddMember ? (
+              <button onClick={function(){setShowAddMember(true);setAddMemberSearch("");setAddMemberSelections([]);}} style={{width:"100%",padding:"8px",background:"white",color:RED,border:"1px dashed "+RED,borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ Add Member</button>
+            ) : (
+              <div style={{background:"white",borderRadius:10,border:"1px solid #E5E7EB",padding:12}}>
+                <input type="text" placeholder="Search connections..." value={addMemberSearch} onChange={function(e){setAddMemberSearch(e.target.value);}} style={{width:"100%",padding:"8px 12px",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#F9FAFB",boxSizing:"border-box",marginBottom:8}} />
+                <div style={{maxHeight:120,overflowY:"auto"}}>
+                  {contacts.filter(function(c){
+                    if (editMembers.indexOf(c.id) !== -1) return false;
+                    if (addMemberSearch.trim() && (c.full_name||"").toLowerCase().indexOf(addMemberSearch.toLowerCase()) === -1) return false;
+                    return true;
+                  }).map(function(c) {
+                    var selected = addMemberSelections.indexOf(c.id) !== -1;
+                    var initials = (c.full_name || "A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+                    return (
+                      <div key={c.id} onClick={function(){
+                        setAddMemberSelections(function(prev){
+                          if (prev.indexOf(c.id) !== -1) return prev.filter(function(id){return id!==c.id;});
+                          if (editMembers.length + prev.length >= 5) { alert("Maximum 5 members per group."); return prev; }
+                          return prev.concat([c.id]);
+                        });
+                      }} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",borderRadius:6,cursor:"pointer",background:selected?"#fdf0f0":"transparent",marginBottom:2}}>
+                        <div style={{width:24,height:24,borderRadius:"50%",background:selected?RED:"#D1D5DB",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:"white"}}>{selected?"\u2713":initials}</div>
+                        <span style={{fontSize:12,fontWeight:selected?600:400,color:selected?"#111827":"#6B7280"}}>{c.full_name || "Anonymous"}</span>
+                      </div>
+                    );
+                  })}
+                  {contacts.filter(function(c){ return editMembers.indexOf(c.id)===-1 && (!addMemberSearch.trim()||(c.full_name||"").toLowerCase().indexOf(addMemberSearch.toLowerCase())!==-1); }).length === 0 && (
+                    <div style={{fontSize:12,color:"#9CA3AF",padding:"8px 0",textAlign:"center"}}>No connections to add</div>
+                  )}
+                </div>
+                <div style={{display:"flex",gap:8,marginTop:8}}>
+                  <button onClick={function(){setShowAddMember(false);setAddMemberSelections([]);setAddMemberSearch("");}} style={{flex:1,padding:"8px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Cancel</button>
+                  <button onClick={async function(){
+                    if (addMemberSelections.length === 0) return;
+                    var inserts = addMemberSelections.map(function(uid){return {room_id:editRoomId,user_id:uid};});
+                    await supabase.from("chat_members").insert(inserts);
+                    // Fetch names for new members
+                    var { data: newProfiles } = await supabase.from("profiles").select("id, full_name").in("id", addMemberSelections);
+                    setEditMembers(function(prev){return prev.concat(addMemberSelections);});
+                    setEditMemberProfiles(function(prev){return prev.concat(newProfiles||[]);});
+                    setAddMemberSelections([]);
+                    setAddMemberSearch("");
+                    setShowAddMember(false);
+                  }} disabled={addMemberSelections.length===0} style={{flex:1,padding:"8px",background:addMemberSelections.length>0?RED:"#E5E7EB",color:"white",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:addMemberSelections.length>0?"pointer":"default",fontFamily:"'DM Sans',sans-serif"}}>{"Add (" + addMemberSelections.length + ")"}</button>
+                </div>
               </div>
-            );
-          })}
+            )}
+          </div>
         </div>
       )}
 
