@@ -2034,13 +2034,22 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
   useEffect(function() {
     if (!user || !isOpen || !initialDmUserId) return;
     async function openDm() {
-      // Check if DM room already exists
-      var existing = rooms.find(function(r) { return r.room_type === "direct" && r.other_user_id === initialDmUserId; });
-      if (existing) {
-        setActiveRoom(existing.id);
-        setActiveRoomName(existing.display_name);
-        setView("chat");
-        return;
+      // Check if DM room already exists by querying DB directly
+      var { data: myRooms } = await supabase.from("chat_members").select("room_id").eq("user_id", user.id);
+      var { data: theirRooms } = await supabase.from("chat_members").select("room_id").eq("user_id", initialDmUserId);
+      if (myRooms && theirRooms) {
+        var myRoomIds = myRooms.map(function(r) { return r.room_id; });
+        var sharedRoomIds = theirRooms.filter(function(r) { return myRoomIds.indexOf(r.room_id) !== -1; }).map(function(r) { return r.room_id; });
+        if (sharedRoomIds.length > 0) {
+          // Check which of these is a direct room
+          var { data: directRooms } = await supabase.from("chat_rooms").select("id, name, room_type").in("id", sharedRoomIds).eq("room_type", "direct");
+          if (directRooms && directRooms.length > 0) {
+            setActiveRoom(directRooms[0].id);
+            setActiveRoomName(initialDmUserName || "Chat");
+            setView("chat");
+            return;
+          }
+        }
       }
       // Create new DM room
       var { data: room, error } = await supabase.from("chat_rooms").insert([{ name: null, room_type: "direct", created_by: user.id }]).select().single();
@@ -2054,7 +2063,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
       setView("chat");
     }
     openDm();
-  }, [user, isOpen, initialDmUserId, rooms.length]);
+  }, [user, isOpen, initialDmUserId]);
 
   // Profile name cache
   var [profileNames, setProfileNames] = useState({});
@@ -2114,25 +2123,6 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     return function() { if (subscriptionRef.current) supabase.removeChannel(subscriptionRef.current); };
   }, [activeRoom]);
 
-  // Poll for new messages every 3 seconds as fallback for real-time
-  useEffect(function() {
-    if (!activeRoom) return;
-    var interval = setInterval(async function() {
-      var { data } = await supabase.from("chat_messages").select("*").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
-      if (data) {
-        setMessages(function(prev) {
-          if (data.length !== prev.length) {
-            enrichMessagesWithNames(data);
-            setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 100);
-            return data;
-          }
-          return prev;
-        });
-      }
-    }, 3000);
-    return function() { clearInterval(interval); };
-  }, [activeRoom]);
-
   // Send message
   async function handleSend(e) {
     e.preventDefault();
@@ -2144,16 +2134,19 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     // Insert the message
     var { error } = await supabase.from("chat_messages").insert([{ room_id: activeRoom, sender_id: user.id, content: msgText }]);
     if (error) {
+      console.error("Chat insert error:", error);
       alert("Error sending message: " + error.message);
       setSending(false);
       return;
     }
 
-    // Reload all messages
-    var { data } = await supabase.from("chat_messages").select("*").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
-    if (data) {
-      setMessages(data);
-      enrichMessagesWithNames(data);
+    // Wait a tiny bit for DB commit then reload
+    await new Promise(function(r) { setTimeout(r, 300); });
+    var { data: reloaded, error: reloadErr } = await supabase.from("chat_messages").select("*").eq("room_id", activeRoom).order("created_at", { ascending: true }).limit(100);
+    console.log("Chat reload:", reloaded ? reloaded.length + " messages" : "null", reloadErr);
+    if (reloaded && reloaded.length > 0) {
+      setMessages(reloaded);
+      enrichMessagesWithNames(reloaded);
       setTimeout(function() { if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); }, 50);
     }
     setSending(false);
