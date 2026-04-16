@@ -1219,14 +1219,16 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
   }, [user, myProfile]);
 
   // Fetch connections
+  var [connRefresh, setConnRefresh] = useState(0);
   useEffect(function() {
     if (!user) return;
     async function loadConnections() {
-      var { data } = await supabase.from("connections").select("*, requester:requester_id(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:receiver_id(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
+      var { data, error } = await supabase.from("connections").select("*, requester:requester_id(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:receiver_id(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
+      if (error) console.error("Connections fetch error:", error);
       setConnections(data || []);
     }
     loadConnections();
-  }, [user]);
+  }, [user, connRefresh]);
 
   // Save profile
   async function handleSaveProfile(e) {
@@ -1260,18 +1262,15 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
       }
     }
     else {
-      var { data } = await supabase.from("connections").select("*, requester:requester_id(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:receiver_id(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
-      setConnections(data || []);
+      setConnRefresh(function(prev) { return prev + 1; });
     }
   }
 
   // Accept/reject connection
-  async function updateConnection(connId, status) {
-    var { error } = await supabase.from("connections").update({ status: status }).eq("id", connId);
-    if (!error) {
-      var { data } = await supabase.from("connections").select("*, requester:requester_id(id, full_name, avatar_url, target_exam, target_score, exam_date), receiver:receiver_id(id, full_name, avatar_url, target_exam, target_score, exam_date)").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
-      setConnections(data || []);
-    }
+  async function updateConnection(connId, newStatus) {
+    var { error } = await supabase.from("connections").update({ status: newStatus }).eq("id", connId);
+    if (error) { alert("Error updating connection: " + error.message); }
+    else { setConnRefresh(function(prev) { return prev + 1; }); }
   }
 
   // Compute suggested matches
@@ -1444,7 +1443,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                   {p.bio && (<p style={{fontSize:13,color:"#6B7280",margin:0,lineHeight:1.5}}>{p.bio}</p>)}
                   <div style={{marginTop:"auto",paddingTop:8}}>
                     {!connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
-                    {connStatus && connStatus.status==="pending" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> {connStatus.isRequester?"Request Sent":"Pending"}</span>)}
+                    {connStatus && connStatus.status==="pending" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> {connStatus.isRequester?"Invite Sent":"Pending"}</span>)}
                     {connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
                   </div>
                 </div>
@@ -1477,7 +1476,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                   </div>
                   <div>
                     {!connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
-                    {connStatus && connStatus.status==="pending" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> {connStatus.isRequester?"Sent":"Pending"}</span>)}
+                    {connStatus && connStatus.status==="pending" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> {connStatus.isRequester?"Invite Sent":"Pending"}</span>)}
                     {connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
                   </div>
                 </div>
