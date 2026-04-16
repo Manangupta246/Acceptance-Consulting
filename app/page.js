@@ -595,10 +595,10 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
     { label:"Our Team", action:()=>{setPage("home");setTimeout(()=>document.getElementById("our-team")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"FAQ", action:()=>{setPage("faq");window.scrollTo(0,0);} },
     { label:"Leaderboard", action:()=>{setPage("leaderboard");window.scrollTo(0,0);} },
-    { label:"Partners", action:()=>{setPage("partners");window.scrollTo(0,0);} },
+    { label:"Study Partner", action:()=>{setPage("partners");window.scrollTo(0,0);} },
     { label:"Forum", action:()=>{setPage("forum");window.scrollTo(0,0);} },
   ];
-  const isActive = (l) => (page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Partners")||(page==="forum"&&l.label==="Forum");
+  const isActive = (l) => (page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Study Partner")||(page==="forum"&&l.label==="Forum");
   return (
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"8px 24px":"12px 24px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",alignItems:"center",gap:"16px"}}>
       <a onClick={()=>{setPage("home");window.scrollTo(0,0);}} style={{cursor:"pointer",flexShrink:0}}><img src={LOGO} alt="AC" style={{height:"36px"}} /></a>
@@ -1213,10 +1213,13 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
     if (!user) return;
     async function loadProfiles() {
       var { data } = await supabase.from("profiles").select("*").neq("id", user.id).not("target_exam", "is", null);
-      setProfiles(data || []);
+      // Filter out blocked users
+      var blockedIds = connections.filter(function(c) { return c.status === "blocked"; }).map(function(c) { return c.requester_id === user.id ? c.receiver_id : c.requester_id; });
+      var filtered = (data || []).filter(function(p) { return blockedIds.indexOf(p.id) === -1; });
+      setProfiles(filtered);
     }
     loadProfiles();
-  }, [user, myProfile]);
+  }, [user, myProfile, connections]);
 
   // Fetch connections
   var [connRefresh, setConnRefresh] = useState(0);
@@ -1271,6 +1274,24 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
     var { error } = await supabase.from("connections").update({ status: newStatus }).eq("id", connId);
     if (error) { alert("Error updating connection: " + error.message); }
     else { setConnRefresh(function(prev) { return prev + 1; }); }
+  }
+
+  // Block user
+  async function blockUser(otherUserId) {
+    if (!user) return;
+    if (!confirm("Are you sure you want to block this user? They will not be able to see your profile or send you requests.")) return;
+    var existing = connections.find(function(c) {
+      return (c.requester_id === user.id && c.receiver_id === otherUserId) || (c.receiver_id === user.id && c.requester_id === otherUserId);
+    });
+    if (existing) {
+      var { error } = await supabase.from("connections").update({ status: "blocked" }).eq("id", existing.id);
+      if (error) { alert("Error blocking user: " + error.message); }
+      else { setConnRefresh(function(prev) { return prev + 1; }); }
+    } else {
+      var { error } = await supabase.from("connections").insert([{ requester_id: user.id, receiver_id: otherUserId, status: "blocked" }]);
+      if (error) { alert("Error blocking user: " + error.message); }
+      else { setConnRefresh(function(prev) { return prev + 1; }); }
+    }
   }
 
   // Compute suggested matches
@@ -1381,6 +1402,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
   var pendingReceived = connections.filter(function(c){ return c.receiver_id===user.id && c.status==="pending"; });
   var pendingSent = connections.filter(function(c){ return c.requester_id===user.id && c.status==="pending"; });
   var accepted = connections.filter(function(c){ return c.status==="accepted"; });
+  var blocked = connections.filter(function(c){ return c.status==="blocked" && c.requester_id===user.id; });
 
   return (
     <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
@@ -1441,10 +1463,12 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                     {p.study_style && (<span style={{fontSize:12,padding:"4px 10px",borderRadius:20,background:"#F3F4F6",color:"#374151"}}>{p.study_style}</span>)}
                   </div>
                   {p.bio && (<p style={{fontSize:13,color:"#6B7280",margin:0,lineHeight:1.5}}>{p.bio}</p>)}
-                  <div style={{marginTop:"auto",paddingTop:8}}>
+                  <div style={{marginTop:"auto",paddingTop:8,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                     {!connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
-                    {connStatus && connStatus.status==="pending" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> {connStatus.isRequester?"Invite Sent":"Pending"}</span>)}
+                    {connStatus && connStatus.status==="pending" && connStatus.isRequester && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> Invite Sent</span>)}
+                    {connStatus && connStatus.status==="pending" && !connStatus.isRequester && (<><button onClick={function(){updateConnection(connStatus.id,"accepted");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"#059669",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccCheckIcon/> Accept Invite</button><button onClick={function(){updateConnection(connStatus.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccXIcon/> Decline</button></>)}
                     {connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
+                    {connStatus && connStatus.status!=="blocked" && (<button onClick={function(){blockUser(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 12px",background:"none",color:"#D1D5DB",border:"none",borderRadius:8,fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}} title="Block user"><AccXIcon/> Block</button>)}
                   </div>
                 </div>
               );
@@ -1474,10 +1498,12 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                     <div style={{fontSize:13,color:"#6B7280",marginTop:2}}>{p.target_exam} | Target: {p.target_score||"--"} | Exam: {formatDate(p.exam_date)}</div>
                     {p.bio && (<p style={{fontSize:13,color:"#9CA3AF",margin:"6px 0 0",lineHeight:1.5}}>{p.bio}</p>)}
                   </div>
-                  <div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
                     {!connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
-                    {connStatus && connStatus.status==="pending" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> {connStatus.isRequester?"Invite Sent":"Pending"}</span>)}
+                    {connStatus && connStatus.status==="pending" && connStatus.isRequester && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> Invite Sent</span>)}
+                    {connStatus && connStatus.status==="pending" && !connStatus.isRequester && (<><button onClick={function(){updateConnection(connStatus.id,"accepted");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"10px 20px",background:"#059669",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccCheckIcon/> Accept Invite</button><button onClick={function(){updateConnection(connStatus.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"10px 20px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccXIcon/> Decline</button></>)}
                     {connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"10px 24px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
+                    {connStatus && connStatus.status!=="blocked" && (<button onClick={function(){blockUser(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"10px 12px",background:"none",color:"#D1D5DB",border:"none",borderRadius:8,fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}} title="Block user"><AccXIcon/> Block</button>)}
                   </div>
                 </div>
               );
@@ -1528,10 +1554,31 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                   <div style={{display:"flex",gap:8,alignItems:"center"}}>
                     <button onClick={function(){if(typeof onOpenChat==="function")onOpenChat(other.id,other.full_name);}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 14px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>&#128172; Message</button>
                     <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 14px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:12,fontWeight:600}}><AccHeartIcon/> Partner</span>
+                    <button onClick={function(){blockUser(other.id);}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 10px",background:"none",color:"#D1D5DB",border:"none",fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}} title="Block user"><AccXIcon/></button>
                   </div>
                 </div>
               );
             })}
+
+            {/* Blocked */}
+            {blocked.length > 0 && (<div style={{marginTop:32}}>
+              <h3 style={{fontSize:16,fontWeight:600,color:"#111827",marginBottom:12,fontFamily:"'Playfair Display',serif"}}>Blocked Users</h3>
+              {blocked.map(function(c){
+                var other = c.requester_id===user.id ? c.receiver : c.requester;
+                if (!other) return null;
+                var initials = (other.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+                return (
+                  <div key={c.id} style={{background:"white",borderRadius:12,border:"1px solid #E5E7EB",padding:"16px 20px",marginBottom:8,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap",opacity:0.6}}>
+                    <div style={{width:40,height:40,borderRadius:"50%",background:"#9CA3AF",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,color:"white"}}>{initials}</div>
+                    <div style={{flex:1,minWidth:180}}>
+                      <div style={{fontSize:14,fontWeight:600,color:"#111827"}}>{other.full_name||"Anonymous"}</div>
+                      <div style={{fontSize:12,color:"#9CA3AF"}}>Blocked</div>
+                    </div>
+                    <button onClick={function(){updateConnection(c.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"6px 14px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Unblock</button>
+                  </div>
+                );
+              })}
+            </div>)}
 
             {/* Pending Sent */}
             {pendingSent.length > 0 && (<div style={{marginTop:32}}>
