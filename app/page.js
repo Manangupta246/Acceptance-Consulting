@@ -2189,22 +2189,37 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
     setView("chat");
   }
 
-  // Leave/delete chat
+  // Delete/clear chat
   async function deleteChat(roomId, e) {
     if (e) e.stopPropagation();
-    if (!confirm("Leave this conversation? You will no longer see messages from this chat.")) return;
-    // Remove current user from the room
-    var { error: leaveErr } = await supabase.from("chat_members").delete().eq("room_id", roomId).eq("user_id", user.id);
-    if (leaveErr) { console.error("Leave chat error:", leaveErr); alert("Could not leave chat: " + leaveErr.message); return; }
-    // Check if anyone else is still in the room
-    var { data: remaining } = await supabase.from("chat_members").select("user_id").eq("room_id", roomId);
-    if (!remaining || remaining.length === 0) {
-      // No one left - delete messages and room entirely
+    var room = rooms.find(function(r) { return r.id === roomId; });
+    if (!room) return;
+
+    if (room.room_type === "group") {
+      // Group: leave the room
+      if (!confirm("Leave this group? You will no longer see messages from this group.")) return;
+      await supabase.from("chat_members").delete().eq("room_id", roomId).eq("user_id", user.id);
+      var { data: remaining } = await supabase.from("chat_members").select("user_id").eq("room_id", roomId);
+      if (!remaining || remaining.length === 0) {
+        await supabase.from("chat_messages").delete().eq("room_id", roomId);
+        await supabase.from("chat_rooms").delete().eq("id", roomId);
+      }
+    } else {
+      // DM: clear all messages but keep the room and memberships
+      if (!confirm("Clear this conversation? All messages will be deleted for both users.")) return;
       await supabase.from("chat_messages").delete().eq("room_id", roomId);
-      await supabase.from("chat_rooms").delete().eq("id", roomId);
     }
-    setRooms(function(prev) { return prev.filter(function(r) { return r.id !== roomId; }); });
-    if (activeRoom === roomId) { setActiveRoom(null); setView("rooms"); }
+    setRooms(function(prev) {
+      if (room.room_type === "group") {
+        return prev.filter(function(r) { return r.id !== roomId; });
+      } else {
+        return prev.map(function(r) {
+          if (r.id === roomId) { r.last_message = null; r.last_message_time = null; }
+          return r;
+        });
+      }
+    });
+    if (activeRoom === roomId) { setMessages([]); if (room.room_type === "group") { setActiveRoom(null); setView("rooms"); } }
   }
 
   // Join group
