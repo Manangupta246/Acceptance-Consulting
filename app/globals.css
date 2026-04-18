@@ -1,62 +1,57 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 
 @media (max-width: 900px) {
   .dt-nav { display: none !important; }
   .mob-btn { display: block !important; }
 }
 
-/* Blog content styling */
-.blog-content h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 28px;
-  font-weight: 800;
-  color: #1a1a1a;
-  margin: 32px 0 16px;
+.blog-content h2 { font-size: 28px; font-weight: 800; margin: 32px 0 16px; }
+.blog-content h2, .blog-content h3 { font-family: 'Playfair Display', serif; color: #1a1a1a; }
+.blog-content h3 { font-size: 22px; font-weight: 700; margin: 28px 0 12px; }
+.blog-content p { margin-bottom: 16px; }
+.blog-content ol, .blog-content ul { margin: 16px 0; padding-left: 24px; }
+.blog-content li { margin-bottom: 8px; }
+.blog-content blockquote { border-left: 4px solid #ec8283; padding: 16px 20px; margin: 24px 0; background: #fdf0f0; border-radius: 0 12px 12px 0; font-style: italic; color: #555; }
+.blog-content img { max-width: 100%; border-radius: 12px; margin: 16px 0; }
+.blog-content a { color: #ec8283; text-decoration: underline; }
+
+@media (max-width: 900px) {
+  section { padding-left: 16px !important; padding-right: 16px !important; }
+  .grid-responsive { grid-template-columns: 1fr !important; }
+  .lb-table-header, .lb-table-row { grid-template-columns: 40px 1fr 65px 65px 55px !important; padding: 10px 12px !important; font-size: 12px !important; }
+  .lb-hide-mobile { display: none !important; }
+  .lb-podium { flex-direction: column !important; align-items: stretch !important; }
+  .lb-podium > div { min-width: unset !important; max-width: 100% !important; flex: 1 !important; }
+  .partner-grid { grid-template-columns: 1fr !important; }
+  .chat-panel { width: 100vw !important; }
+  .admin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .admin-table-wrap table { min-width: 600px; font-size: 12px; }
+  .admin-table-wrap th, .admin-table-wrap td { padding: 8px 6px !important; }
+  .category-pills { flex-wrap: nowrap !important; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 4px; }
+  .category-pills::-webkit-scrollbar { display: none; }
+  .modal-content { max-width: calc(100vw - 32px) !important; padding: 20px !important; }
+  .form-grid-2 { grid-template-columns: 1fr !important; }
+  .form-grid-3 { grid-template-columns: 1fr !important; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .services-grid { grid-template-columns: 1fr !important; }
+  .team-grid { grid-template-columns: 1fr !important; }
+  .tab-scroll { flex-wrap: nowrap !important; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tab-scroll::-webkit-scrollbar { display: none; }
+  .period-pills { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; }
+  .period-pills::-webkit-scrollbar { display: none; }
+  .connection-card { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+  .rankings-grid { grid-template-columns: 1fr 1fr !important; }
 }
-.blog-content h3 {
-  font-family: 'Playfair Display', serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 28px 0 12px;
-}
-.blog-content p {
-  margin-bottom: 16px;
-}
-.blog-content ul, .blog-content ol {
-  margin: 16px 0;
-  padding-left: 24px;
-}
-.blog-content li {
-  margin-bottom: 8px;
-}
-.blog-content blockquote {
-  border-left: 4px solid #B91C1C;
-  padding: 16px 20px;
-  margin: 24px 0;
-  background: #FEF2F2;
-  border-radius: 0 12px 12px 0;
-  font-style: italic;
-  color: #555;
-}
-.blog-content img {
-  max-width: 100%;
-  border-radius: 12px;
-  margin: 16px 0;
-}
-.blog-content a {
-  color: #B91C1C;
-  text-decoration: underline;
-}
-.blog-content strong {
-  color: #1a1a1a;
+
+@media (max-width: 480px) {
+  section[id="home"] { padding-top: 100px !important; }
+  h1 { font-size: clamp(22px, 6vw, 36px) !important; }
+  .cta-buttons { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
+  .cta-buttons a, .cta-buttons button { width: 100% !important; text-align: center !important; }
+  .lb-table-header, .lb-table-row { grid-template-columns: 30px 1fr 55px 55px !important; padding: 8px 10px !important; font-size: 11px !important; }
+  .admin-tabs { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+  .rankings-grid { grid-template-columns: 1fr !important; }
+  .school-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
