@@ -1020,32 +1020,40 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
   }
 
   // Get period start date with 4am daily reset
-  function getPeriodStart(p) {
+  function getPeriodDates(p) {
     var now = new Date();
     var todayAt4am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0);
-    // If before 4am, consider it still "yesterday"
     var effectiveDate = now < todayAt4am ? new Date(now.getTime() - 86400000) : now;
     var ed = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), effectiveDate.getDate());
+    var today = ed.toISOString().split("T")[0];
 
     if (p === "daily") {
-      return ed.toISOString().split("T")[0];
+      return { start: today, end: today, exact: true };
     } else if (p === "weekly") {
-      // Monday to Sunday
       var day = ed.getDay();
       var mondayOffset = day === 0 ? 6 : day - 1;
       var monday = new Date(ed.getTime() - mondayOffset * 86400000);
-      return monday.toISOString().split("T")[0];
+      var sunday = new Date(monday.getTime() + 6 * 86400000);
+      return { start: monday.toISOString().split("T")[0], end: sunday.toISOString().split("T")[0], exact: false };
     } else if (p === "monthly") {
-      return new Date(ed.getFullYear(), ed.getMonth(), 1).toISOString().split("T")[0];
+      var monthStart = new Date(ed.getFullYear(), ed.getMonth(), 1);
+      var monthEnd = new Date(ed.getFullYear(), ed.getMonth() + 1, 0);
+      return { start: monthStart.toISOString().split("T")[0], end: monthEnd.toISOString().split("T")[0], exact: false };
     }
-    return "2020-01-01";
+    return { start: "2020-01-01", end: "2099-12-31", exact: false };
   }
 
   var fetchLeaderboard = useCallback(async function() {
     setLoading(true);
-    var startDate = getPeriodStart(period);
+    var dates = getPeriodDates(period);
     try {
-      var { data, error } = await supabase.from("daily_scores").select("*").eq("exam_type", examType).gte("log_date", startDate).order("log_date", { ascending: false });
+      var query = supabase.from("daily_scores").select("*").eq("exam_type", examType);
+      if (dates.exact) {
+        query = query.eq("log_date", dates.start);
+      } else {
+        query = query.gte("log_date", dates.start).lte("log_date", dates.end);
+      }
+      var { data, error } = await query.order("log_date", { ascending: false });
       if (error) { console.error("Leaderboard fetch error:", error); setLeaderboardData([]); }
       else {
         // Aggregate by user
