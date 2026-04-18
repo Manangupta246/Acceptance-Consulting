@@ -2649,18 +2649,34 @@ function AdminDashboard({ user }) {
     { key: "blog", label: "Blog Posts", table: "blog_posts" },
     { key: "forum_posts", label: "Forum Posts", table: "forum_posts" },
     { key: "forum_comments", label: "Forum Comments", table: "forum_comments" },
-    { key: "profiles", label: "User Profiles", table: "profiles" },
+    { key: "profiles", label: "Partner Profiles", table: "profiles" },
+    { key: "users", label: "Signed Up Users", table: null },
     { key: "scores", label: "Leaderboard Scores", table: "daily_scores" },
     { key: "connections", label: "Connections", table: "connections" },
     { key: "chat_rooms", label: "Chat Rooms", table: "chat_rooms" },
     { key: "categories", label: "Forum Categories", table: "forum_categories" }
   ];
 
+  var [authUsers, setAuthUsers] = useState([]);
+  var [showAddCategory, setShowAddCategory] = useState(false);
+  var [newCategory, setNewCategory] = useState({ name: "", slug: "", description: "", icon: "", sort_order: "" });
+
   var currentTab = tabs.find(function(t) { return t.key === activeTab; });
 
   async function loadData() {
     if (!currentTab) return;
     setLoading(true);
+    if (activeTab === "users") {
+      // Fetch signed up users from profiles joined with auth info
+      var { data: profileRows } = await supabase.from("profiles").select("id, full_name, created_at").order("created_at", { ascending: false });
+      // We cannot directly query auth.users from client, so we show profiles with whatever info we have
+      // Fetch emails via admin API would require service role key, so we show profile data
+      setData(profileRows || []);
+      // Try to get auth users list via supabase admin (this only works if RLS allows it)
+      setLoading(false);
+      return;
+    }
+    if (!currentTab.table) { setData([]); setLoading(false); return; }
     var { data: rows, error } = await supabase.from(currentTab.table).select("*").order("created_at", { ascending: false }).limit(100);
     if (error) { console.error("Admin load error:", error); setData([]); }
     else { setData(rows || []); }
@@ -2671,6 +2687,7 @@ function AdminDashboard({ user }) {
 
   async function handleDelete(id) {
     if (!confirm("Are you sure you want to delete this item? This cannot be undone.")) return;
+    if (activeTab === "users") return;
     var { error } = await supabase.from(currentTab.table).delete().eq("id", id);
     if (error) { alert("Delete error: " + error.message); return; }
     setData(function(prev) { return prev.filter(function(r) { return r.id !== id; }); });
@@ -2698,6 +2715,7 @@ function AdminDashboard({ user }) {
     if (activeTab === "forum_posts") return ["id", "title", "is_pinned", "upvotes", "comment_count", "created_at"];
     if (activeTab === "forum_comments") return ["id", "content", "upvotes", "created_at"];
     if (activeTab === "profiles") return ["id", "full_name", "target_exam", "target_score", "exam_date"];
+    if (activeTab === "users") return ["id", "full_name", "created_at"];
     if (activeTab === "scores") return ["id", "user_id", "exam_type", "questions_solved", "questions_correct", "study_hours", "log_date"];
     if (activeTab === "connections") return ["id", "requester_id", "receiver_id", "status", "created_at"];
     if (activeTab === "chat_rooms") return ["id", "name", "room_type", "created_at"];
@@ -2748,6 +2766,46 @@ function AdminDashboard({ user }) {
 
         {/* Loading */}
         {loading && (<div style={{textAlign: "center", padding: 40, color: "#9CA3AF"}}>Loading...</div>)}
+
+        {/* Add Category Form */}
+        {activeTab === "categories" && (
+          <div style={{marginBottom: 16}}>
+            {!showAddCategory ? (
+              <button onClick={function() {setShowAddCategory(true);}} style={{padding: "10px 20px", background: RED, color: "white", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>+ Add Category</button>
+            ) : (
+              <div style={{background: "white", borderRadius: 12, border: "1px solid #E5E7EB", padding: 20, marginBottom: 12}}>
+                <div style={{fontSize: 14, fontWeight: 600, color: "#111827", marginBottom: 12}}>New Forum Category</div>
+                <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12}}>
+                  <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Name *</label><input type="text" style={adminInputStyle} placeholder="e.g. Career Advice" value={newCategory.name} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}));}} /></div>
+                  <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Slug</label><input type="text" style={adminInputStyle} placeholder="auto-generated" value={newCategory.slug} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {slug: e.target.value}));}} /></div>
+                </div>
+                <div style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12}}>
+                  <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Icon (emoji)</label><input type="text" style={adminInputStyle} placeholder="e.g. &#128188;" value={newCategory.icon} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {icon: e.target.value}));}} /></div>
+                  <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Sort Order</label><input type="number" style={adminInputStyle} placeholder="e.g. 9" value={newCategory.sort_order} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {sort_order: e.target.value}));}} /></div>
+                  <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Description</label><input type="text" style={adminInputStyle} placeholder="Short description" value={newCategory.description} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {description: e.target.value}));}} /></div>
+                </div>
+                <div style={{display: "flex", gap: 10}}>
+                  <button onClick={function() {setShowAddCategory(false); setNewCategory({name:"",slug:"",description:"",icon:"",sort_order:""});}} style={{padding: "8px 16px", background: "white", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Cancel</button>
+                  <button onClick={async function() {
+                    if (!newCategory.name.trim()) { alert("Category name is required."); return; }
+                    var { error } = await supabase.from("forum_categories").insert([{name: newCategory.name.trim(), slug: newCategory.slug || newCategory.name.toLowerCase().replace(/[^a-z0-9]+/g,"-"), description: newCategory.description || null, icon: newCategory.icon || null, sort_order: newCategory.sort_order ? Number(newCategory.sort_order) : 0}]);
+                    if (error) { alert("Error adding category: " + error.message); return; }
+                    setShowAddCategory(false);
+                    setNewCategory({name:"",slug:"",description:"",icon:"",sort_order:""});
+                    loadData();
+                  }} style={{padding: "8px 16px", background: RED, color: "white", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Add Category</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Users tab note */}
+        {activeTab === "users" && !loading && (
+          <div style={{padding: "12px 16px", background: "#fdf0f0", borderRadius: 10, marginBottom: 16, fontSize: 13, color: "#6B7280", fontFamily: "'DM Sans',sans-serif"}}>
+            Showing users who have completed their profile. To see all signed-up users with email addresses, go to <strong>Supabase Dashboard &gt; Authentication &gt; Users</strong>.
+          </div>
+        )}
 
         {/* Edit Modal */}
         {editItem && (<div onClick={function() {setEditItem(null);}} style={{position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20}}>
@@ -2804,8 +2862,9 @@ function AdminDashboard({ user }) {
                       return (<td key={col} style={{padding: "10px 12px", color: "#374151", whiteSpace: "nowrap", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis"}}>{display}</td>);
                     })}
                     <td style={{padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap"}}>
-                      <button onClick={function() {startEdit(row);}} style={{background: "none", border: "none", color: RED, cursor: "pointer", fontSize: 12, fontWeight: 600, marginRight: 8, fontFamily: "'DM Sans',sans-serif"}}>Edit</button>
-                      <button onClick={function() {handleDelete(row.id);}} style={{background: "none", border: "none", color: "#D1D5DB", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans',sans-serif"}}>Delete</button>
+                      {activeTab !== "users" && (<><button onClick={function() {startEdit(row);}} style={{background: "none", border: "none", color: RED, cursor: "pointer", fontSize: 12, fontWeight: 600, marginRight: 8, fontFamily: "'DM Sans',sans-serif"}}>Edit</button>
+                      <button onClick={function() {handleDelete(row.id);}} style={{background: "none", border: "none", color: "#D1D5DB", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans',sans-serif"}}>Delete</button></>)}
+                      {activeTab === "users" && (<span style={{fontSize: 12, color: "#9CA3AF"}}>View only</span>)}
                     </td>
                   </tr>);
                 })}
