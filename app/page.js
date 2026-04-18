@@ -221,11 +221,12 @@ function AuthModal({ onClose, onAuth }) {
 }
 
 /* ── User Menu ── */
-function UserMenu({ user, onLogout }) {
+function UserMenu({ user, onLogout, onAdmin }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
   const initials = displayName.split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
+  const isAdmin = user.email === ADMIN_EMAIL;
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
     document.addEventListener("mousedown", handler);
@@ -241,6 +242,7 @@ function UserMenu({ user, onLogout }) {
           <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"15px",color:DARK,marginBottom:"4px"}}>{displayName}</div>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:GRAY,marginBottom:"16px",wordBreak:"break-all"}}>{user.email}</div>
           <div style={{height:"1px",background:"rgba(0,0,0,0.08)",margin:"0 -20px",marginBottom:"12px"}}></div>
+          {isAdmin && (<button onClick={()=>{setOpen(false);if(onAdmin)onAdmin();}} style={{width:"100%",padding:"10px 0",background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",color:"#111827",textAlign:"left",marginBottom:8}}>Admin Dashboard</button>)}
           <button onClick={()=>{setOpen(false);onLogout();}} style={{width:"100%",padding:"10px 0",background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",color:RED,textAlign:"left"}}>Log Out</button>
         </div>
       )}
@@ -607,7 +609,7 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
       </div>
       <div style={{display:"flex",gap:"10px",alignItems:"center",flexShrink:0}} className="dt-nav">
         {user ? (
-          <UserMenu user={user} onLogout={onLogout} />
+          <UserMenu user={user} onLogout={onLogout} onAdmin={function(){setPage("admin");window.scrollTo(0,0);}} />
         ) : (
           <button onClick={onLoginClick} style={{...bps,padding:"10px 22px",fontSize:"11.5px"}}>Log In</button>
         )}
@@ -2631,6 +2633,192 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
   );
 }
 
+/* ── Admin Dashboard ── */
+function AdminDashboard({ user }) {
+  var [activeTab, setActiveTab] = useState("blog");
+  var [data, setData] = useState([]);
+  var [loading, setLoading] = useState(false);
+  var [editItem, setEditItem] = useState(null);
+  var [editForm, setEditForm] = useState({});
+  var [searchQuery, setSearchQuery] = useState("");
+
+  var isAdmin = user && user.email === ADMIN_EMAIL;
+  if (!isAdmin) return (<div style={{paddingTop:120,minHeight:"100vh",background:"#FAFAFA",textAlign:"center",padding:"200px 20px"}}><h2 style={{fontFamily:"'Playfair Display',serif",color:"#111827"}}>Access Denied</h2><p style={{color:"#6B7280",fontFamily:"'DM Sans',sans-serif"}}>Admin access only.</p></div>);
+
+  var tabs = [
+    { key: "blog", label: "Blog Posts", table: "blog_posts" },
+    { key: "forum_posts", label: "Forum Posts", table: "forum_posts" },
+    { key: "forum_comments", label: "Forum Comments", table: "forum_comments" },
+    { key: "profiles", label: "User Profiles", table: "profiles" },
+    { key: "scores", label: "Leaderboard Scores", table: "daily_scores" },
+    { key: "connections", label: "Connections", table: "connections" },
+    { key: "chat_rooms", label: "Chat Rooms", table: "chat_rooms" },
+    { key: "categories", label: "Forum Categories", table: "forum_categories" }
+  ];
+
+  var currentTab = tabs.find(function(t) { return t.key === activeTab; });
+
+  async function loadData() {
+    if (!currentTab) return;
+    setLoading(true);
+    var { data: rows, error } = await supabase.from(currentTab.table).select("*").order("created_at", { ascending: false }).limit(100);
+    if (error) { console.error("Admin load error:", error); setData([]); }
+    else { setData(rows || []); }
+    setLoading(false);
+  }
+
+  useEffect(function() { loadData(); }, [activeTab]);
+
+  async function handleDelete(id) {
+    if (!confirm("Are you sure you want to delete this item? This cannot be undone.")) return;
+    var { error } = await supabase.from(currentTab.table).delete().eq("id", id);
+    if (error) { alert("Delete error: " + error.message); return; }
+    setData(function(prev) { return prev.filter(function(r) { return r.id !== id; }); });
+  }
+
+  async function handleSaveEdit() {
+    if (!editItem) return;
+    var updates = Object.assign({}, editForm);
+    delete updates.id;
+    delete updates.created_at;
+    var { error } = await supabase.from(currentTab.table).update(updates).eq("id", editItem);
+    if (error) { alert("Update error: " + error.message); return; }
+    setEditItem(null);
+    setEditForm({});
+    loadData();
+  }
+
+  function startEdit(row) {
+    setEditItem(row.id);
+    setEditForm(Object.assign({}, row));
+  }
+
+  function getDisplayColumns() {
+    if (activeTab === "blog") return ["id", "title", "author_name", "category", "published", "created_at"];
+    if (activeTab === "forum_posts") return ["id", "title", "is_pinned", "upvotes", "comment_count", "created_at"];
+    if (activeTab === "forum_comments") return ["id", "content", "upvotes", "created_at"];
+    if (activeTab === "profiles") return ["id", "full_name", "target_exam", "target_score", "exam_date"];
+    if (activeTab === "scores") return ["id", "user_id", "exam_type", "questions_solved", "questions_correct", "study_hours", "log_date"];
+    if (activeTab === "connections") return ["id", "requester_id", "receiver_id", "status", "created_at"];
+    if (activeTab === "chat_rooms") return ["id", "name", "room_type", "created_at"];
+    if (activeTab === "categories") return ["id", "name", "slug", "icon", "sort_order"];
+    return ["id"];
+  }
+
+  function getEditableColumns() {
+    if (activeTab === "blog") return ["title", "content", "author_name", "category", "published"];
+    if (activeTab === "forum_posts") return ["title", "content", "is_pinned", "upvotes", "comment_count"];
+    if (activeTab === "forum_comments") return ["content", "upvotes"];
+    if (activeTab === "profiles") return ["full_name", "target_exam", "target_score", "exam_date", "target_schools", "study_style", "bio"];
+    if (activeTab === "scores") return ["exam_type", "questions_solved", "questions_correct", "study_hours", "log_date"];
+    if (activeTab === "connections") return ["status"];
+    if (activeTab === "chat_rooms") return ["name", "room_type"];
+    if (activeTab === "categories") return ["name", "slug", "description", "icon", "sort_order"];
+    return [];
+  }
+
+  var cols = getDisplayColumns();
+  var filteredData = searchQuery.trim() ? data.filter(function(row) {
+    return JSON.stringify(row).toLowerCase().indexOf(searchQuery.toLowerCase()) !== -1;
+  }) : data;
+
+  var adminInputStyle = { width: "100%", padding: "8px 12px", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" };
+
+  return (
+    <div style={{paddingTop: 120, minHeight: "100vh", background: "#FAFAFA"}}>
+      <div style={{maxWidth: 1200, margin: "0 auto", padding: "0 20px 60px"}}>
+        <div style={{marginBottom: 24}}>
+          <h1 style={{fontFamily: "'Playfair Display',serif", fontSize: "clamp(28px,4vw,36px)", fontWeight: 700, color: "#111827", margin: 0}}>Admin Dashboard</h1>
+          <p style={{fontSize: 15, color: "#6B7280", marginTop: 6, marginBottom: 0, fontFamily: "'DM Sans',sans-serif"}}>Manage all website content and data.</p>
+        </div>
+
+        {/* Tabs */}
+        <div style={{display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20}}>
+          {tabs.map(function(t) {
+            return (<button key={t.key} onClick={function() {setActiveTab(t.key); setSearchQuery(""); setEditItem(null);}} style={{padding: "8px 16px", borderRadius: 8, border: "1px solid " + (activeTab === t.key ? RED : "#E5E7EB"), background: activeTab === t.key ? RED : "white", color: activeTab === t.key ? "white" : "#6B7280", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>{t.label}</button>);
+          })}
+        </div>
+
+        {/* Search + Stats */}
+        <div style={{display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap"}}>
+          <input type="text" placeholder={"Search " + (currentTab ? currentTab.label : "") + "..."} value={searchQuery} onChange={function(e) {setSearchQuery(e.target.value);}} style={{flex: 1, minWidth: 200, padding: "10px 14px", border: "1px solid #E5E7EB", borderRadius: 10, fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", background: "white"}} />
+          <span style={{fontSize: 13, color: "#9CA3AF", fontWeight: 600}}>{filteredData.length + " of " + data.length + " rows"}</span>
+          <button onClick={function() {loadData();}} style={{padding: "10px 16px", background: "white", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Refresh</button>
+        </div>
+
+        {/* Loading */}
+        {loading && (<div style={{textAlign: "center", padding: 40, color: "#9CA3AF"}}>Loading...</div>)}
+
+        {/* Edit Modal */}
+        {editItem && (<div onClick={function() {setEditItem(null);}} style={{position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20}}>
+          <div onClick={function(e) {e.stopPropagation();}} style={{background: "white", borderRadius: 16, padding: 28, width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto", boxShadow: "0 25px 60px rgba(0,0,0,0.15)"}}>
+            <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20}}>
+              <h3 style={{fontSize: 18, fontWeight: 700, color: "#111827", margin: 0, fontFamily: "'Playfair Display',serif"}}>Edit Record</h3>
+              <button onClick={function() {setEditItem(null);}} style={{background: "none", border: "none", fontSize: 22, color: "#9CA3AF", cursor: "pointer"}}>&#10005;</button>
+            </div>
+            {getEditableColumns().map(function(col) {
+              var val = editForm[col];
+              var isBoolean = val === true || val === false;
+              var isLongText = col === "content" || col === "bio" || col === "description";
+              return (<div key={col} style={{marginBottom: 14}}>
+                <label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block", textTransform: "capitalize"}}>{col.replace(/_/g, " ")}</label>
+                {isBoolean ? (
+                  <select style={adminInputStyle} value={String(val)} onChange={function(e) {setEditForm(Object.assign({}, editForm, {[col]: e.target.value === "true"}));}}>
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                ) : isLongText ? (
+                  <textarea style={{...adminInputStyle, resize: "vertical"}} rows={4} value={val || ""} onChange={function(e) {setEditForm(Object.assign({}, editForm, {[col]: e.target.value}));}} />
+                ) : (
+                  <input type="text" style={adminInputStyle} value={val === null || val === undefined ? "" : String(val)} onChange={function(e) {setEditForm(Object.assign({}, editForm, {[col]: e.target.value}));}} />
+                )}
+              </div>);
+            })}
+            <div style={{display: "flex", gap: 10, marginTop: 20}}>
+              <button onClick={function() {setEditItem(null);}} style={{flex: 1, padding: 12, background: "white", color: "#6B7280", border: "1px solid #E5E7EB", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Cancel</button>
+              <button onClick={handleSaveEdit} style={{flex: 1, padding: 12, background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Save Changes</button>
+            </div>
+          </div>
+        </div>)}
+
+        {/* Data Table */}
+        {!loading && (
+          <div style={{background: "white", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "auto"}}>
+            <table style={{width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: "'DM Sans',sans-serif"}}>
+              <thead>
+                <tr style={{borderBottom: "2px solid #F3F4F6"}}>
+                  {cols.map(function(col) {
+                    return (<th key={col} style={{padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 600, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap"}}>{col.replace(/_/g, " ")}</th>);
+                  })}
+                  <th style={{padding: "10px 12px", textAlign: "right", fontSize: 11, fontWeight: 600, color: "#9CA3AF"}}>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map(function(row) {
+                  return (<tr key={row.id} style={{borderBottom: "1px solid #F3F4F6"}}>
+                    {cols.map(function(col) {
+                      var val = row[col];
+                      var display = val === null || val === undefined ? "-" : val === true ? "Yes" : val === false ? "No" : String(val);
+                      if (display.length > 50) display = display.slice(0, 50) + "...";
+                      if (col === "id") display = display.slice(0, 8) + "...";
+                      return (<td key={col} style={{padding: "10px 12px", color: "#374151", whiteSpace: "nowrap", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis"}}>{display}</td>);
+                    })}
+                    <td style={{padding: "10px 12px", textAlign: "right", whiteSpace: "nowrap"}}>
+                      <button onClick={function() {startEdit(row);}} style={{background: "none", border: "none", color: RED, cursor: "pointer", fontSize: 12, fontWeight: 600, marginRight: 8, fontFamily: "'DM Sans',sans-serif"}}>Edit</button>
+                      <button onClick={function() {handleDelete(row.id);}} style={{background: "none", border: "none", color: "#D1D5DB", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "'DM Sans',sans-serif"}}>Delete</button>
+                    </td>
+                  </tr>);
+                })}
+                {filteredData.length === 0 && (<tr><td colSpan={cols.length + 1} style={{padding: 40, textAlign: "center", color: "#9CA3AF"}}>No data found</td></tr>)}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function HomePage() {
   return (<><Hero/><SchoolLogos/><NotTypical/><CommunityProof/><LinkedInFeatures/><HowItWorks/><ServicesSection/><AdmissionsSection/><CommunitySection/><TeamSection/><TestimonialsSection/><CTA/></>);
 }
@@ -2673,6 +2861,7 @@ export default function App() {
       {page==="leaderboard"&&<LeaderboardPage user={user} onOpenChat={openChat} onLoginClick={()=>setShowAuth(true)}/>}
       {page==="partners"&&<AccountabilityPage user={user} onLoginClick={()=>setShowAuth(true)} onOpenChat={openChat}/>}
       {page==="forum"&&<ForumPage user={user} onLoginClick={()=>setShowAuth(true)}/>}
+      {page==="admin"&&<AdminDashboard user={user}/>}
       <Footer/>
       <StickyWhatsApp/>
       {user && !chatOpen && (
