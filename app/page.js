@@ -992,143 +992,217 @@ function lbGetMedalStyle(index) {
 }
 
 /* ── Leaderboard Page ── */
-function LeaderboardPage({ user }) {
+function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
   var [examType, setExamType] = useState("GMAT");
   var [period, setPeriod] = useState("weekly");
   var [leaderboardData, setLeaderboardData] = useState([]);
   var [loading, setLoading] = useState(true);
   var [showScoreModal, setShowScoreModal] = useState(false);
   var [submitting, setSubmitting] = useState(false);
-  var [scoreForm, setScoreForm] = useState({ quant_score:"", verbal_score:"", total_score:"", questions_attempted:"", questions_correct:"", study_hours:"", notes:"" });
+  var [scoreForm, setScoreForm] = useState({ log_date:"", study_hours:"", questions_solved:"", questions_correct:"" });
+  var [selectedProfile, setSelectedProfile] = useState(null);
+  var [selectedProfileData, setSelectedProfileData] = useState(null);
+  var [selectedConnStatus, setSelectedConnStatus] = useState(null);
+  var [connections, setConnections] = useState([]);
+
+  // Fetch user connections for profile modal
+  useEffect(function() {
+    if (!user) return;
+    supabase.from("connections").select("*").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id).then(function(res) {
+      setConnections(res.data || []);
+    });
+  }, [user]);
+
+  function getConnectionForUser(profileId) {
+    return connections.find(function(c) {
+      return ((c.requester_id === profileId || c.receiver_id === profileId) && c.status !== "rejected" && c.status !== "blocked");
+    });
+  }
+
+  // Get period start date with 4am daily reset
+  function getPeriodStart(p) {
+    var now = new Date();
+    var todayAt4am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0);
+    // If before 4am, consider it still "yesterday"
+    var effectiveDate = now < todayAt4am ? new Date(now.getTime() - 86400000) : now;
+    var ed = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), effectiveDate.getDate());
+
+    if (p === "daily") {
+      return ed.toISOString().split("T")[0];
+    } else if (p === "weekly") {
+      // Monday to Sunday
+      var day = ed.getDay();
+      var mondayOffset = day === 0 ? 6 : day - 1;
+      var monday = new Date(ed.getTime() - mondayOffset * 86400000);
+      return monday.toISOString().split("T")[0];
+    } else if (p === "monthly") {
+      return new Date(ed.getFullYear(), ed.getMonth(), 1).toISOString().split("T")[0];
+    }
+    return "2020-01-01";
+  }
 
   var fetchLeaderboard = useCallback(async function() {
     setLoading(true);
-    var startDate = lbGetDateRange(period);
+    var startDate = getPeriodStart(period);
     try {
-      var { data, error } = await supabase.from("daily_scores").select("*, profiles(full_name, avatar_url, target_exam)").eq("exam_type", examType).gte("score_date", startDate).order("total_score", { ascending: false });
+      var { data, error } = await supabase.from("daily_scores").select("*").eq("exam_type", examType).gte("log_date", startDate).order("log_date", { ascending: false });
       if (error) { console.error("Leaderboard fetch error:", error); setLeaderboardData([]); }
       else {
+        // Aggregate by user
         var userMap = {};
         (data || []).forEach(function(row) {
           var uid = row.user_id;
-          if (!userMap[uid]) { userMap[uid] = { user_id: uid, full_name: row.profiles ? row.profiles.full_name : "Anonymous", avatar_url: row.profiles ? row.profiles.avatar_url : null, total_scores: [], quant_scores: [], verbal_scores: [], questions_attempted: 0, questions_correct: 0, study_hours: 0, days_active: 0 }; }
-          if (row.total_score) userMap[uid].total_scores.push(row.total_score);
-          if (row.quant_score) userMap[uid].quant_scores.push(row.quant_score);
-          if (row.verbal_score) userMap[uid].verbal_scores.push(row.verbal_score);
-          userMap[uid].questions_attempted += row.questions_attempted || 0;
+          if (!userMap[uid]) { userMap[uid] = { user_id: uid, questions_solved: 0, questions_correct: 0, study_hours: 0, days_active: new Set(), log_dates: [] }; }
+          userMap[uid].questions_solved += row.questions_solved || 0;
           userMap[uid].questions_correct += row.questions_correct || 0;
           userMap[uid].study_hours += row.study_hours || 0;
-          userMap[uid].days_active += 1;
+          userMap[uid].days_active.add(row.log_date);
+          userMap[uid].log_dates.push(row.log_date);
         });
+
+        // Fetch profile names for all users
+        var userIds = Object.keys(userMap);
+        var profileMap = {};
+        if (userIds.length > 0) {
+          var { data: profiles } = await supabase.from("profiles").select("id, full_name, avatar_url, target_exam, target_score, exam_date").in("id", userIds);
+          (profiles || []).forEach(function(p) { profileMap[p.id] = p; });
+        }
+
         var aggregated = Object.values(userMap).map(function(u) {
-          var avgTotal = u.total_scores.length > 0 ? u.total_scores.reduce(function(a,b){return a+b;},0)/u.total_scores.length : 0;
-          var avgQuant = u.quant_scores.length > 0 ? u.quant_scores.reduce(function(a,b){return a+b;},0)/u.quant_scores.length : 0;
-          var avgVerbal = u.verbal_scores.length > 0 ? u.verbal_scores.reduce(function(a,b){return a+b;},0)/u.verbal_scores.length : 0;
-          var accuracy = u.questions_attempted > 0 ? (u.questions_correct/u.questions_attempted)*100 : 0;
-          var composite = (avgTotal*0.4)+(accuracy*0.25)+(Math.min(u.days_active*10,100)*0.2)+(Math.min(u.questions_attempted*0.5,100)*0.15);
-          return { user_id:u.user_id, full_name:u.full_name, avatar_url:u.avatar_url, questions_attempted:u.questions_attempted, study_hours:u.study_hours, days_active:u.days_active, avg_total:avgTotal, avg_quant:avgQuant, avg_verbal:avgVerbal, accuracy:accuracy, composite:composite };
+          var accuracy = u.questions_solved > 0 ? (u.questions_correct / u.questions_solved) * 100 : 0;
+          var daysActive = u.days_active.size;
+          // Composite: accuracy 35%, volume 25%, consistency 25%, study hours 15%
+          var composite = (accuracy * 0.35) + (Math.min(u.questions_solved * 0.5, 100) * 0.25) + (Math.min(daysActive * 15, 100) * 0.25) + (Math.min(u.study_hours * 5, 100) * 0.15);
+          var prof = profileMap[u.user_id] || {};
+          return { user_id: u.user_id, full_name: prof.full_name || "Anonymous", avatar_url: prof.avatar_url, target_exam: prof.target_exam, target_score: prof.target_score, exam_date: prof.exam_date, questions_solved: u.questions_solved, questions_correct: u.questions_correct, study_hours: u.study_hours, days_active: daysActive, accuracy: accuracy, composite: composite };
         });
-        aggregated.sort(function(a,b){ return b.composite - a.composite; });
+        aggregated.sort(function(a, b) { return b.composite - a.composite; });
         setLeaderboardData(aggregated);
       }
     } catch(err) { console.error("Fetch error:", err); setLeaderboardData([]); }
     setLoading(false);
   }, [examType, period]);
 
-  useEffect(function(){ fetchLeaderboard(); }, [fetchLeaderboard]);
+  useEffect(function() { fetchLeaderboard(); }, [fetchLeaderboard]);
 
   async function handleSubmitScore(e) {
     e.preventDefault();
-    if (!user) { alert("Please sign in to submit a score."); return; }
+    if (!user) { if (onLoginClick) onLoginClick(); return; }
     setSubmitting(true);
-    var today = new Date().toISOString().split("T")[0];
-    var payload = { user_id:user.id, exam_type:examType, score_date:today, quant_score:scoreForm.quant_score?Number(scoreForm.quant_score):null, verbal_score:scoreForm.verbal_score?Number(scoreForm.verbal_score):null, total_score:scoreForm.total_score?Number(scoreForm.total_score):null, questions_attempted:scoreForm.questions_attempted?Number(scoreForm.questions_attempted):null, questions_correct:scoreForm.questions_correct?Number(scoreForm.questions_correct):null, study_hours:scoreForm.study_hours?Number(scoreForm.study_hours):null, notes:scoreForm.notes||null };
+    var logDate = scoreForm.log_date || new Date().toISOString().split("T")[0];
+    var qSolved = Number(scoreForm.questions_solved) || 0;
+    var qCorrect = Number(scoreForm.questions_correct) || 0;
+    var payload = { user_id: user.id, exam_type: examType, log_date: logDate, study_hours: Number(scoreForm.study_hours) || 0, questions_solved: qSolved, questions_correct: qCorrect, questions_wrong: qSolved - qCorrect, section: "general" };
     var { error } = await supabase.from("daily_scores").insert([payload]);
-    if (error) { alert("Error submitting score. You may have already logged today, or please check your inputs."); }
-    else { setShowScoreModal(false); setScoreForm({ quant_score:"", verbal_score:"", total_score:"", questions_attempted:"", questions_correct:"", study_hours:"", notes:"" }); fetchLeaderboard(); }
+    if (error) { alert("Error submitting score: " + error.message); }
+    else { setShowScoreModal(false); setScoreForm({ log_date: "", study_hours: "", questions_solved: "", questions_correct: "" }); fetchLeaderboard(); }
     setSubmitting(false);
   }
 
-  var lbInputStyle = { width:"100%", padding:"12px 16px", border:"1px solid #E5E7EB", borderRadius:"10px", fontSize:"14px", fontFamily:"'DM Sans',sans-serif", outline:"none", background:"#FAFAFA", boxSizing:"border-box" };
+  // Open profile modal
+  async function openProfile(userId) {
+    var { data } = await supabase.from("profiles").select("*").eq("id", userId).single();
+    setSelectedProfileData(data);
+    var conn = getConnectionForUser(userId);
+    setSelectedConnStatus(conn ? { status: conn.status, id: conn.id, isRequester: conn.requester_id === user.id } : null);
+    setSelectedProfile(userId);
+  }
+
+  async function sendConnectionFromProfile(receiverId) {
+    if (!user) { if (onLoginClick) onLoginClick(); return; }
+    var { error } = await supabase.from("connections").insert([{ requester_id: user.id, receiver_id: receiverId, status: "pending" }]);
+    if (error) { alert("Error: " + error.message); return; }
+    var { data } = await supabase.from("connections").select("*").or("requester_id.eq." + user.id + ",receiver_id.eq." + user.id);
+    setConnections(data || []);
+    var conn = (data || []).find(function(c) { return c.requester_id === receiverId || c.receiver_id === receiverId; });
+    setSelectedConnStatus(conn ? { status: conn.status, id: conn.id, isRequester: conn.requester_id === user.id } : null);
+  }
+
+  var lbInputStyle = { width: "100%", padding: "12px 16px", border: "1px solid #E5E7EB", borderRadius: "10px", fontSize: "14px", fontFamily: "'DM Sans',sans-serif", outline: "none", background: "#FAFAFA", boxSizing: "border-box" };
 
   return (
-    <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
-      <div style={{maxWidth:1100,margin:"0 auto",padding:"0 20px"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,marginBottom:24}}>
+    <div style={{paddingTop: "120px", minHeight: "100vh", background: "#FAFAFA"}}>
+      <div style={{maxWidth: 1100, margin: "0 auto", padding: "0 20px"}}>
+        <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 24}}>
           <div>
-            <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,4vw,36px)",fontWeight:700,color:"#111827",margin:0}}>Prep Leaderboard</h1>
-            <p style={{fontSize:15,color:"#6B7280",marginTop:6,marginBottom:0,fontFamily:"'DM Sans',sans-serif"}}>{"Track your "+examType+" prep progress. Compete with fellow aspirants."}</p>
+            <h1 style={{fontFamily: "'Playfair Display',serif", fontSize: "clamp(28px,4vw,36px)", fontWeight: 700, color: "#111827", margin: 0}}>Prep Leaderboard</h1>
+            <p style={{fontSize: 15, color: "#6B7280", marginTop: 6, marginBottom: 0, fontFamily: "'DM Sans',sans-serif"}}>{"Track your " + examType + " prep progress. Compete with fellow aspirants."}</p>
           </div>
-          {user && (<button onClick={function(){setShowScoreModal(true);}} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"12px 24px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><LbPlusIcon/> {"Log Today's Score"}</button>)}
+          {user && (<button onClick={function() {setShowScoreModal(true);}} style={{display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}><LbPlusIcon /> Log Study Session</button>)}
         </div>
 
         {/* Exam Tabs */}
-        <div style={{display:"flex",borderBottom:"2px solid #F3F4F6",gap:0}}>
-          {["GMAT","GRE"].map(function(exam){return (<button key={exam} onClick={function(){setExamType(exam);}} style={{padding:"10px 20px",border:"none",background:"transparent",cursor:"pointer",fontSize:15,fontWeight:examType===exam?600:500,color:examType===exam?RED:"#6B7280",borderBottom:examType===exam?"3px solid "+RED:"3px solid transparent",fontFamily:"'DM Sans',sans-serif"}}>{exam+" Leaderboard"}</button>);})}
+        <div style={{display: "flex", borderBottom: "2px solid #F3F4F6", gap: 0}}>
+          {["GMAT", "GRE"].map(function(exam) {return (<button key={exam} onClick={function() {setExamType(exam);}} style={{padding: "10px 20px", border: "none", background: "transparent", cursor: "pointer", fontSize: 15, fontWeight: examType === exam ? 600 : 500, color: examType === exam ? RED : "#6B7280", borderBottom: examType === exam ? "3px solid " + RED : "3px solid transparent", fontFamily: "'DM Sans',sans-serif"}}>{exam + " Leaderboard"}</button>);})}
         </div>
 
         {/* Period Filter */}
-        <div style={{display:"flex",gap:8,marginTop:20,flexWrap:"wrap"}}>
-          {[{key:"daily",label:"Today"},{key:"weekly",label:"This Week"},{key:"monthly",label:"This Month"},{key:"all",label:"All Time"}].map(function(p){return (<button key={p.key} onClick={function(){setPeriod(p.key);}} style={{padding:"8px 18px",border:"1px solid "+(period===p.key?RED:"#E5E7EB"),background:period===p.key?RED:"white",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:500,color:period===p.key?"white":"#6B7280",fontFamily:"'DM Sans',sans-serif"}}>{p.label}</button>);})}
+        <div style={{display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap"}}>
+          {[{key: "daily", label: "Daily"}, {key: "weekly", label: "Weekly"}, {key: "monthly", label: "Monthly"}, {key: "all", label: "All Time"}].map(function(p) {return (<button key={p.key} onClick={function() {setPeriod(p.key);}} style={{padding: "8px 18px", border: "1px solid " + (period === p.key ? RED : "#E5E7EB"), background: period === p.key ? RED : "white", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, color: period === p.key ? "white" : "#6B7280", fontFamily: "'DM Sans',sans-serif"}}>{p.label}</button>);})}
+          <span style={{fontSize: 12, color: "#9CA3AF", alignSelf: "center", marginLeft: 8}}>
+            {period === "daily" ? "Resets at 4:00 AM daily" : period === "weekly" ? "Monday to Sunday" : period === "monthly" ? "1st to end of month" : ""}
+          </span>
         </div>
 
         {/* Loading */}
-        {loading && (<div style={{marginTop:32}}>{[1,2,3,4,5].map(function(i){return <div key={i} style={{background:"linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%)",backgroundSize:"200% 100%",animation:"lbShimmer 1.5s infinite",borderRadius:8,height:60,marginBottom:8}}/>;})}<style>{"@keyframes lbShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}"}</style></div>)}
+        {loading && (<div style={{marginTop: 32}}>{[1, 2, 3, 4, 5].map(function(i) {return <div key={i} style={{background: "linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%)", backgroundSize: "200% 100%", animation: "lbShimmer 1.5s infinite", borderRadius: 8, height: 60, marginBottom: 8}} />;})}<style>{"@keyframes lbShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}"}</style></div>)}
 
         {/* Empty */}
-        {!loading && leaderboardData.length===0 && (<div style={{textAlign:"center",padding:"80px 20px",color:"#9CA3AF"}}><div style={{fontSize:48,marginBottom:16}}>&#128202;</div><h3 style={{fontSize:20,color:"#374151",marginBottom:8,fontFamily:"'Playfair Display',serif"}}>No scores yet for this period</h3><p style={{fontSize:14,maxWidth:400,margin:"0 auto",lineHeight:1.6,fontFamily:"'DM Sans',sans-serif"}}>{"Be the first to log your "+examType+" practice score and claim the top spot."}</p>{user&&(<button onClick={function(){setShowScoreModal(true);}} style={{marginTop:20,padding:"12px 28px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Log Your First Score</button>)}</div>)}
+        {!loading && leaderboardData.length === 0 && (<div style={{textAlign: "center", padding: "80px 20px", color: "#9CA3AF"}}><div style={{fontSize: 48, marginBottom: 16}}>&#128202;</div><h3 style={{fontSize: 20, color: "#374151", marginBottom: 8, fontFamily: "'Playfair Display',serif"}}>No scores yet for this period</h3><p style={{fontSize: 14, maxWidth: 400, margin: "0 auto", lineHeight: 1.6, fontFamily: "'DM Sans',sans-serif"}}>{"Be the first to log your " + examType + " study session and claim the top spot."}</p>{user && (<button onClick={function() {setShowScoreModal(true);}} style={{marginTop: 20, padding: "12px 28px", background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Log Your First Session</button>)}</div>)}
 
         {/* Top 3 Podium */}
-        {!loading && leaderboardData.length>0 && (<div>
-          <div style={{display:"flex",gap:16,marginTop:32,justifyContent:"center",flexWrap:"wrap"}}>
-            {leaderboardData.slice(0,Math.min(3,leaderboardData.length)).map(function(entry,idx){
-              var medal=lbGetMedalStyle(idx);
-              var initials=(entry.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
-              return (<div key={entry.user_id} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"28px 20px",borderRadius:16,border:"2px solid "+medal.border,backgroundColor:medal.bg,flex:idx===0?"1.2":"1",minWidth:200,maxWidth:300,position:"relative"}}>
-                <div style={{position:"absolute",top:12,left:12,width:28,height:28,borderRadius:"50%",background:medal.border,color:"white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700}}>{idx+1}</div>
-                <LbTrophyIcon color={medal.icon}/>
-                <div style={{width:idx===0?56:48,height:idx===0?56:48,borderRadius:"50%",background:medal.border,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:idx===0?20:18,color:"white",marginTop:12}}>{initials}</div>
-                <h3 style={{fontSize:idx===0?18:16,fontWeight:600,color:medal.text,marginTop:10,marginBottom:4,textAlign:"center",fontFamily:"'Playfair Display',serif"}}>{entry.full_name||"Anonymous"}</h3>
-                <div style={{fontSize:26,fontWeight:800,color:medal.text,fontFamily:"'Playfair Display',serif"}}>{lbFormatScore(entry.avg_total)}</div>
-                <div style={{fontSize:11,color:"#9CA3AF",marginBottom:12}}>avg score</div>
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center"}}>
-                  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:20,fontSize:12,fontWeight:500,background:"#F9FAFB",color:"#6B7280"}}><LbTargetIcon/> {lbFormatScore(entry.accuracy)+"%"}</span>
-                  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:20,fontSize:12,fontWeight:500,background:"#F9FAFB",color:"#6B7280"}}><LbFireIcon/> {entry.days_active+"d streak"}</span>
+        {!loading && leaderboardData.length > 0 && (<div>
+          <div style={{display: "flex", gap: 16, marginTop: 32, justifyContent: "center", flexWrap: "wrap"}}>
+            {leaderboardData.slice(0, Math.min(3, leaderboardData.length)).map(function(entry, idx) {
+              var medal = lbGetMedalStyle(idx);
+              var initials = (entry.full_name || "A").split(" ").map(function(w) {return w[0];}).join("").toUpperCase().slice(0, 2);
+              return (<div key={entry.user_id} onClick={function() {if (user) openProfile(entry.user_id);}} style={{display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 20px", borderRadius: 16, border: "2px solid " + medal.border, backgroundColor: medal.bg, flex: idx === 0 ? "1.2" : "1", minWidth: 200, maxWidth: 300, position: "relative", cursor: user ? "pointer" : "default"}}>
+                <div style={{position: "absolute", top: 12, left: 12, width: 28, height: 28, borderRadius: "50%", background: medal.border, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700}}>{idx + 1}</div>
+                <LbTrophyIcon color={medal.icon} />
+                <div style={{width: idx === 0 ? 56 : 48, height: idx === 0 ? 56 : 48, borderRadius: "50%", background: medal.border, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: idx === 0 ? 20 : 18, color: "white", marginTop: 12}}>{initials}</div>
+                <h3 style={{fontSize: idx === 0 ? 18 : 16, fontWeight: 600, color: medal.text, marginTop: 10, marginBottom: 4, textAlign: "center", fontFamily: "'Playfair Display',serif"}}>{entry.full_name || "Anonymous"}</h3>
+                <div style={{display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 8}}>
+                  <span style={{display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "#F9FAFB", color: "#6B7280"}}><LbTargetIcon /> {lbFormatScore(entry.accuracy) + "%"}</span>
+                  <span style={{display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "#F9FAFB", color: "#6B7280"}}>{entry.questions_solved + " Qs"}</span>
+                  <span style={{display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 500, background: "#F9FAFB", color: "#6B7280"}}><LbFireIcon /> {entry.days_active + "d"}</span>
                 </div>
               </div>);
             })}
           </div>
 
           {/* Table */}
-          <div style={{marginTop:32,background:"white",borderRadius:16,border:"1px solid #E5E7EB",overflow:"hidden",marginBottom:32}}>
-            <div style={{display:"grid",gridTemplateColumns:"60px 1fr 100px 100px 100px 80px",alignItems:"center",padding:"12px 24px",fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.05em",color:"#9CA3AF",borderBottom:"2px solid #F3F4F6",fontFamily:"'DM Sans',sans-serif"}}><span>Rank</span><span>Name</span><span>Avg Score</span><span>Quant</span><span>Verbal</span><span>Accuracy</span></div>
-            {leaderboardData.map(function(entry,idx){
-              var initials=(entry.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
-              var isMe=user&&entry.user_id===user.id;
-              var colors=["#ec8283","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
-              return (<div key={entry.user_id} style={{display:"grid",gridTemplateColumns:"60px 1fr 100px 100px 100px 80px",alignItems:"center",padding:"16px 24px",borderBottom:"1px solid #F3F4F6",backgroundColor:isMe?"#fdf0f0":"transparent",borderLeft:isMe?"3px solid "+RED:"3px solid transparent"}}>
-                <span style={{fontSize:15,fontWeight:700,color:idx<3?lbGetMedalStyle(idx).icon:"#9CA3AF"}}>{idx+1}</span>
-                <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <div style={{width:36,height:36,borderRadius:"50%",background:colors[idx%colors.length],display:"flex",alignItems:"center",justifyContent:"center",fontWeight:600,fontSize:14,color:"white",flexShrink:0}}>{initials}</div>
-                  <div><div style={{fontSize:14,fontWeight:600,color:"#111827",fontFamily:"'DM Sans',sans-serif"}}>{entry.full_name||"Anonymous"}{isMe&&(<span style={{marginLeft:8,fontSize:10,fontWeight:600,background:RED,color:"white",padding:"2px 8px",borderRadius:10}}>YOU</span>)}</div><div style={{fontSize:12,color:"#9CA3AF"}}>{entry.study_hours+"h studied"}</div></div>
+          <div style={{marginTop: 32, background: "white", borderRadius: 16, border: "1px solid #E5E7EB", overflow: "hidden", marginBottom: 32}}>
+            <div style={{display: "grid", gridTemplateColumns: "50px 1fr 90px 90px 70px 70px 70px", alignItems: "center", padding: "12px 20px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", borderBottom: "2px solid #F3F4F6", fontFamily: "'DM Sans',sans-serif"}}><span>#</span><span>Name</span><span>Solved</span><span>Correct</span><span>Acc%</span><span>Hours</span><span>Days</span></div>
+            {leaderboardData.map(function(entry, idx) {
+              var initials = (entry.full_name || "A").split(" ").map(function(w) {return w[0];}).join("").toUpperCase().slice(0, 2);
+              var isMe = user && entry.user_id === user.id;
+              var colors = ["#ec8283", "#2563EB", "#059669", "#7C3AED", "#D97706", "#DB2777"];
+              return (<div key={entry.user_id} onClick={function() {if (user) openProfile(entry.user_id);}} style={{display: "grid", gridTemplateColumns: "50px 1fr 90px 90px 70px 70px 70px", alignItems: "center", padding: "14px 20px", borderBottom: "1px solid #F3F4F6", backgroundColor: isMe ? "#fdf0f0" : "transparent", borderLeft: isMe ? "3px solid " + RED : "3px solid transparent", cursor: user ? "pointer" : "default"}}>
+                <span style={{fontSize: 14, fontWeight: 700, color: idx < 3 ? lbGetMedalStyle(idx).icon : "#9CA3AF"}}>{idx + 1}</span>
+                <div style={{display: "flex", alignItems: "center", gap: 10}}>
+                  <div style={{width: 32, height: 32, borderRadius: "50%", background: colors[idx % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 12, color: "white", flexShrink: 0}}>{initials}</div>
+                  <div>
+                    <div style={{fontSize: 13, fontWeight: 600, color: "#111827"}}>{entry.full_name || "Anonymous"}{isMe && (<span style={{marginLeft: 6, fontSize: 9, fontWeight: 600, background: RED, color: "white", padding: "1px 6px", borderRadius: 8}}>YOU</span>)}</div>
+                  </div>
                 </div>
-                <span style={{fontSize:15,fontWeight:700,color:"#111827"}}>{lbFormatScore(entry.avg_total)}</span>
-                <span style={{fontSize:14,color:"#374151"}}>{lbFormatScore(entry.avg_quant)}</span>
-                <span style={{fontSize:14,color:"#374151"}}>{lbFormatScore(entry.avg_verbal)}</span>
-                <span style={{fontSize:14,color:"#374151"}}>{lbFormatScore(entry.accuracy)+"%"}</span>
+                <span style={{fontSize: 13, fontWeight: 600, color: "#111827"}}>{entry.questions_solved}</span>
+                <span style={{fontSize: 13, color: "#374151"}}>{entry.questions_correct}</span>
+                <span style={{fontSize: 13, color: "#374151"}}>{lbFormatScore(entry.accuracy) + "%"}</span>
+                <span style={{fontSize: 13, color: "#374151"}}>{entry.study_hours + "h"}</span>
+                <span style={{fontSize: 13, color: "#374151"}}>{entry.days_active}</span>
               </div>);
             })}
           </div>
         </div>)}
 
         {/* How Rankings Work */}
-        <div style={{marginTop:16,marginBottom:60,padding:28,background:"white",borderRadius:16,border:"1px solid #E5E7EB"}}>
-          <h3 style={{fontSize:18,fontWeight:600,color:"#111827",marginTop:0,marginBottom:16,fontFamily:"'Playfair Display',serif"}}>How Rankings Work</h3>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
-            {[{icon:<LbChartIcon/>,label:"Average Score",weight:"40%",desc:"Your mean practice test score"},{icon:<LbTargetIcon/>,label:"Accuracy",weight:"25%",desc:"Questions correct / attempted"},{icon:<LbFireIcon/>,label:"Consistency",weight:"20%",desc:"Number of days you logged scores"},{icon:<LbUserIcon/>,label:"Volume",weight:"15%",desc:"Total questions you attempted"}].map(function(item,i){
-              return (<div key={i} style={{padding:16,background:"#F9FAFB",borderRadius:12,display:"flex",flexDirection:"column",gap:6}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,color:RED}}>{item.icon}<span style={{fontSize:14,fontWeight:600,color:"#111827"}}>{item.label}</span><span style={{marginLeft:"auto",fontSize:12,fontWeight:700,color:RED,background:"#fdf0f0",padding:"2px 8px",borderRadius:10}}>{item.weight}</span></div>
-                <span style={{fontSize:12,color:"#6B7280"}}>{item.desc}</span>
+        <div style={{marginTop: 16, marginBottom: 60, padding: 28, background: "white", borderRadius: 16, border: "1px solid #E5E7EB"}}>
+          <h3 style={{fontSize: 18, fontWeight: 600, color: "#111827", marginTop: 0, marginBottom: 16, fontFamily: "'Playfair Display',serif"}}>How Rankings Work</h3>
+          <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16}}>
+            {[{icon: <LbTargetIcon />, label: "Accuracy", weight: "35%", desc: "Questions correct / solved"}, {icon: <LbChartIcon />, label: "Volume", weight: "25%", desc: "Total questions attempted"}, {icon: <LbFireIcon />, label: "Consistency", weight: "25%", desc: "Number of active study days"}, {icon: <LbUserIcon />, label: "Study Hours", weight: "15%", desc: "Total hours studied"}].map(function(item, i) {
+              return (<div key={i} style={{padding: 16, background: "#F9FAFB", borderRadius: 12, display: "flex", flexDirection: "column", gap: 6}}>
+                <div style={{display: "flex", alignItems: "center", gap: 8, color: RED}}>{item.icon}<span style={{fontSize: 14, fontWeight: 600, color: "#111827"}}>{item.label}</span><span style={{marginLeft: "auto", fontSize: 12, fontWeight: 700, color: RED, background: "#fdf0f0", padding: "2px 8px", borderRadius: 10}}>{item.weight}</span></div>
+                <span style={{fontSize: 12, color: "#6B7280"}}>{item.desc}</span>
               </div>);
             })}
           </div>
@@ -1136,26 +1210,73 @@ function LeaderboardPage({ user }) {
       </div>
 
       {/* Score Modal */}
-      {showScoreModal && (<div onClick={function(){setShowScoreModal(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,padding:20}}>
-        <div onClick={function(e){e.stopPropagation();}} style={{background:"white",borderRadius:20,padding:36,width:"100%",maxWidth:520,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 25px 60px rgba(0,0,0,0.15)"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
-            <h2 style={{fontSize:22,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>{"Log "+examType+" Score"}</h2>
-            <button onClick={function(){setShowScoreModal(false);}} style={{background:"none",border:"none",fontSize:24,color:"#9CA3AF",cursor:"pointer"}}>&#10005;</button>
+      {showScoreModal && (<div onClick={function() {setShowScoreModal(false);}} style={{position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20}}>
+        <div onClick={function(e) {e.stopPropagation();}} style={{background: "white", borderRadius: 20, padding: 36, width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 25px 60px rgba(0,0,0,0.15)"}}>
+          <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24}}>
+            <h2 style={{fontSize: 22, fontWeight: 700, color: "#111827", margin: 0, fontFamily: "'Playfair Display',serif"}}>Log Study Session</h2>
+            <button onClick={function() {setShowScoreModal(false);}} style={{background: "none", border: "none", fontSize: 24, color: "#9CA3AF", cursor: "pointer"}}>&#10005;</button>
           </div>
           <form onSubmit={handleSubmitScore}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Quant Score</label><input type="number" style={lbInputStyle} placeholder={examType==="GMAT"?"60-90":"130-170"} value={scoreForm.quant_score} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{quant_score:e.target.value}));}}/></div>
-              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Verbal Score</label><input type="number" style={lbInputStyle} placeholder={examType==="GMAT"?"60-90":"130-170"} value={scoreForm.verbal_score} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{verbal_score:e.target.value}));}}/></div>
+            <div style={{marginBottom: 16}}>
+              <label style={{fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block"}}>Study Date *</label>
+              <input type="date" style={lbInputStyle} value={scoreForm.log_date} onChange={function(e) {setScoreForm(Object.assign({}, scoreForm, {log_date: e.target.value}));}} max={new Date().toISOString().split("T")[0]} required />
             </div>
-            <div style={{marginTop:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Total Score *</label><input type="number" style={lbInputStyle} placeholder={examType==="GMAT"?"205-805":"260-340"} value={scoreForm.total_score} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{total_score:e.target.value}));}} required/></div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginTop:16}}>
-              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Questions Attempted</label><input type="number" style={lbInputStyle} placeholder="e.g. 50" value={scoreForm.questions_attempted} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{questions_attempted:e.target.value}));}}/></div>
-              <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Questions Correct</label><input type="number" style={lbInputStyle} placeholder="e.g. 38" value={scoreForm.questions_correct} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{questions_correct:e.target.value}));}}/></div>
+            <div style={{marginBottom: 16}}>
+              <label style={{fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block"}}>Study Hours *</label>
+              <input type="number" step="0.5" min="0" style={lbInputStyle} placeholder="e.g. 3.5" value={scoreForm.study_hours} onChange={function(e) {setScoreForm(Object.assign({}, scoreForm, {study_hours: e.target.value}));}} required />
             </div>
-            <div style={{marginTop:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Study Hours Today</label><input type="number" step="0.5" style={lbInputStyle} placeholder="e.g. 3.5" value={scoreForm.study_hours} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{study_hours:e.target.value}));}}/></div>
-            <div style={{marginTop:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Notes (optional)</label><textarea style={{...lbInputStyle,resize:"vertical"}} rows={3} placeholder="What did you practice today?" value={scoreForm.notes} onChange={function(e){setScoreForm(Object.assign({},scoreForm,{notes:e.target.value}));}}/></div>
-            <button type="submit" disabled={submitting||!scoreForm.total_score} style={{width:"100%",padding:14,background:submitting||!scoreForm.total_score?"#D1D5DB":RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:submitting?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif",marginTop:24}}>{submitting?"Submitting...":"Submit Score"}</button>
+            <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16}}>
+              <div>
+                <label style={{fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block"}}>Questions Attempted *</label>
+                <input type="number" min="0" style={lbInputStyle} placeholder="e.g. 50" value={scoreForm.questions_solved} onChange={function(e) {setScoreForm(Object.assign({}, scoreForm, {questions_solved: e.target.value}));}} required />
+              </div>
+              <div>
+                <label style={{fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block"}}>Questions Correct *</label>
+                <input type="number" min="0" style={lbInputStyle} placeholder="e.g. 38" value={scoreForm.questions_correct} onChange={function(e) {setScoreForm(Object.assign({}, scoreForm, {questions_correct: e.target.value}));}} required />
+              </div>
+            </div>
+            {scoreForm.questions_solved && scoreForm.questions_correct && (
+              <div style={{padding: "12px 16px", background: "#F9FAFB", borderRadius: 10, marginBottom: 16, fontSize: 13, color: "#6B7280"}}>
+                {"Accuracy: " + (Number(scoreForm.questions_solved) > 0 ? Math.round((Number(scoreForm.questions_correct) / Number(scoreForm.questions_solved)) * 100) : 0) + "% | Wrong: " + (Number(scoreForm.questions_solved) - Number(scoreForm.questions_correct))}
+              </div>
+            )}
+            <button type="submit" disabled={submitting || !scoreForm.log_date || !scoreForm.study_hours || !scoreForm.questions_solved || !scoreForm.questions_correct} style={{width: "100%", padding: 14, background: submitting ? "#D1D5DB" : RED, color: "white", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 600, cursor: submitting ? "not-allowed" : "pointer", fontFamily: "'DM Sans',sans-serif"}}>{submitting ? "Submitting..." : "Submit"}</button>
           </form>
+        </div>
+      </div>)}
+
+      {/* Profile Modal */}
+      {selectedProfile && selectedProfileData && (<div onClick={function() {setSelectedProfile(null);}} style={{position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20}}>
+        <div onClick={function(e) {e.stopPropagation();}} style={{background: "white", borderRadius: 20, padding: 32, width: "100%", maxWidth: 420, boxShadow: "0 25px 60px rgba(0,0,0,0.15)"}}>
+          <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20}}>
+            <h3 style={{fontSize: 18, fontWeight: 700, color: "#111827", margin: 0, fontFamily: "'Playfair Display',serif"}}>Profile</h3>
+            <button onClick={function() {setSelectedProfile(null);}} style={{background: "none", border: "none", fontSize: 22, color: "#9CA3AF", cursor: "pointer"}}>&#10005;</button>
+          </div>
+          {(function() {
+            var p = selectedProfileData;
+            var initials = (p.full_name || "A").split(" ").map(function(w) {return w[0];}).join("").toUpperCase().slice(0, 2);
+            var isMe = user && p.id === user.id;
+            return (<div>
+              <div style={{display: "flex", alignItems: "center", gap: 16, marginBottom: 20}}>
+                <div style={{width: 56, height: 56, borderRadius: "50%", background: RED, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 22, color: "white"}}>{initials}</div>
+                <div>
+                  <div style={{fontSize: 18, fontWeight: 700, color: "#111827"}}>{p.full_name || "Anonymous"}</div>
+                  <div style={{fontSize: 13, color: "#6B7280"}}>{p.target_exam || "Not set"}{p.target_score ? " | Target: " + p.target_score : ""}</div>
+                </div>
+              </div>
+              <div style={{display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16}}>
+                {p.exam_date && (<span style={{fontSize: 12, padding: "5px 12px", borderRadius: 20, background: "#F3F4F6", color: "#374151"}}>{"Exam: " + new Date(p.exam_date).toLocaleDateString("en-US", {month: "short", day: "numeric", year: "numeric"})}</span>)}
+                {p.target_schools && (<span style={{fontSize: 12, padding: "5px 12px", borderRadius: 20, background: "#F3F4F6", color: "#374151"}}>{p.target_schools}</span>)}
+                {p.study_style && (<span style={{fontSize: 12, padding: "5px 12px", borderRadius: 20, background: "#F3F4F6", color: "#374151"}}>{p.study_style}</span>)}
+              </div>
+              {p.bio && (<p style={{fontSize: 13, color: "#6B7280", lineHeight: 1.6, margin: "0 0 20px"}}>{p.bio}</p>)}
+              {!isMe && (<div style={{display: "flex", gap: 10}}>
+                {!selectedConnStatus && (<button onClick={function() {sendConnectionFromProfile(p.id);}} style={{flex: 1, padding: "12px", background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Connect</button>)}
+                {selectedConnStatus && selectedConnStatus.status === "pending" && (<span style={{flex: 1, padding: "12px", background: "#FEF3C7", color: "#92400E", borderRadius: 10, fontSize: 13, fontWeight: 600, textAlign: "center"}}>{selectedConnStatus.isRequester ? "Invite Sent" : "Pending"}</span>)}
+                {selectedConnStatus && selectedConnStatus.status === "accepted" && (<button onClick={function() {if (typeof onOpenChat === "function") {onOpenChat(p.id, p.full_name); setSelectedProfile(null);}}} style={{flex: 1, padding: "12px", background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Message</button>)}
+              </div>)}
+            </div>);
+          })()}
         </div>
       </div>)}
     </div>
@@ -2541,7 +2662,7 @@ export default function App() {
       {page==="home"&&<HomePage/>}
       {page==="faq"&&<FAQPage/>}
       {page==="blog"&&<BlogPage user={user}/>}
-      {page==="leaderboard"&&<LeaderboardPage user={user}/>}
+      {page==="leaderboard"&&<LeaderboardPage user={user} onOpenChat={openChat} onLoginClick={()=>setShowAuth(true)}/>}
       {page==="partners"&&<AccountabilityPage user={user} onLoginClick={()=>setShowAuth(true)} onOpenChat={openChat}/>}
       {page==="forum"&&<ForumPage user={user} onLoginClick={()=>setShowAuth(true)}/>}
       <Footer/>
