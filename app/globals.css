@@ -19,7 +19,7 @@ body { -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 @media (max-width: 900px) {
   section { padding-left: 16px !important; padding-right: 16px !important; }
   .grid-responsive { grid-template-columns: 1fr !important; }
-  .lb-table-header, .lb-table-row { grid-template-columns: 40px 1fr 65px 65px 55px !important; padding: 10px 12px !important; font-size: 12px !important; }
+  .lb-table-header, .lb-table-row { grid-template-columns: 30px 1fr 55px 55px 50px !important; padding: 10px 10px !important; font-size: 12px !important; gap: 4px !important; }
   .lb-hide-mobile { display: none !important; }
   .lb-podium { flex-direction: column !important; align-items: stretch !important; }
   .lb-podium > div { min-width: unset !important; max-width: 100% !important; flex: 1 !important; }
@@ -49,7 +49,7 @@ body { -webkit-font-smoothing: antialiased; overflow-x: hidden; }
   h1 { font-size: clamp(22px, 6vw, 36px) !important; }
   .cta-buttons { flex-direction: column !important; align-items: center !important; gap: 12px !important; }
   .cta-buttons a, .cta-buttons button { width: 100% !important; text-align: center !important; }
-  .lb-table-header, .lb-table-row { grid-template-columns: 30px 1fr 55px 55px !important; padding: 8px 10px !important; font-size: 11px !important; }
+  .lb-table-header, .lb-table-row { grid-template-columns: 25px 1fr 45px 45px 45px !important; padding: 8px 8px !important; font-size: 11px !important; gap: 2px !important; }
   .admin-tabs { flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: none; }
   .admin-tabs::-webkit-scrollbar { display: none; }
   .rankings-grid { grid-template-columns: 1fr !important; }
