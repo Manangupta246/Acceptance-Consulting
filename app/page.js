@@ -617,9 +617,9 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
         )}
         <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,padding:"10px 22px",fontSize:"11.5px"}}>Join Community</a>
       </div>
-      <button onClick={()=>setMenuOpen(!menuOpen)} className="mob-btn" style={{display:"none",background:"none",border:"none",fontSize:"28px",color:RED,cursor:"pointer"}}>{menuOpen?"\u2715":"\u2630"}</button>
-      {menuOpen&&(<div style={{position:"fixed",top:"65px",left:0,right:0,bottom:0,background:"rgba(255,255,255,0.99)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"28px",zIndex:999}}>
-        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:DARK,textDecoration:"none",fontSize:"20px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer"}}>{l.label}</a>))}
+      <button onClick={()=>setMenuOpen(!menuOpen)} className="mob-btn" style={{display:"none",background:"none",border:"none",fontSize:"28px",color:RED,cursor:"pointer",zIndex:1002}}>{menuOpen?"\u2715":"\u2630"}</button>
+      {menuOpen&&(<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"#fff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"24px",zIndex:1001}}>
+        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:DARK,textDecoration:"none",fontSize:"18px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer"}}>{l.label}</a>))}
         {user ? (
           <button onClick={()=>{setMenuOpen(false);onLogout();}} style={{...bos,padding:"14px 36px"}}>Log Out</button>
         ) : (
@@ -791,7 +791,7 @@ function AdmissionsSection() {
         </div>
         <div style={{background:LIGHT_GRAY,borderRadius:"20px",padding:"40px 36px"}}>
           <p style={{...bs,marginBottom:"28px"}}>{isISB?"We have been in your shoes, and now we are in your corner. After going through the grind ourselves and sitting inside those ISB classrooms, we have seen firsthand what actually gets someone in. It is not just big brand names or perfect GPAs - it is about the diversity you bring.":"Every international B-school has its own lens - some value global exposure more, others prioritize social impact or leadership potential. Some want sharp career clarity, others look for a non-linear story done right. We have studied these nuances, decoded what each program truly values, and helped applicants crack them all."}</p>
-          <div className="school-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:"12px"}}>
+          <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:"12px"}}>
             {(isISB?isbServices:intlServices).map((s,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:"10px",padding:"12px 16px",borderRadius:"10px",background:"#fff"}}><span style={{color:RED,fontWeight:800}}>{"\u2192"}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:DARK}}>{s}</span></div>))}
           </div>
           <p style={{...bs,marginTop:"28px",fontStyle:"italic",fontSize:"15px",color:RED}}>This may be the most personalized MBA admissions support you will ever experience.</p>
