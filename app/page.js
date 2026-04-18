@@ -537,7 +537,7 @@ function BlogPage({ user }) {
             <p style={{...bs,fontSize:"14px"}}>{search ? "Try a different search term." : "Check back soon for new content!"}</p>
           </div>
         ) : (
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:"24px"}}>
+          <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))",gap:"24px"}}>
             {filtered.map(post => {
               const date = new Date(post.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
               return (
@@ -644,7 +644,7 @@ function Hero() {
         <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={bps}>Get Free Profile Evaluation</a>
         <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bos}>Join 1000+ Community</a>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"20px",maxWidth:"780px",width:"100%",marginTop:"72px",padding:"36px 28px",background:"#fff",borderRadius:"20px",boxShadow:"0 8px 40px rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.04)"}}>
+      <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"20px",maxWidth:"780px",width:"100%",marginTop:"72px",padding:"36px 28px",background:"#fff",borderRadius:"20px",boxShadow:"0 8px 40px rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.04)"}}>
         {stats.map((s,i)=>(<div key={i} style={{textAlign:"center"}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,46px)",fontWeight:800,color:RED}}><AnimatedCounter target={s.number} suffix={s.suffix}/></div>
           <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:GRAY,marginTop:"6px",fontWeight:600,letterSpacing:"0.3px",textTransform:"uppercase"}}>{s.label}</div>
@@ -694,7 +694,7 @@ function CommunityProof() {
           <h2 style={hs()}>Real Conversations. Real Impact.</h2>
           <p style={{...bs,maxWidth:"550px",margin:"12px auto 0"}}>This is what our community actually looks like - no staged photos, no stock images.</p>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
+        <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
           {communityProof.map((c,i)=>(<div key={i} style={{borderRadius:"16px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)"}}>
             <div style={{height:"220px",background:c.type==="chat"?"linear-gradient(135deg,#E8F5E9,#C8E6C9)":"linear-gradient(135deg,#E3F2FD,#BBDEFB)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:"8px"}}>
               <span style={{fontSize:"40px"}}>{c.type==="chat"?"\u{1F4AC}":"\u{1F3A5}"}</span>
@@ -717,7 +717,7 @@ function LinkedInFeatures() {
           <p style={lbs}>As Featured On</p>
           <h2 style={{...hs("clamp(24px,4vw,36px)"),marginBottom:"8px"}}>LinkedIn</h2>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
+        <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
           {linkedinPosts.map((p,i)=>(<div key={i} style={{background:"#fff",borderRadius:"16px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)"}}>
             <div style={{height:"180px",background:"linear-gradient(135deg,#E8EAF6,#C5CAE9)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:"8px"}}>
               <svg width="40" height="40" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
@@ -740,7 +740,7 @@ function HowItWorks() {
           <h2 style={hs()}>How It Works</h2>
           <p style={{...bs,maxWidth:"500px",margin:"12px auto 0"}}>Three steps. Zero complexity. One goal - getting you in.</p>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:"28px"}}>
+        <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:"28px"}}>
           {howItWorks.map((hi,i)=>(<div key={i} style={{padding:"36px 28px",borderRadius:"20px",background:i===1?RED:"#fff",border:i===1?"none":"1px solid rgba(0,0,0,0.06)",boxShadow:i===1?"0 12px 40px rgba(236,130,131,0.15)":"0 2px 12px rgba(0,0,0,0.03)",textAlign:"center",position:"relative"}}>
             <div style={{fontSize:"36px",marginBottom:"12px"}}>{hi.icon}</div>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"48px",fontWeight:900,color:i===1?"rgba(255,255,255,0.15)":"rgba(236,130,131,0.08)",position:"absolute",top:"16px",right:"20px"}}>{hi.step}</div>
@@ -762,7 +762,7 @@ function ServicesSection() {
           <h2 style={hs()}>Turning Aspiration Into Acceptance</h2>
           <p style={{...bs,maxWidth:"600px",margin:"12px auto 0"}}>From <strong>ISB YL, PGP & other programs</strong> to <strong>top international programs</strong> like INSEAD, LBS, Wharton, and more.</p>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
+        <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
           {services.map((s,i)=>(<div key={i} style={{padding:"32px 28px",borderRadius:"16px",background:"#fff",border:"1px solid rgba(0,0,0,0.06)",transition:"border-color 0.3s,box-shadow 0.3s"}}
             onMouseEnter={e=>{e.currentTarget.style.borderColor=RED;e.currentTarget.style.boxShadow="0 8px 30px rgba(236,130,131,0.08)";}}
             onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(0,0,0,0.06)";e.currentTarget.style.boxShadow="none";}}>
@@ -791,7 +791,7 @@ function AdmissionsSection() {
         </div>
         <div style={{background:LIGHT_GRAY,borderRadius:"20px",padding:"40px 36px"}}>
           <p style={{...bs,marginBottom:"28px"}}>{isISB?"We have been in your shoes, and now we are in your corner. After going through the grind ourselves and sitting inside those ISB classrooms, we have seen firsthand what actually gets someone in. It is not just big brand names or perfect GPAs - it is about the diversity you bring.":"Every international B-school has its own lens - some value global exposure more, others prioritize social impact or leadership potential. Some want sharp career clarity, others look for a non-linear story done right. We have studied these nuances, decoded what each program truly values, and helped applicants crack them all."}</p>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:"12px"}}>
+          <div className="school-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:"12px"}}>
             {(isISB?isbServices:intlServices).map((s,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:"10px",padding:"12px 16px",borderRadius:"10px",background:"#fff"}}><span style={{color:RED,fontWeight:800}}>{"\u2192"}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:DARK}}>{s}</span></div>))}
           </div>
           <p style={{...bs,marginTop:"28px",fontStyle:"italic",fontSize:"15px",color:RED}}>This may be the most personalized MBA admissions support you will ever experience.</p>
@@ -826,7 +826,7 @@ function TeamSection() {
           <p style={lbs}>Meet The Team</p>
           <h2 style={hs()}>We Are Fun To Work With!</h2>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(340px,1fr))",gap:"36px",maxWidth:"800px",margin:"0 auto"}}>
+        <div className="team-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(340px,1fr))",gap:"36px",maxWidth:"800px",margin:"0 auto"}}>
           {team.map((t,i)=>(<div key={i} style={{background:LIGHT_GRAY,borderRadius:"20px",overflow:"hidden",boxShadow:"0 4px 24px rgba(0,0,0,0.05)"}}>
             <div style={{width:"100%",height:"300px",background:RED_BG,display:"flex",alignItems:"center",justifyContent:"center"}}>
               <img src={t.image} alt={t.name} style={{width:"180px",height:"180px",borderRadius:"50%",objectFit:"cover",border:`4px solid ${RED}`}} />
@@ -872,7 +872,7 @@ function TestimonialsSection() {
         </div>
         <div style={{position:"relative"}}>
           {totalPages>1&&(<button onClick={()=>canPrev&&setPg(pg-1)} style={{...arrowBtn("prev",canPrev),position:"absolute",left:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2190"}</button>)}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}}>
+          <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}}>
             {visible.map((t,i)=>(<div key={`${ac}-${pg}-${i}`} style={{background:"#fff",borderRadius:"20px",padding:"28px 24px",border:"1px solid rgba(0,0,0,0.06)",display:"flex",flexDirection:"column"}}>
               <div style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"18px"}}>
                 <img src={t.image} alt={t.name} style={{width:"52px",height:"52px",borderRadius:"50%",objectFit:"cover",border:`2px solid ${RED_BG}`,background:RED_BG}} />
@@ -1136,12 +1136,12 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
         </div>
 
         {/* Exam Tabs */}
-        <div style={{display: "flex", borderBottom: "2px solid #F3F4F6", gap: 0}}>
+        <div className="tab-scroll" style={{display: "flex", borderBottom: "2px solid #F3F4F6", gap: 0}}>
           {["GMAT", "GRE"].map(function(exam) {return (<button key={exam} onClick={function() {setExamType(exam);}} style={{padding: "10px 20px", border: "none", background: "transparent", cursor: "pointer", fontSize: 15, fontWeight: examType === exam ? 600 : 500, color: examType === exam ? RED : "#6B7280", borderBottom: examType === exam ? "3px solid " + RED : "3px solid transparent", fontFamily: "'DM Sans',sans-serif"}}>{exam + " Leaderboard"}</button>);})}
         </div>
 
         {/* Period Filter */}
-        <div style={{display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap"}}>
+        <div className="period-pills" style={{display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap"}}>
           {[{key: "daily", label: "Daily"}, {key: "weekly", label: "Weekly"}, {key: "monthly", label: "Monthly"}, {key: "all", label: "All Time"}].map(function(p) {return (<button key={p.key} onClick={function() {setPeriod(p.key);}} style={{padding: "8px 18px", border: "1px solid " + (period === p.key ? RED : "#E5E7EB"), background: period === p.key ? RED : "white", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, color: period === p.key ? "white" : "#6B7280", fontFamily: "'DM Sans',sans-serif"}}>{p.label}</button>);})}
           <span style={{fontSize: 12, color: "#9CA3AF", alignSelf: "center", marginLeft: 8}}>
             {period === "daily" ? "Resets at 4:00 AM daily" : period === "weekly" ? "Monday to Sunday" : period === "monthly" ? "1st to end of month" : ""}
@@ -1156,7 +1156,7 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
 
         {/* Top 3 Podium */}
         {!loading && leaderboardData.length > 0 && (<div>
-          <div style={{display: "flex", gap: 16, marginTop: 32, justifyContent: "center", flexWrap: "wrap"}}>
+          <div className="lb-podium" style={{display: "flex", gap: 16, marginTop: 32, justifyContent: "center", flexWrap: "wrap"}}>
             {leaderboardData.slice(0, Math.min(3, leaderboardData.length)).map(function(entry, idx) {
               var medal = lbGetMedalStyle(idx);
               var initials = (entry.full_name || "A").split(" ").map(function(w) {return w[0];}).join("").toUpperCase().slice(0, 2);
@@ -1176,12 +1176,12 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
 
           {/* Table */}
           <div style={{marginTop: 32, background: "white", borderRadius: 16, border: "1px solid #E5E7EB", overflow: "hidden", marginBottom: 32}}>
-            <div style={{display: "grid", gridTemplateColumns: "50px 1fr 90px 90px 70px 70px 70px", alignItems: "center", padding: "12px 20px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", borderBottom: "2px solid #F3F4F6", fontFamily: "'DM Sans',sans-serif"}}><span>#</span><span>Name</span><span>Solved</span><span>Correct</span><span>Acc%</span><span>Hours</span><span>Days</span></div>
+            <div className="lb-table-header" style={{display: "grid", gridTemplateColumns: "50px 1fr 90px 90px 70px 70px 70px", alignItems: "center", padding: "12px 20px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9CA3AF", borderBottom: "2px solid #F3F4F6", fontFamily: "'DM Sans',sans-serif"}}><span>#</span><span>Name</span><span>Solved</span><span>Correct</span><span>Acc%</span><span className="lb-hide-mobile">Hours</span><span className="lb-hide-mobile">Days</span></div>
             {leaderboardData.map(function(entry, idx) {
               var initials = (entry.full_name || "A").split(" ").map(function(w) {return w[0];}).join("").toUpperCase().slice(0, 2);
               var isMe = user && entry.user_id === user.id;
               var colors = ["#ec8283", "#2563EB", "#059669", "#7C3AED", "#D97706", "#DB2777"];
-              return (<div key={entry.user_id} onClick={function() {if (user) openProfile(entry.user_id);}} style={{display: "grid", gridTemplateColumns: "50px 1fr 90px 90px 70px 70px 70px", alignItems: "center", padding: "14px 20px", borderBottom: "1px solid #F3F4F6", backgroundColor: isMe ? "#fdf0f0" : "transparent", borderLeft: isMe ? "3px solid " + RED : "3px solid transparent", cursor: user ? "pointer" : "default"}}>
+              return (<div key={entry.user_id} onClick={function() {if (user) openProfile(entry.user_id);}} className="lb-table-row" style={{display: "grid", gridTemplateColumns: "50px 1fr 90px 90px 70px 70px 70px", alignItems: "center", padding: "14px 20px", borderBottom: "1px solid #F3F4F6", backgroundColor: isMe ? "#fdf0f0" : "transparent", borderLeft: isMe ? "3px solid " + RED : "3px solid transparent", cursor: user ? "pointer" : "default"}}>
                 <span style={{fontSize: 14, fontWeight: 700, color: idx < 3 ? lbGetMedalStyle(idx).icon : "#9CA3AF"}}>{idx + 1}</span>
                 <div style={{display: "flex", alignItems: "center", gap: 10}}>
                   <div style={{width: 32, height: 32, borderRadius: "50%", background: colors[idx % colors.length], display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 600, fontSize: 12, color: "white", flexShrink: 0}}>{initials}</div>
@@ -1192,8 +1192,8 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
                 <span style={{fontSize: 13, fontWeight: 600, color: "#111827"}}>{entry.questions_solved}</span>
                 <span style={{fontSize: 13, color: "#374151"}}>{entry.questions_correct}</span>
                 <span style={{fontSize: 13, color: "#374151"}}>{lbFormatScore(entry.accuracy) + "%"}</span>
-                <span style={{fontSize: 13, color: "#374151"}}>{entry.study_hours + "h"}</span>
-                <span style={{fontSize: 13, color: "#374151"}}>{entry.days_active}</span>
+                <span className="lb-hide-mobile" style={{fontSize: 13, color: "#374151"}}>{entry.study_hours + "h"}</span>
+                <span className="lb-hide-mobile" style={{fontSize: 13, color: "#374151"}}>{entry.days_active}</span>
               </div>);
             })}
           </div>
@@ -1202,7 +1202,7 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
         {/* How Rankings Work */}
         <div style={{marginTop: 16, marginBottom: 60, padding: 28, background: "white", borderRadius: 16, border: "1px solid #E5E7EB"}}>
           <h3 style={{fontSize: 18, fontWeight: 600, color: "#111827", marginTop: 0, marginBottom: 16, fontFamily: "'Playfair Display',serif"}}>How Rankings Work</h3>
-          <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16}}>
+          <div className="rankings-grid" style={{display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 16}}>
             {[{icon: <LbTargetIcon />, label: "Accuracy", weight: "35%", desc: "Questions correct / solved"}, {icon: <LbChartIcon />, label: "Volume", weight: "25%", desc: "Total questions attempted"}, {icon: <LbFireIcon />, label: "Consistency", weight: "25%", desc: "Number of active study days"}, {icon: <LbUserIcon />, label: "Study Hours", weight: "15%", desc: "Total hours studied"}].map(function(item, i) {
               return (<div key={i} style={{padding: 16, background: "#F9FAFB", borderRadius: 12, display: "flex", flexDirection: "column", gap: 6}}>
                 <div style={{display: "flex", alignItems: "center", gap: 8, color: RED}}>{item.icon}<span style={{fontSize: 14, fontWeight: 600, color: "#111827"}}>{item.label}</span><span style={{marginLeft: "auto", fontSize: 12, fontWeight: 700, color: RED, background: "#fdf0f0", padding: "2px 8px", borderRadius: 10}}>{item.weight}</span></div>
@@ -1571,7 +1571,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
         )}
 
         {/* Tabs */}
-        <div style={{display:"flex",borderBottom:"2px solid #F3F4F6",gap:0,marginBottom:24}}>
+        <div className="tab-scroll" style={{display:"flex",borderBottom:"2px solid #F3F4F6",gap:0,marginBottom:24}}>
           {[{key:"browse",label:"Browse Profiles"},{key:"suggested",label:"Suggested Matches" + (suggested.length>0?" ("+suggested.length+")":"")},{key:"connections",label:"My Connections" + (pendingReceived.length>0?" ("+pendingReceived.length+" new)":"")}].map(function(t){
             return (<button key={t.key} onClick={function(){setTab(t.key);}} style={{padding:"10px 20px",border:"none",background:"transparent",cursor:"pointer",fontSize:14,fontWeight:tab===t.key?600:500,color:tab===t.key?RED:"#6B7280",borderBottom:tab===t.key?"3px solid "+RED:"3px solid transparent",fontFamily:"'DM Sans',sans-serif"}}>{t.label}</button>);
           })}
@@ -1579,7 +1579,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
 
         {/* Browse Tab */}
         {tab==="browse" && (
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16,marginBottom:60}}>
+          <div className="partner-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16,marginBottom:60}}>
             {profiles.length===0 && (<div style={{gridColumn:"1/-1",textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}><div style={{fontSize:40,marginBottom:12}}>&#128100;</div><p style={{fontSize:14}}>No profiles found yet. Be the first to set up your study profile.</p></div>)}
             {profiles.map(function(p){
               var connStatus = getConnectionStatus(p.id);
@@ -2022,7 +2022,7 @@ function ForumPage({ user, onLoginClick }) {
         </div>
 
         {/* Category Pills */}
-        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:20}}>
+        <div className="category-pills" style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:20}}>
           <button onClick={function(){setSelectedCategory(null);}} style={{padding:"8px 16px",borderRadius:20,border:"1px solid "+(selectedCategory===null?RED:"#E5E7EB"),background:selectedCategory===null?RED:"white",color:selectedCategory===null?"white":"#6B7280",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>All</button>
           {categories.map(function(cat) {
             var isActive = selectedCategory === cat.id;
@@ -2410,7 +2410,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
   var chatInputStyle = { flex:1, padding:"12px 16px", border:"1px solid #E5E7EB", borderRadius:24, fontSize:14, fontFamily:"'DM Sans',sans-serif", outline:"none", background:"#F9FAFB" };
 
   return (
-    <div style={{position:"fixed",right:0,top:0,bottom:0,width:"min(420px,100vw)",background:"white",boxShadow:"-4px 0 30px rgba(0,0,0,0.1)",zIndex:1200,display:"flex",flexDirection:"column",fontFamily:"'DM Sans',sans-serif"}}>
+    <div className="chat-panel" style={{position:"fixed",right:0,top:0,bottom:0,width:"min(420px,100vw)",background:"white",boxShadow:"-4px 0 30px rgba(0,0,0,0.1)",zIndex:1200,display:"flex",flexDirection:"column",fontFamily:"'DM Sans',sans-serif"}}>
       {/* Header */}
       <div style={{padding:"16px 20px",borderBottom:"1px solid #E5E7EB",display:"flex",alignItems:"center",gap:12,background:"white",flexShrink:0}}>
         {view==="chat" && (<button onClick={function(){setView("rooms");setActiveRoom(null);setShowEditMembers(false);}} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:"#6B7280",padding:0}}>&#8592;</button>)}
@@ -2745,7 +2745,7 @@ function AdminDashboard({ user }) {
         </div>
 
         {/* Tabs */}
-        <div style={{display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20}}>
+        <div className="admin-tabs" style={{display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20}}>
           {tabs.map(function(t) {
             return (<button key={t.key} onClick={function() {setActiveTab(t.key); setSearchQuery(""); setEditItem(null);}} style={{padding: "8px 16px", borderRadius: 8, border: "1px solid " + (activeTab === t.key ? RED : "#E5E7EB"), background: activeTab === t.key ? RED : "white", color: activeTab === t.key ? "white" : "#6B7280", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>{t.label}</button>);
           })}
@@ -2773,7 +2773,7 @@ function AdminDashboard({ user }) {
                   <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Name *</label><input type="text" style={adminInputStyle} placeholder="e.g. Career Advice" value={newCategory.name} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {name: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}));}} /></div>
                   <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Slug</label><input type="text" style={adminInputStyle} placeholder="auto-generated" value={newCategory.slug} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {slug: e.target.value}));}} /></div>
                 </div>
-                <div style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12}}>
+                <div className="form-grid-3" style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12}}>
                   <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Icon (emoji)</label><input type="text" style={adminInputStyle} placeholder="e.g. &#128188;" value={newCategory.icon} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {icon: e.target.value}));}} /></div>
                   <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Sort Order</label><input type="number" style={adminInputStyle} placeholder="e.g. 9" value={newCategory.sort_order} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {sort_order: e.target.value}));}} /></div>
                   <div><label style={{fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 4, display: "block"}}>Description</label><input type="text" style={adminInputStyle} placeholder="Short description" value={newCategory.description} onChange={function(e) {setNewCategory(Object.assign({}, newCategory, {description: e.target.value}));}} /></div>
@@ -2835,7 +2835,7 @@ function AdminDashboard({ user }) {
 
         {/* Data Table */}
         {!loading && (
-          <div style={{background: "white", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "auto"}}>
+          <div className="admin-table-wrap" style={{background: "white", borderRadius: 12, border: "1px solid #E5E7EB", overflow: "auto"}}>
             <table style={{width: "100%", borderCollapse: "collapse", fontSize: 13, fontFamily: "'DM Sans',sans-serif"}}>
               <thead>
                 <tr style={{borderBottom: "2px solid #F3F4F6"}}>
