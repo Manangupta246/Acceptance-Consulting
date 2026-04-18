@@ -2113,7 +2113,7 @@ function ForumPage({ user, onLoginClick }) {
 }
 
 /* ── Chat Panel ── */
-function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }) {
+function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, onMarkSeen }) {
   var [rooms, setRooms] = useState([]);
   var [activeRoom, setActiveRoom] = useState(null);
   var [activeRoomName, setActiveRoomName] = useState("");
@@ -2577,7 +2577,7 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName }
               else timeStr = Math.floor(diff / 86400) + "d";
             }
             return (
-              <div key={r.id} onClick={function(){setActiveRoom(r.id);setActiveRoomName(r.display_name);setView("chat");}} style={{padding:"14px 20px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",borderBottom:"1px solid #F3F4F6",transition:"background 0.15s"}}>
+              <div key={r.id} onClick={function(){setActiveRoom(r.id);setActiveRoomName(r.display_name);setView("chat");if(onMarkSeen)onMarkSeen(r.id);}} style={{padding:"14px 20px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",borderBottom:"1px solid #F3F4F6",transition:"background 0.15s"}}>
                 <div style={{width:44,height:44,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:15,color:"white",flexShrink:0}}>{r.room_type==="group"?"G":initials}</div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -2883,6 +2883,39 @@ export default function App() {
   const [chatOpen,setChatOpen]=useState(false);
   const [chatDmUserId,setChatDmUserId]=useState(null);
   const [chatDmUserName,setChatDmUserName]=useState(null);
+  const [unreadCount,setUnreadCount]=useState(0);
+  const lastSeenRef=useRef({});
+
+  // Poll for unread messages every 10 seconds
+  useEffect(() => {
+    if (!user) { setUnreadCount(0); return; }
+    async function checkUnread() {
+      // Get all rooms user is in
+      var { data: memberships } = await supabase.from("chat_members").select("room_id").eq("user_id", user.id);
+      if (!memberships || memberships.length === 0) { setUnreadCount(0); return; }
+      var roomIds = memberships.map(function(m) { return m.room_id; });
+      // Get latest message in each room not sent by current user
+      var count = 0;
+      for (var i = 0; i < roomIds.length; i++) {
+        var { data: msgs } = await supabase.from("chat_messages").select("id, sender_id, created_at").eq("room_id", roomIds[i]).order("created_at", { ascending: false }).limit(1);
+        if (msgs && msgs[0] && msgs[0].sender_id !== user.id) {
+          var lastSeen = lastSeenRef.current[roomIds[i]] || null;
+          if (!lastSeen || new Date(msgs[0].created_at) > new Date(lastSeen)) {
+            count++;
+          }
+        }
+      }
+      setUnreadCount(count);
+    }
+    checkUnread();
+    var interval = setInterval(checkUnread, 10000);
+    return () => clearInterval(interval);
+  }, [user, chatOpen]);
+
+  // Mark room as seen when chat opens
+  const markRoomSeen = (roomId) => {
+    lastSeenRef.current[roomId] = new Date().toISOString();
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -2917,9 +2950,12 @@ export default function App() {
       {page==="admin"&&<AdminDashboard user={user}/>}
       <Footer/>
       {user && !chatOpen && (
-        <button onClick={()=>setChatOpen(true)} style={{position:"fixed",bottom:28,right:28,zIndex:900,width:56,height:56,borderRadius:"50%",background:RED,color:"white",border:"none",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(236,130,131,0.35)",cursor:"pointer"}}><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></button>
+        <button onClick={()=>setChatOpen(true)} style={{position:"fixed",bottom:28,right:28,zIndex:900,width:56,height:56,borderRadius:"50%",background:RED,color:"white",border:"none",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 4px 20px rgba(236,130,131,0.35)",cursor:"pointer"}}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          {unreadCount > 0 && (<span style={{position:"absolute",top:-2,right:-2,width:22,height:22,borderRadius:"50%",background:"#EF4444",color:"white",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",border:"2px solid white",fontFamily:"'DM Sans',sans-serif"}}>{unreadCount > 9 ? "9+" : unreadCount}</span>)}
+        </button>
       )}
-      <ChatPanel user={user} isOpen={chatOpen} onClose={()=>{setChatOpen(false);setChatDmUserId(null);setChatDmUserName(null);}} initialDmUserId={chatDmUserId} initialDmUserName={chatDmUserName} />
+      <ChatPanel user={user} isOpen={chatOpen} onClose={()=>{setChatOpen(false);setChatDmUserId(null);setChatDmUserName(null);}} initialDmUserId={chatDmUserId} initialDmUserName={chatDmUserName} onMarkSeen={markRoomSeen} />
       {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
     </div>
   );
