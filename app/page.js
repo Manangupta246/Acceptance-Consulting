@@ -44,7 +44,7 @@ function AnimatedCounter({ target, suffix = "" }) {
 
 /* ── Data ── */
 const stats = [
-  { number: "150", suffix: "+", label: "Successful Applicants" },
+  { number: "230", suffix: "+", label: "Successful Applicants" },
   { number: "96", suffix: "%", label: "Acceptance Rate" },
   { number: "92", suffix: "%", label: "Final Admit Rate" },
   { number: "100", suffix: "%", label: "Reapplicant Success" },
