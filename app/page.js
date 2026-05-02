@@ -78,7 +78,7 @@ const team = [
 const testimonialCategories = [
   { category: "Overall Journey", icon: "\u{1F31F}", items: [
     { name: "Nandeta Agrawala", school: "ISB Co'26", image: avatar("Nandeta"), text: "One thing I can say with 100% confidence is that the level of belief and confidence Tanya and Manan instill in their mentees is beyond extraordinary and I genuinely owe a large part of my success to them. Their mentorship felt personal, thoughtful, and deeply committed." },
-    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("Rhythm"), text: "With just a week left to apply, I was overwhelmed and full of doubt. That is when Tanya and Manan stepped in - not just as consultants, but as true mentors. What meant the most was how much they believed in me, especially in moments I could not believe in myself." },
+    { name: "Rhythm Garg", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/WhatsApp%20Image%202026-05-02%20at%203.48.00%20PM%20(1).jpeg", text: "With just a week left to apply, I was overwhelmed and full of doubt. That is when Tanya and Manan stepped in - not just as consultants, but as true mentors. What meant the most was how much they believed in me, especially in moments I could not believe in myself." },
     { name: "Shiv Bhasin", school: "ISB Co'26", image: avatar("ShivAll"), text: "They had prepared me for every scenario and it is because of them that I could handle the entire process and secure an admit. The biggest thank you for my application journey goes to them!" },
   ]},
   { category: "Interview Prep", icon: "\u{1F3A4}", items: [
