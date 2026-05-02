@@ -103,7 +103,7 @@ const faqs = [
 const communityProof = [
   { type: "chat", caption: "Late-night essay brainstorming in the community group", placeholder: "Community WhatsApp Screenshot" },
   { type: "chat", caption: "Admit celebrations - this never gets old", placeholder: "Admit Celebration Screenshot" },
-  { type: "webinar", caption: "Free ISB admissions webinar - 200+ attendees", placeholder: "Webinar Screenshot" },
+  { type: "webinar", caption: "Free ISB admissions webinar - 200+ attendees", Image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Webinar/WhatsApp%20Image%202026-05-02%20at%204.21.10%20PM.jpeg" },
   { type: "chat", caption: "Real questions, real answers - no gatekeeping", placeholder: "Q&A Discussion Screenshot" },
   { type: "webinar", caption: "Panel discussion with ISB alumni", placeholder: "Panel Discussion Photo" },
   { type: "chat", caption: "When the community rallies around a reapplicant", placeholder: "Support Thread Screenshot" },
