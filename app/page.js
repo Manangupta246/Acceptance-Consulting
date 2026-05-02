@@ -44,14 +44,14 @@ function AnimatedCounter({ target, suffix = "" }) {
 
 /* ── Data ── */
 const stats = [
-  { number: "230", suffix: "+", label: "Successful Applicants" },
+  { number: "150", suffix: "+", label: "Successful Applicants" },
   { number: "96", suffix: "%", label: "Acceptance Rate" },
   { number: "92", suffix: "%", label: "Final Admit Rate" },
   { number: "100", suffix: "%", label: "Reapplicant Success" },
 ];
 const schools = [
   { name: "ISB", color: "#1B3A5C" }, { name: "INSEAD", color: "#003D6B" },
-  { name: "LBS", color: "#2C1654" }, { name: "UCLA", color: "#8C1515" },
+  { name: "LBS", color: "#2C1654" }, { name: "Stanford GSB", color: "#8C1515" },
   { name: "NUS Business", color: "#003D7C" }, { name: "IESE", color: "#00205B" },
   { name: "Said (Oxford)", color: "#002147" }, { name: "SP Jain", color: "#C8102E" },
   { name: "& Other Top Schools", color: RED },
@@ -101,17 +101,17 @@ const faqs = [
   { q: "Can I just get interview prep without the full package?", a: "Yes! We offer standalone interview prep - mock interviews tailored to the specific school format and question style. Whether it is ISB panel format, INSEAD alumni interviews, or a case-style discussion, we have got you covered." },
 ];
 const communityProof = [
-  { type: "chat", caption: "Late-night essay brainstorming in the community group", placeholder: "Community WhatsApp Screenshot" },
-  { type: "chat", caption: "Admit celebrations - this never gets old", placeholder: "Admit Celebration Screenshot" },
-  { type: "webinar", caption: "Free ISB admissions webinar - 200+ attendees", Image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Webinar/WhatsApp%20Image%202026-05-02%20at%204.21.10%20PM.jpeg" },
-  { type: "chat", caption: "Real questions, real answers - no gatekeeping", placeholder: "Q&A Discussion Screenshot" },
-  { type: "webinar", caption: "Panel discussion with ISB alumni", placeholder: "Panel Discussion Photo" },
-  { type: "chat", caption: "When the community rallies around a reapplicant", placeholder: "Support Thread Screenshot" },
+  { type: "chat", caption: "Late-night essay brainstorming in the community group", image: "" },
+  { type: "chat", caption: "Admit celebrations - this never gets old", image: "" },
+  { type: "webinar", caption: "Free ISB admissions webinar - 200+ attendees", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Webinar/WhatsApp%20Image%202026-05-02%20at%204.21.10%20PM.jpeg" },
+  { type: "chat", caption: "Real questions, real answers - no gatekeeping", image: "" },
+  { type: "webinar", caption: "Panel discussion with ISB alumni", image: "" },
+  { type: "chat", caption: "When the community rallies around a reapplicant", image: "" },
 ];
 const linkedinPosts = [
-  { title: "How we helped 50+ applicants get into ISB in one cycle", placeholder: "LinkedIn Post Screenshot 1" },
-  { title: "The reapplicant who turned rejection into an admit", placeholder: "LinkedIn Post Screenshot 2" },
-  { title: "Why your MBA essay probably is not working", placeholder: "LinkedIn Post Screenshot 3" },
+  { title: "How we helped 50+ applicants get into ISB in one cycle", image: "" },
+  { title: "The reapplicant who turned rejection into an admit", image: "" },
+  { title: "Why your MBA essay probably is not working", image: "" },
 ];
 
 const BLOG_CATEGORIES = ["All","MBA Strategy","ISB Admissions","International B-Schools","Essay Tips","Interview Prep","Scholarships","Reapplication"];
@@ -703,11 +703,14 @@ function CommunityProof() {
         </div>
         <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
           {communityProof.map((c,i)=>(<div key={i} style={{borderRadius:"16px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)"}}>
-            <div style={{height:"220px",background:c.type==="chat"?"linear-gradient(135deg,#E8F5E9,#C8E6C9)":"linear-gradient(135deg,#E3F2FD,#BBDEFB)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:"8px"}}>
-              <span style={{fontSize:"40px"}}>{c.type==="chat"?"\u{1F4AC}":"\u{1F3A5}"}</span>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:"rgba(0,0,0,0.4)",padding:"0 20px",textAlign:"center"}}>{c.placeholder}</span>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",color:"rgba(0,0,0,0.3)"}}>Upload your screenshot here</span>
-            </div>
+            {c.image ? (
+              <div style={{height:"220px",overflow:"hidden"}}><img src={c.image} alt={c.caption} style={{width:"100%",height:"100%",objectFit:"cover"}} /></div>
+            ) : (
+              <div style={{height:"220px",background:c.type==="chat"?"linear-gradient(135deg,#E8F5E9,#C8E6C9)":"linear-gradient(135deg,#E3F2FD,#BBDEFB)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:"8px"}}>
+                <span style={{fontSize:"40px"}}>{c.type==="chat"?"\u{1F4AC}":"\u{1F3A5}"}</span>
+                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"rgba(0,0,0,0.3)"}}>Upload screenshot</span>
+              </div>
+            )}
             <div style={{padding:"16px 20px",background:"#fff"}}><p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:DARK,fontWeight:600,margin:0}}>{c.caption}</p></div>
           </div>))}
         </div>
@@ -726,10 +729,14 @@ function LinkedInFeatures() {
         </div>
         <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
           {linkedinPosts.map((p,i)=>(<div key={i} style={{background:"#fff",borderRadius:"16px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)"}}>
-            <div style={{height:"180px",background:"linear-gradient(135deg,#E8EAF6,#C5CAE9)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:"8px"}}>
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-              <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"rgba(0,0,0,0.35)"}}>Upload LinkedIn screenshot</span>
-            </div>
+            {p.image ? (
+              <div style={{height:"180px",overflow:"hidden"}}><img src={p.image} alt={p.title} style={{width:"100%",height:"100%",objectFit:"cover"}} /></div>
+            ) : (
+              <div style={{height:"180px",background:"linear-gradient(135deg,#E8EAF6,#C5CAE9)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:"8px"}}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="#0A66C2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"rgba(0,0,0,0.35)"}}>Upload screenshot</span>
+              </div>
+            )}
             <div style={{padding:"16px 20px"}}><p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:DARK,margin:0}}>{p.title}</p></div>
           </div>))}
         </div>
