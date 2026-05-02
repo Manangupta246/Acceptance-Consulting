@@ -51,7 +51,7 @@ const stats = [
 ];
 const schools = [
   { name: "ISB", color: "#1B3A5C" }, { name: "INSEAD", color: "#003D6B" },
-  { name: "LBS", color: "#2C1654" }, { name: "Stanford GSB", color: "#8C1515" },
+  { name: "LBS", color: "#2C1654" }, { name: "UCLA", color: "#8C1515" },
   { name: "NUS Business", color: "#003D7C" }, { name: "IESE", color: "#00205B" },
   { name: "Said (Oxford)", color: "#002147" }, { name: "SP Jain", color: "#C8102E" },
   { name: "& Other Top Schools", color: RED },
