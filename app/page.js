@@ -78,7 +78,7 @@ const team = [
 const testimonialCategories = [
   { category: "Overall Journey", icon: "\u{1F31F}", items: [
     { name: "Nandeta Agrawala", school: "ISB Co'26", image: avatar("Nandeta"), text: "One thing I can say with 100% confidence is that the level of belief and confidence Tanya and Manan instill in their mentees is beyond extraordinary and I genuinely owe a large part of my success to them. Their mentorship felt personal, thoughtful, and deeply committed." },
-    { name: "Rhythm Garg", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/WhatsApp%20Image%202026-05-02%20at%203.48.00%20PM%20(1).jpeg", text: "With just a week left to apply, I was overwhelmed and full of doubt. That is when Tanya and Manan stepped in - not just as consultants, but as true mentors. What meant the most was how much they believed in me, especially in moments I could not believe in myself." },
+    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("Rhythm"), text: "With just a week left to apply, I was overwhelmed and full of doubt. That is when Tanya and Manan stepped in - not just as consultants, but as true mentors. What meant the most was how much they believed in me, especially in moments I could not believe in myself." },
     { name: "Shiv Bhasin", school: "ISB Co'26", image: avatar("ShivAll"), text: "They had prepared me for every scenario and it is because of them that I could handle the entire process and secure an admit. The biggest thank you for my application journey goes to them!" },
   ]},
   { category: "Interview Prep", icon: "\u{1F3A4}", items: [
@@ -880,16 +880,12 @@ function TestimonialsSection() {
         <div style={{position:"relative"}}>
           {totalPages>1&&(<button onClick={()=>canPrev&&setPg(pg-1)} style={{...arrowBtn("prev",canPrev),position:"absolute",left:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2190"}</button>)}
           <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}}>
-            {visible.map((t,i)=>(<div key={`${ac}-${pg}-${i}`} style={{background:"#fff",borderRadius:"20px",padding:"28px 24px",border:"1px solid rgba(0,0,0,0.06)",display:"flex",flexDirection:"column"}}>
-              <div style={{display:"flex",alignItems:"center",gap:"14px",marginBottom:"18px"}}>
-                <img src={t.image} alt={t.name} style={{width:"52px",height:"52px",borderRadius:"50%",objectFit:"cover",border:`2px solid ${RED_BG}`,background:RED_BG}} />
-                <div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"15px",color:DARK}}>{t.name}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:RED,fontWeight:600}}>{t.school}</div>
-                </div>
-              </div>
+            {visible.map((t,i)=>(<div key={`${ac}-${pg}-${i}`} style={{background:"#fff",borderRadius:"20px",padding:"28px 24px",border:"1px solid rgba(0,0,0,0.06)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
+              <img src={t.image} alt={t.name} style={{width:"100px",height:"100px",borderRadius:"50%",objectFit:"cover",border:`3px solid ${RED}`,background:RED_BG,marginBottom:"16px"}} />
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"16px",color:DARK}}>{t.name}</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:RED,fontWeight:600,marginBottom:"16px"}}>{t.school}</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"28px",color:RED,lineHeight:1,marginBottom:"6px"}}>{"\u201C"}</div>
-              <p style={{...bs,fontSize:"14px",fontStyle:"italic",flex:1,lineHeight:1.7}}>{t.text}</p>
+              <p style={{...bs,fontSize:"14px",fontStyle:"italic",flex:1,lineHeight:1.7,textAlign:"left"}}>{t.text}</p>
             </div>))}
           </div>
           {totalPages>1&&(<button onClick={()=>canNext&&setPg(pg+1)} style={{...arrowBtn("next",canNext),position:"absolute",right:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2192"}</button>)}
