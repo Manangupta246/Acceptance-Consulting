@@ -617,16 +617,21 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
         )}
         <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,padding:"10px 22px",fontSize:"11.5px"}}>Join Community</a>
       </div>
-      <button onClick={()=>setMenuOpen(!menuOpen)} className="mob-btn" style={{display:"none",background:"none",border:"none",fontSize:"28px",color:RED,cursor:"pointer",zIndex:1002}}>{menuOpen?"\u2715":"\u2630"}</button>
-      {menuOpen&&(<div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"#fff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:"24px",zIndex:1001}}>
-        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:DARK,textDecoration:"none",fontSize:"18px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer"}}>{l.label}</a>))}
-        {user ? (
-          <button onClick={()=>{setMenuOpen(false);onLogout();}} style={{...bos,padding:"14px 36px"}}>Log Out</button>
-        ) : (
-          <button onClick={()=>{setMenuOpen(false);onLoginClick();}} style={bps}>Log In</button>
-        )}
-        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bos}>Join Community</a>
-      </div>)}
+      <button onClick={()=>setMenuOpen(!menuOpen)} className="mob-btn" style={{display:"none",background:"none",border:"none",fontSize:"28px",color:RED,cursor:"pointer",zIndex:1002,position:"relative"}}>{menuOpen?"\u2715":"\u2630"}</button>
+      {/* Mobile side panel */}
+      {menuOpen&&(<div onClick={()=>setMenuOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:1000}}/>)}
+      <div style={{position:"fixed",top:0,right:0,bottom:0,width:"280px",background:"#fff",zIndex:1001,transform:menuOpen?"translateX(0)":"translateX(100%)",transition:"transform 0.3s ease",display:"flex",flexDirection:"column",paddingTop:"80px",paddingLeft:"32px",paddingRight:"32px",gap:"8px",boxShadow:menuOpen?"-4px 0 30px rgba(0,0,0,0.1)":"none"}}>
+        <button onClick={()=>setMenuOpen(false)} style={{position:"absolute",top:20,right:20,background:"none",border:"none",fontSize:24,color:"#9CA3AF",cursor:"pointer"}}>{"\u2715"}</button>
+        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:DARK,textDecoration:"none",fontSize:"15px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer",padding:"12px 0",borderBottom:"1px solid #F3F4F6"}}>{l.label}</a>))}
+        <div style={{marginTop:"16px",display:"flex",flexDirection:"column",gap:"12px"}}>
+          {user ? (
+            <button onClick={()=>{setMenuOpen(false);onLogout();}} style={{...bos,padding:"12px 24px",width:"100%",textAlign:"center"}}>Log Out</button>
+          ) : (
+            <button onClick={()=>{setMenuOpen(false);onLoginClick();}} style={{...bps,width:"100%",textAlign:"center"}}>Log In</button>
+          )}
+          <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,width:"100%",textAlign:"center",boxSizing:"border-box"}}>Join Community</a>
+        </div>
+      </div>
     </nav>
   );
 }
