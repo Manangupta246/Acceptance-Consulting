@@ -824,7 +824,7 @@ function TestimonialsSection() {
         <div style={{position:"relative"}}>
           {totalPages>1&&(<button onClick={()=>{canPrev&&changePage(pg-1);}} style={{...arrowBtn("prev",canPrev),position:"absolute",left:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2190"}</button>)}
           <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px",alignItems:"stretch"}}>
-            {visible.map((t,i)=>(<div key={`${ac}-${pg}-${i}`} style={{background:"#fff",borderRadius:"20px",padding:"28px 24px",border:"1px solid rgba(0,0,0,0.06)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
+            {visible.map((t,i)=>(<div key={`${ac}-${pg}-${i}`} style={{background:"linear-gradient(135deg, #fff 0%, #fdf0f0 50%, #fce8e8 100%)",borderRadius:"20px",padding:"28px 24px",border:"1px solid rgba(236,130,131,0.12)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
               <img src={t.image} alt={t.name} style={{width:"100px",height:"100px",borderRadius:"50%",objectFit:"cover",border:`3px solid ${RED}`,background:RED_BG,marginBottom:"16px"}} />
               <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"16px",color:DARK}}>{t.name}</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:RED,fontWeight:600,marginBottom:"16px"}}>{t.school}</div>
