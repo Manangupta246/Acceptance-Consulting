@@ -660,24 +660,11 @@ function Hero() {
 
   return (
     <section id="home" style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:"120px 24px 60px",background:"radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 60%, #050510 100%)",position:"relative",overflow:"hidden"}}>
-      <style>{`
-        @keyframes twinkle { 0%,100%{opacity:0.2} 50%{opacity:0.9} }
-        @keyframes orbitFloat { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-8px)} }
-        @keyframes pulseRing { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(1.4);opacity:0} }
-        @keyframes rotateRing { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
-        @keyframes counterRotate { 0%{transform:rotate(0deg)} 100%{transform:rotate(-360deg)} }
-        .star { position: absolute; background: #fff; border-radius: 50%; }
-        .orbit-person { transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; }
-        .orbit-person:hover { transform: scale(1.18) !important; box-shadow: 0 0 30px rgba(236,130,131,0.6) !important; }
-        .pulse-circle { position: absolute; top: 50%; left: 50%; border-radius: 50%; border: 2px solid rgba(236,130,131,0.4); }
-        .pulse-circle:nth-child(1) { animation: pulseRing 3s ease-out infinite; animation-delay: 0s; }
-        .pulse-circle:nth-child(2) { animation: pulseRing 3s ease-out infinite; animation-delay: 1s; }
-        .pulse-circle:nth-child(3) { animation: pulseRing 3s ease-out infinite; animation-delay: 2s; }
-      `}</style>
+      <style dangerouslySetInnerHTML={{__html: "@keyframes twinkle { 0%,100%{opacity:0.2} 50%{opacity:0.9} } @keyframes orbitFloat { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-8px)} } @keyframes pulseRing { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(1.4);opacity:0} } @keyframes rotateRing { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} } .hero-star { position: absolute; background: #fff; border-radius: 50%; } .orbit-person { transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; } .orbit-person:hover { transform: scale(1.18) !important; box-shadow: 0 0 30px rgba(236,130,131,0.6) !important; } .pulse-circle { position: absolute; top: 50%; left: 50%; border-radius: 50%; border: 2px solid rgba(236,130,131,0.4); } .pulse-circle.p1 { animation: pulseRing 3s ease-out infinite; animation-delay: 0s; } .pulse-circle.p2 { animation: pulseRing 3s ease-out infinite; animation-delay: 1s; } .pulse-circle.p3 { animation: pulseRing 3s ease-out infinite; animation-delay: 2s; }"}} />
       {/* Stars in background */}
       {Array.from({length:60}).map(function(_,i){
         var size = 1+Math.random()*2;
-        return <div key={i} className="star" style={{
+        return <div key={i} className="hero-star" style={{
           left: Math.random()*100+"%",
           top: Math.random()*100+"%",
           width: size+"px",
@@ -730,9 +717,9 @@ function Hero() {
 
         {/* Center: Number of successful applicants */}
         <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"180px",height:"180px",borderRadius:"50%",background:"radial-gradient(circle, rgba(236,130,131,0.3) 0%, rgba(236,130,131,0.1) 50%, transparent 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:5}}>
-          <div className="pulse-circle" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
-          <div className="pulse-circle" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
-          <div className="pulse-circle" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
+          <div className="pulse-circle p1" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
+          <div className="pulse-circle p2" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
+          <div className="pulse-circle p3" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
           <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(48px,7vw,72px)",fontWeight:800,color:"#fff",lineHeight:1,textShadow:"0 0 30px rgba(236,130,131,0.5)"}}>
             <AnimatedCounter target={150} suffix="+"/>
           </div>
