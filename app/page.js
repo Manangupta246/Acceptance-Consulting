@@ -812,7 +812,7 @@ function TestimonialsSection() {
   });
   var truncLen = 250;
   return (
-    <section id="testimonials" style={{...sps,background:LIGHT_GRAY}}>
+    <section id="testimonials" style={{...sps,background:"#fff"}}>
       <div style={mws}>
         <div style={{textAlign:"center",marginBottom:"48px"}}>
           <p style={lbs}>Testimonials</p>
