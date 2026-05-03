@@ -647,22 +647,29 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
 
 function Hero() {
   return (
-    <section id="home" style={{minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center",padding:"140px 24px 80px",background:`linear-gradient(180deg,${RED_BG} 0%,#fff 60%)`}}>
-      <div style={{display:"inline-block",padding:"8px 20px",borderRadius:"50px",border:"1px solid rgba(236,130,131,0.2)",background:"rgba(236,130,131,0.05)",marginBottom:"28px"}}>
-        <span style={{...lbs,marginBottom:0,fontSize:"11px"}}>ISB . INSEAD . LBS . Wharton . & More</span>
-      </div>
-      <h1 style={{...hs("clamp(40px,7vw,80px)"),maxWidth:"850px",marginBottom:"20px"}}>Get Accepted to Your <span style={{color:RED}}>Dream B-School</span></h1>
-      <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(14px,2vw,18px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"28px"}}>Affordable. Personalised. Proven.</p>
-      <p style={{...bs,fontSize:"clamp(16px,2vw,19px)",maxWidth:"580px",margin:"0 auto 40px"}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
-      <div style={{display:"flex",gap:"16px",flexWrap:"wrap",justifyContent:"center"}}>
-        <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={bps}>Get Free Profile Evaluation</a>
-        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bos}>Join 1000+ Community</a>
-      </div>
-      <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"20px",maxWidth:"780px",width:"100%",marginTop:"72px",padding:"36px 28px",background:"#fff",borderRadius:"20px",boxShadow:"0 8px 40px rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.04)"}}>
-        {stats.map((s,i)=>(<div key={i} style={{textAlign:"center"}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,46px)",fontWeight:800,color:RED}}><AnimatedCounter target={s.number} suffix={s.suffix}/></div>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:GRAY,marginTop:"6px",fontWeight:600,letterSpacing:"0.3px",textTransform:"uppercase"}}>{s.label}</div>
-        </div>))}
+    <section id="home" style={{minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center",padding:"140px 24px 80px",position:"relative",overflow:"hidden"}}>
+      {/* Background image */}
+      <div style={{position:"absolute",inset:0,backgroundImage:"url('https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/tanya%20Master%20union.jpeg')",backgroundSize:"cover",backgroundPosition:"center",backgroundRepeat:"no-repeat"}} />
+      {/* Dark overlay for text readability */}
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.65) 50%, rgba(0,0,0,0.7) 100%)"}} />
+      {/* Content */}
+      <div style={{position:"relative",zIndex:1}}>
+        <div style={{display:"inline-block",padding:"8px 20px",borderRadius:"50px",border:"1px solid rgba(255,255,255,0.25)",background:"rgba(255,255,255,0.1)",backdropFilter:"blur(8px)",marginBottom:"28px"}}>
+          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,letterSpacing:"3px",textTransform:"uppercase",color:"rgba(255,255,255,0.85)"}}>ISB . INSEAD . LBS . Wharton . & More</span>
+        </div>
+        <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(40px,7vw,80px)",fontWeight:800,color:"#fff",lineHeight:1.1,maxWidth:"850px",marginBottom:"20px"}}>Get Accepted to Your <span style={{color:RED}}>Dream B-School</span></h1>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(14px,2vw,18px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"28px"}}>Affordable. Personalised. Proven.</p>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(16px,2vw,19px)",color:"rgba(255,255,255,0.85)",maxWidth:"580px",margin:"0 auto 40px",lineHeight:1.6}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
+        <div className="cta-buttons" style={{display:"flex",gap:"16px",flexWrap:"wrap",justifyContent:"center"}}>
+          <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={bps}>Get Free Profile Evaluation</a>
+          <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,color:"#fff",borderColor:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.1)",backdropFilter:"blur(4px)"}}>Join 1000+ Community</a>
+        </div>
+        <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"20px",maxWidth:"780px",width:"100%",marginTop:"72px",padding:"36px 28px",background:"rgba(255,255,255,0.95)",borderRadius:"20px",boxShadow:"0 8px 40px rgba(0,0,0,0.15)",border:"1px solid rgba(255,255,255,0.2)"}}>
+          {stats.map((s,i)=>(<div key={i} style={{textAlign:"center"}}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,46px)",fontWeight:800,color:RED}}><AnimatedCounter target={s.number} suffix={s.suffix}/></div>
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:GRAY,marginTop:"6px",fontWeight:600,letterSpacing:"0.3px",textTransform:"uppercase"}}>{s.label}</div>
+          </div>))}
+        </div>
       </div>
     </section>
   );
