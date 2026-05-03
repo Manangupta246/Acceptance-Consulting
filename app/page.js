@@ -726,25 +726,23 @@ function CommunityProof() {
   );
 }
 
-function AdmissionsSection() {
-  const [tab,setTab]=useState("isb");
-  const isISB=tab==="isb";
+function ServicesSection() {
   return (
-    <section style={{...sps,background:"#fff"}}>
-      <div style={{...mws,maxWidth:"850px"}}>
-        <div style={{textAlign:"center",marginBottom:"40px"}}>
-          <p style={lbs}>Our Programs</p>
-          <h2 style={hs()}>Tailored For Your Target School</h2>
+    <section id="services" style={{...sps,background:LIGHT_GRAY}}>
+      <div style={mws}>
+        <div style={{textAlign:"center",marginBottom:"56px"}}>
+          <p style={lbs}>What We Help With</p>
+          <h2 style={hs()}>Turning Aspiration Into Acceptance</h2>
+          <p style={{...bs,maxWidth:"600px",margin:"12px auto 0"}}>From <strong>ISB YL, PGP & other programs</strong> to <strong>top international programs</strong> like INSEAD, LBS, Wharton, and more.</p>
         </div>
-        <div style={{display:"flex",justifyContent:"center",gap:"8px",marginBottom:"40px",flexWrap:"wrap"}}>
-          {[["isb","ISB Admissions"],["intl","International B-Schools"]].map(([k,l])=>(<button key={k} onClick={()=>setTab(k)} style={{padding:"12px 28px",borderRadius:"50px",border:`2px solid ${RED}`,background:tab===k?RED:"transparent",color:tab===k?"#fff":RED,fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"14px",cursor:"pointer",transition:"all 0.3s"}}>{l}</button>))}
-        </div>
-        <div style={{background:LIGHT_GRAY,borderRadius:"20px",padding:"40px 36px"}}>
-          <p style={{...bs,marginBottom:"28px"}}>{isISB?"We have been in your shoes, and now we are in your corner. After going through the grind ourselves and sitting inside those ISB classrooms, we have seen firsthand what actually gets someone in. It is not just big brand names or perfect GPAs - it is about the diversity you bring.":"Every international B-school has its own lens - some value global exposure more, others prioritize social impact or leadership potential. Some want sharp career clarity, others look for a non-linear story done right. We have studied these nuances, decoded what each program truly values, and helped applicants crack them all."}</p>
-          <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:"12px"}}>
-            {(isISB?isbServices:intlServices).map((s,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:"10px",padding:"12px 16px",borderRadius:"10px",background:"#fff"}}><span style={{color:RED,fontWeight:800}}>{"\u2192"}</span><span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,color:DARK}}>{s}</span></div>))}
-          </div>
-          <p style={{...bs,marginTop:"28px",fontStyle:"italic",fontSize:"15px",color:RED}}>This may be the most personalized MBA admissions support you will ever experience.</p>
+        <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
+          {services.map((s,i)=>(<div key={i} style={{padding:"32px 28px",borderRadius:"16px",background:"#fff",border:"1px solid rgba(0,0,0,0.06)",transition:"border-color 0.3s,box-shadow 0.3s"}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=RED;e.currentTarget.style.boxShadow="0 8px 30px rgba(236,130,131,0.08)";}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(0,0,0,0.06)";e.currentTarget.style.boxShadow="none";}}>
+            <div style={{fontSize:"28px",marginBottom:"14px"}}>{s.icon}</div>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"18px",fontWeight:700,color:DARK,marginBottom:"10px"}}>{s.title}</h3>
+            <p style={{...bs,fontSize:"15px"}}>{s.desc}</p>
+          </div>))}
         </div>
       </div>
     </section>
@@ -2828,7 +2826,7 @@ function AdminDashboard({ user }) {
 }
 
 function HomePage() {
-  return (<><Hero/><SchoolLogos/><NotTypical/><CommunityProof/><AdmissionsSection/><CommunitySection/><TeamSection/><TestimonialsSection/><CTA/></>);
+  return (<><Hero/><SchoolLogos/><NotTypical/><CommunityProof/><ServicesSection/><CommunitySection/><TeamSection/><TestimonialsSection/><CTA/></>);
 }
 
 export default function App() {
