@@ -2826,7 +2826,7 @@ function AdminDashboard({ user }) {
 }
 
 function HomePage() {
-  return (<><Hero/><SchoolLogos/><NotTypical/><CommunityProof/><ServicesSection/><CommunitySection/><TeamSection/><TestimonialsSection/><CTA/></>);
+  return (<><Hero/><SchoolLogos/><ServicesSection/><TestimonialsSection/><NotTypical/><TeamSection/><CommunitySection/><CommunityProof/><CTA/></>);
 }
 
 export default function App() {
