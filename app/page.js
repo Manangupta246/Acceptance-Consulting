@@ -93,12 +93,6 @@ const testimonialCategories = [
     { name: "Aviral Agrawal", school: "ISB Co'26", image: avatar("NandetaI"), text: "Tanya went above and beyond in her commitment to help me deep dive into the finer aspects of my application. I engaged with her on consulting for my isb interview. She not only pointed out areas of improvement, but also spent time in forming a better story for me. Her judgement of how an interview can be driven helped me during my actual interview, where I was effectively able to convey my areas of strength." },
     { name: "Nandeta Agrawala", school: "ISB Co'26", image: avatar("NandetaI"), text: "The mock interviews they conducted were not just rehearsals, they were transformative learning experiences. I made it a point to incorporate their feedback every time and it made all the difference." },
  
-  ]},
-  { category: "Essays & Applications", icon: "\u{1F4DD}", items: [
-    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("RhythmE"), text: "They helped me dig deep, reflect on my journey, and bring out stories I did not even realise were worth telling. Every single essay went through multiple rounds, not to make it sound fancy, but to make it sound authentic." },
-    { name: "Nandeta Agrawala", school: "ISB Co'26", image: avatar("NandetaE"), text: "Their ability to break things down helped me understand my own story better. They never treated me like just another candidate. I can say without a doubt that if it were not for them, I would not be at ISB today." },
-    { name: "Rhythm Garg", school: "ISB Co'26", image: avatar("RhythmE2"), text: "From essay and resume edits to interview prep, they were there for every step of the process, often more invested in my application than I was. If you are looking for people who actually care, you will not find a better team." },
-  ]},
 ];
 const faqs = [
   { q: "When should I start preparing?", a: "The earlier the better - but it is never too late. Ideally, start 4-6 months before your target deadline. That gives us time to do a proper profile deep-dive, work through multiple essay drafts, and run thorough mock interviews. That said, we have helped people with just a week left. Whenever you start, we will make it work." },
