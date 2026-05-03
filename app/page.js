@@ -795,13 +795,15 @@ function TeamSection() {
 function TestimonialsSection() {
   const [ac,setAc]=useState(0);
   const [pg,setPg]=useState(0);
+  const [expanded,setExpanded]=useState(false);
   const perPage=3;
   const items=testimonialCategories[ac].items;
   const totalPages=Math.ceil(items.length/perPage);
   const visible=items.slice(pg*perPage,pg*perPage+perPage);
   const canPrev=pg>0;
   const canNext=pg<totalPages-1;
-  const switchCat=(i)=>{setAc(i);setPg(0);};
+  const switchCat=(i)=>{setAc(i);setPg(0);setExpanded(false);};
+  const changePage=(p)=>{setPg(p);setExpanded(false);};
   const arrowBtn=(dir,enabled)=>({
     width:"44px",height:"44px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",
     fontSize:"18px",fontWeight:800,cursor:enabled?"pointer":"default",transition:"all 0.3s",border:"none",
@@ -810,6 +812,7 @@ function TestimonialsSection() {
     boxShadow:enabled?(dir==="next"?"0 2px 12px rgba(236,130,131,0.3)":"0 2px 12px rgba(0,0,0,0.1)"):"none",
     ...(dir==="prev"&&enabled?{border:`2px solid ${RED}`}:{}),
   });
+  var truncLen = 250;
   return (
     <section id="testimonials" style={{...sps,background:LIGHT_GRAY}}>
       <div style={mws}>
@@ -821,21 +824,26 @@ function TestimonialsSection() {
           {testimonialCategories.map((c,i)=>(<button key={i} onClick={()=>switchCat(i)} style={{padding:"10px 24px",borderRadius:"50px",border:ac===i?"none":"1px solid rgba(0,0,0,0.1)",background:ac===i?RED:"#fff",color:ac===i?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",cursor:"pointer",transition:"all 0.3s",boxShadow:ac===i?"0 4px 16px rgba(236,130,131,0.2)":"none",display:"flex",alignItems:"center",gap:"8px"}}><span>{c.icon}</span>{c.category}</button>))}
         </div>
         <div style={{position:"relative"}}>
-          {totalPages>1&&(<button onClick={()=>canPrev&&setPg(pg-1)} style={{...arrowBtn("prev",canPrev),position:"absolute",left:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2190"}</button>)}
-          <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px"}}>
+          {totalPages>1&&(<button onClick={()=>{canPrev&&changePage(pg-1);}} style={{...arrowBtn("prev",canPrev),position:"absolute",left:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2190"}</button>)}
+          <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px",alignItems:"stretch"}}>
             {visible.map((t,i)=>(<div key={`${ac}-${pg}-${i}`} style={{background:"#fff",borderRadius:"20px",padding:"28px 24px",border:"1px solid rgba(0,0,0,0.06)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
               <img src={t.image} alt={t.name} style={{width:"100px",height:"100px",borderRadius:"50%",objectFit:"cover",border:`3px solid ${RED}`,background:RED_BG,marginBottom:"16px"}} />
               <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"16px",color:DARK}}>{t.name}</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:RED,fontWeight:600,marginBottom:"16px"}}>{t.school}</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"28px",color:RED,lineHeight:1,marginBottom:"6px"}}>{"\u201C"}</div>
-              <p style={{...bs,fontSize:"14px",fontStyle:"italic",flex:1,lineHeight:1.7,textAlign:"left"}}>{t.text.length > 250 ? t.text.slice(0, 250) + "..." : t.text}</p>
-              {t.text.length > 250 && (<button onClick={function(e){e.stopPropagation();var el=e.target.previousElementSibling;if(el.textContent.endsWith("...")){el.textContent=t.text;e.target.textContent="Read less";}else{el.textContent=t.text.slice(0,250)+"...";e.target.textContent="Read more";}}} style={{background:"none",border:"none",color:RED,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:600,padding:"4px 0",marginTop:"4px"}}>Read more</button>)}
+              <p style={{...bs,fontSize:"14px",fontStyle:"italic",flex:1,lineHeight:1.7,textAlign:"left"}}>{expanded ? t.text : (t.text.length > truncLen ? t.text.slice(0, truncLen) + "..." : t.text)}</p>
             </div>))}
           </div>
-          {totalPages>1&&(<button onClick={()=>canNext&&setPg(pg+1)} style={{...arrowBtn("next",canNext),position:"absolute",right:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2192"}</button>)}
+          {totalPages>1&&(<button onClick={()=>{canNext&&changePage(pg+1);}} style={{...arrowBtn("next",canNext),position:"absolute",right:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2192"}</button>)}
         </div>
+        {/* Read more / Read less toggle for the whole page of cards */}
+        {visible.some(function(t){return t.text.length > truncLen;}) && (
+          <div style={{textAlign:"center",marginTop:"16px"}}>
+            <button onClick={function(){setExpanded(!expanded);}} style={{background:"none",border:"none",color:RED,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,padding:"8px 16px"}}>{expanded ? "\u25B2 Read less" : "\u25BC Read more"}</button>
+          </div>
+        )}
         {totalPages>1&&(<div style={{display:"flex",justifyContent:"center",gap:"8px",marginTop:"28px"}}>
-          {Array.from({length:totalPages}).map((_,i)=>(<button key={i} onClick={()=>setPg(i)} style={{width:pg===i?"28px":"10px",height:"10px",borderRadius:"5px",border:"none",cursor:"pointer",background:pg===i?RED:"rgba(0,0,0,0.15)",transition:"all 0.3s"}} />))}
+          {Array.from({length:totalPages}).map((_,i)=>(<button key={i} onClick={()=>changePage(i)} style={{width:pg===i?"28px":"10px",height:"10px",borderRadius:"5px",border:"none",cursor:"pointer",background:pg===i?RED:"rgba(0,0,0,0.15)",transition:"all 0.3s"}} />))}
         </div>)}
       </div>
     </section>
