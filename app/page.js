@@ -646,146 +646,23 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
 }
 
 function Hero() {
-  var orbitPeople = [
-    { name: "Siddhant ShanBagh", school: "SBS, Oxford; ISB Co'27", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Siddhant1.jpeg" },
-    { name: "Dhiti Gurnani", school: "ISB Co'27", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Dhiti.jpeg" },
-    { name: "Krish Bhansali", school: "ISB Co'27", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Krish.jpeg" },
-    { name: "Sravani", school: "ISB Co'27", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Sravani.jpeg" },
-    { name: "Nandeta Agrawala", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Nandeta.jpeg" },
-    { name: "Rhythm Garg", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Rhythm.jpeg" },
-    { name: "Neelima Sajeev", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Neelima.jpeg" },
-    { name: "Vrinda Gupta", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Vrinda1.jpeg" },
-  ];
-  var [hovered, setHovered] = useState(-1);
-
   return (
-    <section id="home" style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:"120px 24px 60px",background:"radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 60%, #050510 100%)",position:"relative",overflow:"hidden"}}>
-      <style dangerouslySetInnerHTML={{__html: "@keyframes twinkle { 0%,100%{opacity:0.2} 50%{opacity:0.9} } @keyframes orbitFloat { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-8px)} } @keyframes pulseRing { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(1.4);opacity:0} } @keyframes rotateRing { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} } .hero-star { position: absolute; background: #fff; border-radius: 50%; } .orbit-person { transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; } .orbit-person:hover { transform: scale(1.18) !important; box-shadow: 0 0 30px rgba(236,130,131,0.6) !important; } .pulse-circle { position: absolute; top: 50%; left: 50%; border-radius: 50%; border: 2px solid rgba(236,130,131,0.4); } .pulse-circle.p1 { animation: pulseRing 3s ease-out infinite; animation-delay: 0s; } .pulse-circle.p2 { animation: pulseRing 3s ease-out infinite; animation-delay: 1s; } .pulse-circle.p3 { animation: pulseRing 3s ease-out infinite; animation-delay: 2s; }"}} />
-      {/* Stars in background */}
-      {Array.from({length:60}).map(function(_,i){
-        var size = 1+Math.random()*2;
-        return <div key={i} className="hero-star" style={{
-          left: Math.random()*100+"%",
-          top: Math.random()*100+"%",
-          width: size+"px",
-          height: size+"px",
-          opacity: 0.2+Math.random()*0.6,
-          animation: "twinkle "+(2+Math.random()*3)+"s ease-in-out infinite",
-          animationDelay: Math.random()*3+"s"
-        }} />;
-      })}
-
-      {/* Subtle nebula glow */}
-      <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"800px",height:"800px",background:"radial-gradient(circle, rgba(236,130,131,0.15) 0%, rgba(236,130,131,0.05) 30%, transparent 60%)",pointerEvents:"none"}} />
-
-      {/* Top label */}
-      <div style={{position:"relative",zIndex:2,display:"inline-block",padding:"8px 20px",borderRadius:"50px",border:"1px solid rgba(236,130,131,0.3)",background:"rgba(236,130,131,0.08)",backdropFilter:"blur(8px)",marginBottom:"28px"}}>
-        <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,letterSpacing:"3px",textTransform:"uppercase",color:RED}}>ISB . INSEAD . LBS . Wharton . & More</span>
+    <section id="home" style={{minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center",padding:"140px 24px 80px",background:`linear-gradient(180deg,${RED_BG} 0%,#fff 60%)`}}>
+      <div style={{display:"inline-block",padding:"8px 20px",borderRadius:"50px",border:"1px solid rgba(236,130,131,0.2)",background:"rgba(236,130,131,0.05)",marginBottom:"28px"}}>
+        <span style={{...lbs,marginBottom:0,fontSize:"11px"}}>ISB . INSEAD . LBS . Wharton . & More</span>
       </div>
-
-      {/* Headline */}
-      <h1 style={{position:"relative",zIndex:2,fontFamily:"'Playfair Display',serif",fontSize:"clamp(36px,6vw,68px)",fontWeight:800,color:"#fff",lineHeight:1.1,maxWidth:"850px",marginBottom:"16px"}}>Get Accepted to Your <span style={{color:RED,fontStyle:"italic"}}>Dream B-School</span></h1>
-
-      {/* Sub headline */}
-      <p style={{position:"relative",zIndex:2,fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(13px,1.8vw,16px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"20px"}}>Affordable. Personalised. Proven.</p>
-
-      {/* Sub-sub headline */}
-      <p style={{position:"relative",zIndex:2,fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(15px,1.8vw,17px)",color:"rgba(255,255,255,0.75)",maxWidth:"600px",margin:"0 auto 50px",lineHeight:1.6}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
-
-      {/* CONSTELLATION */}
-      <div style={{position:"relative",width:"min(560px,90vw)",height:"min(560px,90vw)",margin:"0 auto",zIndex:2}}>
-        {/* Outer rotating ring with markers */}
-        <div style={{position:"absolute",inset:0,animation:"rotateRing 60s linear infinite",borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.15)"}}>
-          {Array.from({length:12}).map(function(_,i){
-            var angle = (i/12)*360;
-            return <div key={i} style={{
-              position:"absolute",
-              top:"50%",
-              left:"50%",
-              width:"4px",
-              height:"4px",
-              background:RED,
-              borderRadius:"50%",
-              opacity:0.4,
-              transform:"translate(-50%,-50%) rotate("+angle+"deg) translateY(-"+(280)+"px)"
-            }} />;
-          })}
-        </div>
-
-        {/* Inner ring */}
-        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"60%",height:"60%",borderRadius:"50%",border:"1px solid rgba(236,130,131,0.15)"}} />
-
-        {/* Center: Number of successful applicants */}
-        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"180px",height:"180px",borderRadius:"50%",background:"radial-gradient(circle, rgba(236,130,131,0.3) 0%, rgba(236,130,131,0.1) 50%, transparent 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:5}}>
-          <div className="pulse-circle p1" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
-          <div className="pulse-circle p2" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
-          <div className="pulse-circle p3" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(48px,7vw,72px)",fontWeight:800,color:"#fff",lineHeight:1,textShadow:"0 0 30px rgba(236,130,131,0.5)"}}>
-            <AnimatedCounter target={150} suffix="+"/>
-          </div>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:600,color:RED,letterSpacing:"2px",textTransform:"uppercase",marginTop:"4px"}}>Successful Admits</div>
-        </div>
-
-        {/* Orbit profile photos */}
-        {orbitPeople.map(function(p,i){
-          var angle = (i/orbitPeople.length)*2*Math.PI - Math.PI/2;
-          var radius = 42; // percentage
-          var x = 50 + radius*Math.cos(angle);
-          var y = 50 + radius*Math.sin(angle);
-          var size = 64;
-          return (
-            <div key={i}
-              className="orbit-person"
-              onMouseEnter={function(){setHovered(i);}}
-              onMouseLeave={function(){setHovered(-1);}}
-              style={{
-                position:"absolute",
-                top:y+"%",
-                left:x+"%",
-                width:size+"px",
-                height:size+"px",
-                marginLeft:-size/2+"px",
-                marginTop:-size/2+"px",
-                borderRadius:"50%",
-                overflow:"hidden",
-                border:"3px solid "+RED,
-                boxShadow:"0 0 20px rgba(236,130,131,0.3)",
-                background:"#1a1a2e",
-                animation:"orbitFloat "+(3+i*0.3)+"s ease-in-out infinite",
-                animationDelay:i*0.4+"s",
-                zIndex:hovered===i?20:3
-              }}>
-              <img src={p.image} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover"}} />
-              {/* Tooltip */}
-              {hovered===i && (
-                <div style={{
-                  position:"absolute",
-                  top:"100%",
-                  left:"50%",
-                  transform:"translateX(-50%)",
-                  marginTop:"12px",
-                  padding:"10px 16px",
-                  background:"rgba(15,15,30,0.95)",
-                  border:"1px solid rgba(236,130,131,0.4)",
-                  borderRadius:"10px",
-                  whiteSpace:"nowrap",
-                  pointerEvents:"none",
-                  boxShadow:"0 8px 30px rgba(0,0,0,0.5)",
-                  zIndex:30
-                }}>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:"#fff"}}>{p.name}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",color:RED,marginTop:"2px"}}>{p.school}</div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* CTAs */}
-      <div className="cta-buttons" style={{position:"relative",zIndex:2,display:"flex",gap:"16px",flexWrap:"wrap",justifyContent:"center",marginTop:"50px"}}>
+      <h1 style={{...hs("clamp(40px,7vw,80px)"),maxWidth:"850px",marginBottom:"20px"}}>Get Accepted to Your <span style={{color:RED}}>Dream B-School</span></h1>
+      <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(14px,2vw,18px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"28px"}}>Affordable. Personalised. Proven.</p>
+      <p style={{...bs,fontSize:"clamp(16px,2vw,19px)",maxWidth:"580px",margin:"0 auto 40px"}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
+      <div style={{display:"flex",gap:"16px",flexWrap:"wrap",justifyContent:"center"}}>
         <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={bps}>Get Free Profile Evaluation</a>
-        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,color:"#fff",borderColor:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.06)",backdropFilter:"blur(4px)"}}>Join 1000+ Community</a>
+        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bos}>Join 1000+ Community</a>
+      </div>
+      <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"20px",maxWidth:"780px",width:"100%",marginTop:"72px",padding:"36px 28px",background:"#fff",borderRadius:"20px",boxShadow:"0 8px 40px rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.04)"}}>
+        {stats.map((s,i)=>(<div key={i} style={{textAlign:"center"}}>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,46px)",fontWeight:800,color:RED}}><AnimatedCounter target={s.number} suffix={s.suffix}/></div>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:GRAY,marginTop:"6px",fontWeight:600,letterSpacing:"0.3px",textTransform:"uppercase"}}>{s.label}</div>
+        </div>))}
       </div>
     </section>
   );
