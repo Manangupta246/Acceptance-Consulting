@@ -130,7 +130,7 @@ const lbs = { fontFamily:"'DM Sans',sans-serif", fontSize:"12px", fontWeight:700
 const bps = { display:"inline-block", padding:"16px 40px", borderRadius:"50px", fontWeight:700, fontSize:"14px", textDecoration:"none", fontFamily:"'DM Sans',sans-serif", letterSpacing:"0.5px", textTransform:"uppercase", transition:"all 0.3s", cursor:"pointer", border:"none", background:RED, color:"#fff", boxShadow:"0 4px 20px rgba(236,130,131,0.25)" };
 const bos = { ...bps, background:"transparent", color:RED, border:`2px solid ${RED}`, boxShadow:"none" };
 const mws = { maxWidth:"1100px", margin:"0 auto" };
-const sps = { padding:"100px 24px" };
+const sps = { padding:"60px 24px" };
 
 /* ── Auth Modal ── */
 function AuthModal({ onClose, onAuth }) {
@@ -656,44 +656,58 @@ function Hero() {
     { name: "Neelima Sajeev", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Neelima.jpeg" },
     { name: "Vrinda Gupta", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Vrinda1.jpeg" },
   ];
-  var schoolRing = ["ISB","INSEAD","LBS","Wharton","Oxford","NUS","HEC Paris","IIMA"];
+  var schoolRing = ["ISB","INSEAD","LBS","Cambridge","Oxford","NUS","HEC Paris","UCLA"];
   var [hovered, setHovered] = useState(-1);
+  var [rotation, setRotation] = useState(0);
+
+  useEffect(function(){
+    var interval = setInterval(function(){ setRotation(function(r){ return r + 0.05; }); }, 16);
+    return function(){ clearInterval(interval); };
+  },[]);
+
+  var schoolAngleOffset = rotation;
+  var peopleAngleOffset = -rotation * 0.8;
 
   return (
-    <section id="home" style={{minHeight:"100vh",display:"flex",alignItems:"center",padding:"120px 24px 60px",background:"linear-gradient(180deg, #fff 0%, "+RED_BG+" 50%, #fff 100%)",position:"relative",overflow:"hidden"}}>
-      {/* Subtle decorative circles */}
+    <section id="home" style={{minHeight:"100vh",display:"flex",alignItems:"center",padding:"120px 24px 40px",background:"linear-gradient(180deg, #fff 0%, "+RED_BG+" 50%, #fff 100%)",position:"relative",overflow:"hidden"}}>
       <div style={{position:"absolute",top:"-200px",right:"-200px",width:"500px",height:"500px",borderRadius:"50%",background:"radial-gradient(circle, rgba(236,130,131,0.08) 0%, transparent 70%)",pointerEvents:"none"}} />
       <div style={{position:"absolute",bottom:"-100px",left:"-100px",width:"400px",height:"400px",borderRadius:"50%",background:"radial-gradient(circle, rgba(236,130,131,0.06) 0%, transparent 70%)",pointerEvents:"none"}} />
 
       <div style={{maxWidth:"1200px",margin:"0 auto",display:"flex",alignItems:"center",gap:"60px",width:"100%",flexWrap:"wrap",justifyContent:"center"}}>
-        {/* Left: Text content */}
         <div style={{flex:"1 1 420px",maxWidth:"560px",textAlign:"left"}}>
           <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,58px)",fontWeight:800,color:DARK,lineHeight:1.1,marginBottom:"16px"}}>Get Accepted to Your <span style={{color:RED,fontStyle:"italic"}}>Dream B-School</span></h1>
           <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(12px,1.5vw,14px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"20px"}}>Affordable. Personalised. Proven.</p>
           <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(14px,1.5vw,16px)",color:GRAY,maxWidth:"480px",lineHeight:1.7,marginBottom:"36px"}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
           <div className="cta-buttons" style={{display:"flex",gap:"16px",flexWrap:"wrap"}}>
-            <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={bps}>Get Free Profile Evaluation</a>
-            <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bos}>Join 1000+ Community</a>
+            <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={bps}>Get Started With Us</a>
+            <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bos}>{"Join 1000+ Applicants' Community"}</a>
           </div>
         </div>
 
-        {/* Right: Constellation */}
         <div style={{flex:"0 0 auto",position:"relative",width:"min(420px,80vw)",height:"min(420px,80vw)"}}>
-          {/* School ring (outermost) */}
-          <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.2)",animation:"rotateRing 90s linear infinite"}}>
+          {/* School ring - labels always horizontal */}
+          <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.2)"}}>
             {schoolRing.map(function(s,i){
-              var angle=(i/schoolRing.length)*360;
-              return (<div key={i} style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%) rotate("+angle+"deg) translateY(-"+(210)+"px) rotate(-"+angle+"deg)",padding:"6px 14px",borderRadius:"20px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,color:RED,whiteSpace:"nowrap"}}>{s}</div>);
+              var baseAngle=(i/schoolRing.length)*360;
+              var currentAngle=baseAngle+schoolAngleOffset;
+              var rad=(currentAngle-90)*(Math.PI/180);
+              var x=50+50*Math.cos(rad);
+              var y=50+50*Math.sin(rad);
+              return (<div key={i} style={{position:"absolute",top:y+"%",left:x+"%",transform:"translate(-50%,-50%)",padding:"6px 14px",borderRadius:"20px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,color:RED,whiteSpace:"nowrap"}}>{s}</div>);
             })}
           </div>
 
-          {/* People ring */}
+          {/* People ring - anti-clockwise, photos always upright */}
           <div style={{position:"absolute",inset:"15%",borderRadius:"50%",border:"1px solid rgba(236,130,131,0.12)"}}>
             {orbitPeople.map(function(p,i){
-              var angle=(i/orbitPeople.length)*360;
+              var baseAngle=(i/orbitPeople.length)*360;
+              var currentAngle=baseAngle+peopleAngleOffset;
+              var rad=(currentAngle-90)*(Math.PI/180);
+              var x=50+50*Math.cos(rad);
+              var y=50+50*Math.sin(rad);
               var size=56;
               return (
-                <div key={i} onMouseEnter={function(){setHovered(i);}} onMouseLeave={function(){setHovered(-1);}} style={{position:"absolute",top:"50%",left:"50%",width:size+"px",height:size+"px",marginLeft:-size/2+"px",marginTop:-size/2+"px",transform:"rotate("+angle+"deg) translateY(-"+(140)+"px) rotate(-"+angle+"deg)",borderRadius:"50%",overflow:"hidden",border:"3px solid "+RED,boxShadow:"0 4px 16px rgba(236,130,131,0.15)",background:"#fff",zIndex:hovered===i?20:3,transition:"transform 0.3s"}}>
+                <div key={i} onMouseEnter={function(){setHovered(i);}} onMouseLeave={function(){setHovered(-1);}} style={{position:"absolute",top:y+"%",left:x+"%",width:size+"px",height:size+"px",marginLeft:-size/2+"px",marginTop:-size/2+"px",borderRadius:"50%",overflow:"hidden",border:"3px solid "+RED,boxShadow:"0 4px 16px rgba(236,130,131,0.15)",background:"#fff",zIndex:hovered===i?20:3}}>
                   <img src={p.image} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover"}} />
                   {hovered===i && (<div style={{position:"absolute",top:"100%",left:"50%",transform:"translateX(-50%)",marginTop:"8px",padding:"8px 14px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",borderRadius:"10px",whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.08)",zIndex:30}}>
                     <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:700,color:DARK}}>{p.name}</div>
@@ -713,11 +727,6 @@ function Hero() {
           </div>
         </div>
       </div>
-
-      {/* CSS animations */}
-      <style>{`
-        @keyframes rotateRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
     </section>
   );
 }
