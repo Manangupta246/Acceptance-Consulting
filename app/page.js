@@ -656,148 +656,75 @@ function Hero() {
     { name: "Neelima Sajeev", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Neelima.jpeg" },
     { name: "Vrinda Gupta", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Vrinda1.jpeg" },
   ];
+  var schoolRing = ["ISB","INSEAD","LBS","Wharton","Oxford","NUS","HEC Paris","IIMA"];
   var [hovered, setHovered] = useState(-1);
 
   return (
-    <section id="home" style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:"120px 24px 60px",background:"radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 60%, #050510 100%)",position:"relative",overflow:"hidden"}}>
-      {/* Stars in background */}
-      {Array.from({length:60}).map(function(_,i){
-        var size = 1+Math.random()*2;
-        return <div key={i} className="hero-star" style={{
-          left: Math.random()*100+"%",
-          top: Math.random()*100+"%",
-          width: size+"px",
-          height: size+"px",
-          opacity: 0.2+Math.random()*0.6,
-          animation: "twinkle "+(2+Math.random()*3)+"s ease-in-out infinite",
-          animationDelay: Math.random()*3+"s"
-        }} />;
-      })}
+    <section id="home" style={{minHeight:"100vh",display:"flex",alignItems:"center",padding:"120px 24px 60px",background:"linear-gradient(180deg, #fff 0%, "+RED_BG+" 50%, #fff 100%)",position:"relative",overflow:"hidden"}}>
+      {/* Subtle decorative circles */}
+      <div style={{position:"absolute",top:"-200px",right:"-200px",width:"500px",height:"500px",borderRadius:"50%",background:"radial-gradient(circle, rgba(236,130,131,0.08) 0%, transparent 70%)",pointerEvents:"none"}} />
+      <div style={{position:"absolute",bottom:"-100px",left:"-100px",width:"400px",height:"400px",borderRadius:"50%",background:"radial-gradient(circle, rgba(236,130,131,0.06) 0%, transparent 70%)",pointerEvents:"none"}} />
 
-      {/* Subtle nebula glow */}
-      <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"800px",height:"800px",background:"radial-gradient(circle, rgba(236,130,131,0.15) 0%, rgba(236,130,131,0.05) 30%, transparent 60%)",pointerEvents:"none"}} />
-
-      {/* Top label */}
-      <div style={{position:"relative",zIndex:2,display:"inline-block",padding:"8px 20px",borderRadius:"50px",border:"1px solid rgba(236,130,131,0.3)",background:"rgba(236,130,131,0.08)",backdropFilter:"blur(8px)",marginBottom:"28px"}}>
-        <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,letterSpacing:"3px",textTransform:"uppercase",color:RED}}>ISB . INSEAD . LBS . Wharton . & More</span>
-      </div>
-
-      {/* Headline */}
-      <h1 style={{position:"relative",zIndex:2,fontFamily:"'Playfair Display',serif",fontSize:"clamp(36px,6vw,68px)",fontWeight:800,color:"#fff",lineHeight:1.1,maxWidth:"850px",marginBottom:"16px"}}>Get Accepted to Your <span style={{color:RED,fontStyle:"italic"}}>Dream B-School</span></h1>
-
-      {/* Sub headline */}
-      <p style={{position:"relative",zIndex:2,fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(13px,1.8vw,16px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"20px"}}>Affordable. Personalised. Proven.</p>
-
-      {/* Sub-sub headline */}
-      <p style={{position:"relative",zIndex:2,fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(15px,1.8vw,17px)",color:"rgba(255,255,255,0.75)",maxWidth:"600px",margin:"0 auto 50px",lineHeight:1.6}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
-
-      {/* CONSTELLATION */}
-      <div style={{position:"relative",width:"min(560px,90vw)",height:"min(560px,90vw)",margin:"0 auto",zIndex:2}}>
-        {/* Outer rotating ring with markers */}
-        <div style={{position:"absolute",inset:0,animation:"rotateRing 60s linear infinite",borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.15)"}}>
-          {Array.from({length:12}).map(function(_,i){
-            var angle = (i/12)*360;
-            return <div key={i} style={{
-              position:"absolute",
-              top:"50%",
-              left:"50%",
-              width:"4px",
-              height:"4px",
-              background:RED,
-              borderRadius:"50%",
-              opacity:0.4,
-              transform:"translate(-50%,-50%) rotate("+angle+"deg) translateY(-"+(280)+"px)"
-            }} />;
-          })}
-        </div>
-
-        {/* Inner ring */}
-        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"60%",height:"60%",borderRadius:"50%",border:"1px solid rgba(236,130,131,0.15)"}} />
-
-        {/* Center: Number of successful applicants */}
-        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"180px",height:"180px",borderRadius:"50%",background:"radial-gradient(circle, rgba(236,130,131,0.3) 0%, rgba(236,130,131,0.1) 50%, transparent 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:5}}>
-          <div className="pulse-circle p1" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
-          <div className="pulse-circle p2" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
-          <div className="pulse-circle p3" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(48px,7vw,72px)",fontWeight:800,color:"#fff",lineHeight:1,textShadow:"0 0 30px rgba(236,130,131,0.5)"}}>
-            <AnimatedCounter target={150} suffix="+"/>
+      <div style={{maxWidth:"1200px",margin:"0 auto",display:"flex",alignItems:"center",gap:"60px",width:"100%",flexWrap:"wrap",justifyContent:"center"}}>
+        {/* Left: Text content */}
+        <div style={{flex:"1 1 420px",maxWidth:"560px",textAlign:"left"}}>
+          <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,58px)",fontWeight:800,color:DARK,lineHeight:1.1,marginBottom:"16px"}}>Get Accepted to Your <span style={{color:RED,fontStyle:"italic"}}>Dream B-School</span></h1>
+          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(12px,1.5vw,14px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"20px"}}>Affordable. Personalised. Proven.</p>
+          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(14px,1.5vw,16px)",color:GRAY,maxWidth:"480px",lineHeight:1.7,marginBottom:"36px"}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
+          <div className="cta-buttons" style={{display:"flex",gap:"16px",flexWrap:"wrap"}}>
+            <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={bps}>Get Free Profile Evaluation</a>
+            <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bos}>Join 1000+ Community</a>
           </div>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:600,color:RED,letterSpacing:"2px",textTransform:"uppercase",marginTop:"4px"}}>Successful Admits</div>
         </div>
 
-        {/* Orbit profile photos */}
-        {orbitPeople.map(function(p,i){
-          var angle = (i/orbitPeople.length)*2*Math.PI - Math.PI/2;
-          var radius = 42; // percentage
-          var x = 50 + radius*Math.cos(angle);
-          var y = 50 + radius*Math.sin(angle);
-          var size = 64;
-          return (
-            <div key={i}
-              className="orbit-person"
-              onMouseEnter={function(){setHovered(i);}}
-              onMouseLeave={function(){setHovered(-1);}}
-              style={{
-                position:"absolute",
-                top:y+"%",
-                left:x+"%",
-                width:size+"px",
-                height:size+"px",
-                marginLeft:-size/2+"px",
-                marginTop:-size/2+"px",
-                borderRadius:"50%",
-                overflow:"hidden",
-                border:"3px solid "+RED,
-                boxShadow:"0 0 20px rgba(236,130,131,0.3)",
-                background:"#1a1a2e",
-                animation:"orbitFloat "+(3+i*0.3)+"s ease-in-out infinite",
-                animationDelay:i*0.4+"s",
-                zIndex:hovered===i?20:3
-              }}>
-              <img src={p.image} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover"}} />
-              {/* Tooltip */}
-              {hovered===i && (
-                <div style={{
-                  position:"absolute",
-                  top:"100%",
-                  left:"50%",
-                  transform:"translateX(-50%)",
-                  marginTop:"12px",
-                  padding:"10px 16px",
-                  background:"rgba(15,15,30,0.95)",
-                  border:"1px solid rgba(236,130,131,0.4)",
-                  borderRadius:"10px",
-                  whiteSpace:"nowrap",
-                  pointerEvents:"none",
-                  boxShadow:"0 8px 30px rgba(0,0,0,0.5)",
-                  zIndex:30
-                }}>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:"#fff"}}>{p.name}</div>
-                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",color:RED,marginTop:"2px"}}>{p.school}</div>
+        {/* Right: Constellation */}
+        <div style={{flex:"0 0 auto",position:"relative",width:"min(420px,80vw)",height:"min(420px,80vw)"}}>
+          {/* School ring (outermost) */}
+          <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.2)",animation:"rotateRing 90s linear infinite"}}>
+            {schoolRing.map(function(s,i){
+              var angle=(i/schoolRing.length)*360;
+              return (<div key={i} style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%) rotate("+angle+"deg) translateY(-"+(210)+"px) rotate(-"+angle+"deg)",padding:"6px 14px",borderRadius:"20px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,color:RED,whiteSpace:"nowrap"}}>{s}</div>);
+            })}
+          </div>
+
+          {/* People ring */}
+          <div style={{position:"absolute",inset:"15%",borderRadius:"50%",border:"1px solid rgba(236,130,131,0.12)"}}>
+            {orbitPeople.map(function(p,i){
+              var angle=(i/orbitPeople.length)*360;
+              var size=56;
+              return (
+                <div key={i} onMouseEnter={function(){setHovered(i);}} onMouseLeave={function(){setHovered(-1);}} style={{position:"absolute",top:"50%",left:"50%",width:size+"px",height:size+"px",marginLeft:-size/2+"px",marginTop:-size/2+"px",transform:"rotate("+angle+"deg) translateY(-"+(140)+"px) rotate(-"+angle+"deg)",borderRadius:"50%",overflow:"hidden",border:"3px solid "+RED,boxShadow:"0 4px 16px rgba(236,130,131,0.15)",background:"#fff",zIndex:hovered===i?20:3,transition:"transform 0.3s"}}>
+                  <img src={p.image} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover"}} />
+                  {hovered===i && (<div style={{position:"absolute",top:"100%",left:"50%",transform:"translateX(-50%)",marginTop:"8px",padding:"8px 14px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",borderRadius:"10px",whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.08)",zIndex:30}}>
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:700,color:DARK}}>{p.name}</div>
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"10px",color:RED,marginTop:"2px"}}>{p.school}</div>
+                  </div>)}
                 </div>
-              )}
+              );
+            })}
+          </div>
+
+          {/* Center */}
+          <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"120px",height:"120px",borderRadius:"50%",background:"linear-gradient(135deg, "+RED+" 0%, #e06060 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 32px rgba(236,130,131,0.25)",zIndex:5}}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,48px)",fontWeight:800,color:"#fff",lineHeight:1}}>
+              <AnimatedCounter target={150} suffix="+"/>
             </div>
-          );
-        })}
+            <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"8px",fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:"1.5px",textTransform:"uppercase",marginTop:"2px"}}>Admits</div>
+          </div>
+        </div>
       </div>
 
-      {/* CTAs */}
-      <div className="cta-buttons" style={{position:"relative",zIndex:2,display:"flex",gap:"16px",flexWrap:"wrap",justifyContent:"center",marginTop:"50px"}}>
-        <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={bps}>Get Free Profile Evaluation</a>
-        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,color:"#fff",borderColor:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.06)",backdropFilter:"blur(4px)"}}>Join 1000+ Community</a>
-      </div>
+      {/* CSS animations */}
+      <style>{`
+        @keyframes rotateRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </section>
   );
 }
 
 function SchoolLogos() {
-  return (
-    <section style={{padding:"48px 24px",background:"#fff",borderBottom:"1px solid rgba(0,0,0,0.04)"}}>
-      <div style={mws}>
-        <p style={{textAlign:"center",fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:600,color:GRAY,letterSpacing:"2px",textTransform:"uppercase",marginBottom:"28px"}}>Our Applicants Have Been Admitted To</p>
-        <div style={{display:"flex",flexWrap:"wrap",justifyContent:"center",gap:"12px"}}>
-          {schools.map((s,i)=>(<div key={i} style={{padding:"10px 22px",borderRadius:"50px",background:s.color,color:"#fff",fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,letterSpacing:"0.5px",boxShadow:"0 2px 8px rgba(0,0,0,0.1)"}}>{s.name}</div>))}
-        </div>
+  return null;
+}
       </div>
     </section>
   );
@@ -914,29 +841,26 @@ function TeamSection() {
 
 function TestimonialsSection() {
   const [ac,setAc]=useState(0);
-  const [expanded,setExpanded]=useState(null);
+  const [expanded,setExpanded]=useState(false);
   const items=testimonialCategories[ac].items;
   const truncLen=400;
   const scrollRef=useRef(null);
   const [paused,setPaused]=useState(false);
 
-  // Auto-scroll horizontally
   useEffect(function(){
     var ref=scrollRef.current;
     if(!ref||paused) return;
-    var speed=0.8;
-    var animId;
-    function step(){
-      if(ref.scrollLeft>=ref.scrollWidth-ref.clientWidth){
+    var interval=setInterval(function(){
+      if(ref.scrollLeft>=ref.scrollWidth-ref.clientWidth-1){
         ref.scrollLeft=0;
       } else {
-        ref.scrollLeft+=speed;
+        ref.scrollLeft+=1;
       }
-      animId=requestAnimationFrame(step);
-    }
-    animId=requestAnimationFrame(step);
-    return function(){cancelAnimationFrame(animId);};
+    },16);
+    return function(){clearInterval(interval);};
   },[ac,paused]);
+
+  var hasLongText=items.some(function(t){return t.text.length>truncLen;});
 
   return (
     <section id="testimonials" style={{...sps,background:"#fff",overflow:"hidden"}}>
@@ -946,27 +870,100 @@ function TestimonialsSection() {
           <h2 style={hs()}>The Impact We Are Proud Of</h2>
         </div>
         <div style={{display:"flex",justifyContent:"center",gap:"10px",marginBottom:"36px",flexWrap:"wrap"}}>
-          {testimonialCategories.map((c,i)=>(<button key={i} onClick={()=>{setAc(i);setExpanded(null);if(scrollRef.current)scrollRef.current.scrollLeft=0;}} style={{padding:"10px 24px",borderRadius:"50px",border:ac===i?"none":"1px solid rgba(0,0,0,0.1)",background:ac===i?RED:"#fff",color:ac===i?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",cursor:"pointer",transition:"all 0.3s",boxShadow:ac===i?"0 4px 16px rgba(236,130,131,0.2)":"none",display:"flex",alignItems:"center",gap:"8px"}}><span>{c.icon}</span>{c.category}</button>))}
+          {testimonialCategories.map((c,i)=>(<button key={i} onClick={()=>{setAc(i);setExpanded(false);if(scrollRef.current)scrollRef.current.scrollLeft=0;}} style={{padding:"10px 24px",borderRadius:"50px",border:ac===i?"none":"1px solid rgba(0,0,0,0.1)",background:ac===i?RED:"#fff",color:ac===i?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",cursor:"pointer",transition:"all 0.3s",boxShadow:ac===i?"0 4px 16px rgba(236,130,131,0.2)":"none",display:"flex",alignItems:"center",gap:"8px"}}><span>{c.icon}</span>{c.category}</button>))}
         </div>
       </div>
-      {/* Horizontal scrolling carousel */}
       <div ref={scrollRef} onMouseEnter={function(){setPaused(true);}} onMouseLeave={function(){setPaused(false);}} onTouchStart={function(){setPaused(true);}} onTouchEnd={function(){setPaused(false);}} style={{display:"flex",gap:"24px",overflowX:"auto",scrollBehavior:"auto",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
         <style>{".testimonial-scroll::-webkit-scrollbar{display:none}"}</style>
-        {/* Double the items for seamless loop */}
         {items.concat(items).map((t,i)=>{
-          var isExpanded=expanded===i;
           return (
             <div key={`${ac}-${i}`} style={{minWidth:"380px",maxWidth:"380px",background:"linear-gradient(180deg, #ffffff 30%, #fdf2f2 70%, #fce8e8 100%)",borderRadius:"20px",padding:"32px 28px",border:"1px solid rgba(236,130,131,0.1)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",flexShrink:0}}>
               <img src={t.image} alt={t.name} style={{width:"90px",height:"90px",borderRadius:"50%",objectFit:"cover",border:"3px solid "+RED,background:RED_BG,marginBottom:"14px"}} />
               <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"15px",color:DARK}}>{t.name}</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:RED,fontWeight:600,marginBottom:"14px"}}>{t.school}</div>
               <div style={{fontFamily:"'Playfair Display',serif",fontSize:"24px",color:RED,lineHeight:1,marginBottom:"4px"}}>{"\u201C"}</div>
-              <p style={{...bs,fontSize:"13px",fontStyle:"italic",lineHeight:1.7,textAlign:"left",flex:1}}>{isExpanded?t.text:(t.text.length>truncLen?t.text.slice(0,truncLen)+"...":t.text)}</p>
-              {t.text.length>truncLen&&(<button onClick={function(){setExpanded(isExpanded?null:i);setPaused(true);}} style={{background:"none",border:"none",color:RED,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:600,padding:"4px 0",marginTop:"8px"}}>{isExpanded?"Read less":"Read more"}</button>)}
+              <p style={{...bs,fontSize:"13px",fontStyle:"italic",lineHeight:1.7,textAlign:"left",flex:1}}>{expanded?t.text:(t.text.length>truncLen?t.text.slice(0,truncLen)+"...":t.text)}</p>
             </div>
           );
         })}
       </div>
+      {hasLongText && (
+        <div style={{textAlign:"center",marginTop:"16px"}}>
+          <button onClick={function(){setExpanded(!expanded);setPaused(true);}} style={{background:"none",border:"none",color:RED,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,padding:"8px 16px"}}>{expanded?"\u25B2 Read less":"\u25BC Read more"}</button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ── Chat Screenshots / Thank You Messages Section ── */
+var chatScreenshots = [
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+  { image: "", caption: "" },
+];
+
+function ChatScreenshotsSection() {
+  var scrollRef2=useRef(null);
+  var [paused2,setPaused2]=useState(false);
+  var filtered=chatScreenshots.filter(function(s){return s.image;});
+
+  useEffect(function(){
+    var ref=scrollRef2.current;
+    if(!ref||paused2||filtered.length===0) return;
+    var interval=setInterval(function(){
+      if(ref.scrollLeft>=ref.scrollWidth-ref.clientWidth-1){
+        ref.scrollLeft=0;
+      } else {
+        ref.scrollLeft+=1.2;
+      }
+    },16);
+    return function(){clearInterval(interval);};
+  },[paused2,filtered.length]);
+
+  var [lightbox,setLightbox]=useState(null);
+
+  if(filtered.length===0) return null;
+
+  return (
+    <section style={{padding:"64px 0",background:LIGHT_GRAY,overflow:"hidden"}}>
+      <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px",textAlign:"center",marginBottom:"40px"}}>
+        <p style={lbs}>Real Conversations</p>
+        <h2 style={hs()}>Words That Made Our Day</h2>
+        <p style={{...bs,maxWidth:"500px",margin:"12px auto 0"}}>Unfiltered messages from applicants who trusted us with their journey.</p>
+      </div>
+      <div ref={scrollRef2} onMouseEnter={function(){setPaused2(true);}} onMouseLeave={function(){setPaused2(false);}} onTouchStart={function(){setPaused2(true);}} onTouchEnd={function(){setPaused2(false);}} style={{display:"flex",gap:"16px",overflowX:"auto",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
+        {filtered.concat(filtered).map(function(s,i){
+          return (
+            <div key={i} onClick={function(){setLightbox(s.image);setPaused2(true);}} style={{minWidth:"220px",maxWidth:"220px",borderRadius:"16px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)",background:"#fff",cursor:"pointer",flexShrink:0,transition:"transform 0.2s,box-shadow 0.2s",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
+              <img src={s.image} alt={s.caption||"Chat screenshot"} style={{width:"100%",height:"300px",objectFit:"cover",display:"block"}} />
+              {s.caption && (<div style={{padding:"10px 14px",fontSize:"12px",fontFamily:"'DM Sans',sans-serif",color:GRAY,fontWeight:500}}>{s.caption}</div>)}
+            </div>
+          );
+        })}
+      </div>
+      {/* Lightbox */}
+      {lightbox&&(<div onClick={function(){setLightbox(null);setPaused2(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,cursor:"pointer",padding:20}}>
+        <img src={lightbox} alt="Chat screenshot" style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,objectFit:"contain"}} />
+        <button style={{position:"absolute",top:20,right:20,background:"none",border:"none",color:"#fff",fontSize:28,cursor:"pointer"}}>{"\u2715"}</button>
+      </div>)}
     </section>
   );
 }
@@ -2949,7 +2946,7 @@ function AdminDashboard({ user }) {
 }
 
 function HomePage() {
-  return (<><Hero/><SchoolLogos/><ServicesSection/><TestimonialsSection/><NotTypical/><TeamSection/><CommunitySection/><CommunityProof/><CTA/></>);
+  return (<><Hero/><SchoolLogos/><ServicesSection/><TestimonialsSection/><ChatScreenshotsSection/><NotTypical/><TeamSection/><CommunitySection/><CommunityProof/><CTA/></>);
 }
 
 export default function App() {
