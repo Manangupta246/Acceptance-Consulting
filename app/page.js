@@ -77,8 +77,8 @@ const howItWorks = [
   { step: "03", title: "We Build It Together", desc: "From essays to interviews, we walk with you every step. Unlimited revisions, real-time support, midnight voice notes - the works.", icon: "\u{1F91D}" },
 ];
 const team = [
-  { name: "Tanya Mehta", image: avatar("TanyaMehta"), bio: "Tanya Mehta is an MBA graduate, Chartered Accountant (CA) and CFA Level 1 who secured admits from top global business schools and ISB, giving her a well-rounded understanding of MBA admissions worldwide. She also teaches strategy to MBA students, further strengthening her insights into what top schools seek in candidates." },
-  { name: "Manan Gupta", image: avatar("MananGupta"), bio: "Manan Gupta is an MBA graduate from ISB and a management consultant with 4+ years of work experience at Bain and Kepler Cannon. He brings a wealth of experience in storytelling and career mentorship. With an insider perspective on top-tier MBA programs, he has guided 100+ candidates in crafting high-impact applications that stand out." },
+  { name: "Tanya Mehta", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Profile%20pictures/Tanya2.jpeg", bio: "Tanya Mehta is an MBA graduate, Chartered Accountant (CA) and CFA Level 1 who secured admits from top global business schools and ISB, giving her a well-rounded understanding of MBA admissions worldwide. She also teaches strategy to MBA students, further strengthening her insights into what top schools seek in candidates." },
+  { name: "Manan Gupta", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Profile%20pictures/Manan1.jpeg", bio: "Manan Gupta is an MBA graduate from ISB and a management consultant with 4+ years of work experience at Bain and Kepler Cannon. He brings a wealth of experience in storytelling and career mentorship. With an insider perspective on top-tier MBA programs, he has guided 100+ candidates in crafting high-impact applications that stand out." },
 ];
 const testimonialCategories = [
   { category: "Overall Journey", icon: "\u{1F31F}", items: [
@@ -799,9 +799,9 @@ function ServicesSection() {
 }
 
 function CommunitySection() {
-  var communityScreenshot = "";
-  var webinarPhoto1 = "";
-  var webinarPhoto2 = "";
+  var communityScreenshot = "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Other%20than%20webinar/Community%20groups.jpeg";
+  var webinarPhoto1 = "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Other%20than%20webinar/Community%20poll%201.jpeg";
+  var webinarPhoto2 = "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Webinar/WhatsApp%20Image%202026-05-02%20at%204.21.10%20PM.jpeg";
   return (
     <section style={{...sps,background:LIGHT_GRAY}}>
       <div style={mws}>
