@@ -916,7 +916,7 @@ function TestimonialsSection() {
   const [ac,setAc]=useState(0);
   const [expanded,setExpanded]=useState(null);
   const items=testimonialCategories[ac].items;
-  const truncLen=250;
+  const truncLen=400;
   const scrollRef=useRef(null);
   const [paused,setPaused]=useState(false);
 
@@ -924,7 +924,7 @@ function TestimonialsSection() {
   useEffect(function(){
     var ref=scrollRef.current;
     if(!ref||paused) return;
-    var speed=0.5;
+    var speed=0.8;
     var animId;
     function step(){
       if(ref.scrollLeft>=ref.scrollWidth-ref.clientWidth){
@@ -956,7 +956,7 @@ function TestimonialsSection() {
         {items.concat(items).map((t,i)=>{
           var isExpanded=expanded===i;
           return (
-            <div key={`${ac}-${i}`} style={{minWidth:"340px",maxWidth:"340px",background:"linear-gradient(180deg, #ffffff 30%, #fdf2f2 70%, #fce8e8 100%)",borderRadius:"20px",padding:"28px 24px",border:"1px solid rgba(236,130,131,0.1)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",flexShrink:0}}>
+            <div key={`${ac}-${i}`} style={{minWidth:"380px",maxWidth:"380px",background:"linear-gradient(180deg, #ffffff 30%, #fdf2f2 70%, #fce8e8 100%)",borderRadius:"20px",padding:"32px 28px",border:"1px solid rgba(236,130,131,0.1)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",flexShrink:0}}>
               <img src={t.image} alt={t.name} style={{width:"90px",height:"90px",borderRadius:"50%",objectFit:"cover",border:"3px solid "+RED,background:RED_BG,marginBottom:"14px"}} />
               <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"15px",color:DARK}}>{t.name}</div>
               <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:RED,fontWeight:600,marginBottom:"14px"}}>{t.school}</div>
@@ -966,10 +966,6 @@ function TestimonialsSection() {
             </div>
           );
         })}
-      </div>
-      {/* Scroll hint */}
-      <div style={{textAlign:"center",marginTop:"16px",fontSize:"12px",color:"#9CA3AF",fontFamily:"'DM Sans',sans-serif"}}>
-        {paused?"Scroll paused \u2014 hover away to resume":"Scrolling \u2014 hover to pause"}
       </div>
     </section>
   );
