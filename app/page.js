@@ -658,6 +658,39 @@ function Hero() {
   ];
   var schoolRing = ["ISB","INSEAD","LBS","Cambridge","Oxford","NUS","HEC Paris","UCLA"];
   var [hovered, setHovered] = useState(-1);
+  var schoolRefs = useRef([]);
+  var peopleRefs = useRef([]);
+  var angleRef = useRef(0);
+
+  useEffect(function(){
+    var animId;
+    function tick(){
+      angleRef.current += 0.015;
+      var schoolDeg = angleRef.current * (180/Math.PI);
+      var peopleDeg = -angleRef.current * 0.8 * (180/Math.PI);
+      for(var i=0;i<schoolRefs.current.length;i++){
+        if(!schoolRefs.current[i]) continue;
+        var sBase = (i/schoolRing.length)*2*Math.PI;
+        var sA = sBase + angleRef.current;
+        var sx = 50 + 50*Math.cos(sA - Math.PI/2);
+        var sy = 50 + 50*Math.sin(sA - Math.PI/2);
+        schoolRefs.current[i].style.left = sx+"%";
+        schoolRefs.current[i].style.top = sy+"%";
+      }
+      for(var j=0;j<peopleRefs.current.length;j++){
+        if(!peopleRefs.current[j]) continue;
+        var pBase = (j/orbitPeople.length)*2*Math.PI;
+        var pA = pBase + (-angleRef.current * 0.8);
+        var px = 50 + 50*Math.cos(pA - Math.PI/2);
+        var py = 50 + 50*Math.sin(pA - Math.PI/2);
+        peopleRefs.current[j].style.left = px+"%";
+        peopleRefs.current[j].style.top = py+"%";
+      }
+      animId = requestAnimationFrame(tick);
+    }
+    animId = requestAnimationFrame(tick);
+    return function(){ cancelAnimationFrame(animId); };
+  },[]);
 
   return (
     <section id="home" style={{minHeight:"100vh",display:"flex",alignItems:"center",padding:"120px 24px 40px",background:"linear-gradient(180deg, #fff 0%, "+RED_BG+" 50%, #fff 100%)",position:"relative",overflow:"hidden"}}>
@@ -676,30 +709,30 @@ function Hero() {
         </div>
 
         <div style={{flex:"0 0 auto",position:"relative",width:"min(420px,80vw)",height:"min(420px,80vw)"}}>
-          {/* School ring - CSS rotation, labels counter-rotate to stay horizontal */}
-          <div className="school-orbit" style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.2)"}}>
+          {/* School ring */}
+          <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.2)"}}>
             {schoolRing.map(function(s,i){
-              var angle=(i/schoolRing.length)*360;
-              return (<div key={i} className="school-label" style={{position:"absolute",top:"50%",left:"50%",transform:"rotate("+angle+"deg) translateY(-210px)",transformOrigin:"0 0",width:0,height:0}}>
-                <div style={{position:"absolute",transform:"rotate(-"+angle+"deg) translate(-50%,-50%)",padding:"6px 14px",borderRadius:"20px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,color:RED,whiteSpace:"nowrap"}}>{s}</div>
-              </div>);
+              var baseAngle=(i/schoolRing.length)*2*Math.PI;
+              var ix=50+50*Math.cos(baseAngle-Math.PI/2);
+              var iy=50+50*Math.sin(baseAngle-Math.PI/2);
+              return (<div key={i} ref={function(el){schoolRefs.current[i]=el;}} style={{position:"absolute",top:iy+"%",left:ix+"%",transform:"translate(-50%,-50%)",padding:"6px 14px",borderRadius:"20px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,color:RED,whiteSpace:"nowrap",willChange:"left,top"}}>{s}</div>);
             })}
           </div>
 
-          {/* People ring - CSS rotation anti-clockwise, photos counter-rotate to stay upright */}
-          <div className="people-orbit" style={{position:"absolute",inset:"15%",borderRadius:"50%",border:"1px solid rgba(236,130,131,0.12)"}}>
+          {/* People ring */}
+          <div style={{position:"absolute",inset:"15%",borderRadius:"50%",border:"1px solid rgba(236,130,131,0.12)"}}>
             {orbitPeople.map(function(p,i){
-              var angle=(i/orbitPeople.length)*360;
+              var baseAngle=(i/orbitPeople.length)*2*Math.PI;
+              var ix=50+50*Math.cos(baseAngle-Math.PI/2);
+              var iy=50+50*Math.sin(baseAngle-Math.PI/2);
               var size=56;
               return (
-                <div key={i} className="person-dot" style={{position:"absolute",top:"50%",left:"50%",transform:"rotate("+angle+"deg) translateY(-"+Math.round(0.5*((420*0.7)/2))+"px)",transformOrigin:"0 0",width:0,height:0,zIndex:hovered===i?20:3}}>
-                  <div onMouseEnter={function(){setHovered(i);}} onMouseLeave={function(){setHovered(-1);}} style={{position:"absolute",transform:"rotate(-"+angle+"deg) translate(-50%,-50%)",width:size+"px",height:size+"px",borderRadius:"50%",overflow:"visible",border:"3px solid "+RED,boxShadow:"0 4px 16px rgba(236,130,131,0.15)",background:"#fff"}}>
-                    <img src={p.image} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"50%"}} />
-                    {hovered===i && (<div style={{position:"absolute",top:"100%",left:"50%",transform:"translateX(-50%)",marginTop:"8px",padding:"8px 14px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",borderRadius:"10px",whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.08)",zIndex:30}}>
-                      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:700,color:DARK}}>{p.name}</div>
-                      <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"10px",color:RED,marginTop:"2px"}}>{p.school}</div>
-                    </div>)}
-                  </div>
+                <div key={i} ref={function(el){peopleRefs.current[i]=el;}} onMouseEnter={function(){setHovered(i);}} onMouseLeave={function(){setHovered(-1);}} style={{position:"absolute",top:iy+"%",left:ix+"%",width:size+"px",height:size+"px",marginLeft:-size/2+"px",marginTop:-size/2+"px",borderRadius:"50%",overflow:"visible",border:"3px solid "+RED,boxShadow:"0 4px 16px rgba(236,130,131,0.15)",background:"#fff",zIndex:hovered===i?20:3,willChange:"left,top"}}>
+                  <img src={p.image} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"50%"}} />
+                  {hovered===i && (<div style={{position:"absolute",top:"100%",left:"50%",transform:"translateX(-50%)",marginTop:"8px",padding:"8px 14px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",borderRadius:"10px",whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.08)",zIndex:30}}>
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:700,color:DARK}}>{p.name}</div>
+                    <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"10px",color:RED,marginTop:"2px"}}>{p.school}</div>
+                  </div>)}
                 </div>
               );
             })}
@@ -714,17 +747,6 @@ function Hero() {
           </div>
         </div>
       </div>
-
-      <style>{"\
-        .school-orbit { animation: orbitCW 120s linear infinite; }\
-        .school-orbit .school-label > div { animation: counterCW 120s linear infinite; }\
-        .people-orbit { animation: orbitCCW 100s linear infinite; }\
-        .people-orbit .person-dot > div { animation: counterCCW 100s linear infinite; }\
-        @keyframes orbitCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }\
-        @keyframes counterCW { from { transform: rotate(0deg) translate(-50%,-50%); } to { transform: rotate(-360deg) translate(-50%,-50%); } }\
-        @keyframes orbitCCW { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }\
-        @keyframes counterCCW { from { transform: rotate(0deg) translate(-50%,-50%); } to { transform: rotate(360deg) translate(-50%,-50%); } }\
-      "}</style>
     </section>
   );
 }
