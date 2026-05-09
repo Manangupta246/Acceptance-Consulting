@@ -850,7 +850,7 @@ function TestimonialsSection() {
       if(ref.scrollLeft>=ref.scrollWidth-ref.clientWidth-1){
         ref.scrollLeft=0;
       } else {
-        ref.scrollLeft+=1;
+        ref.scrollLeft+=0.8;
       }
     },16);
     return function(){clearInterval(interval);};
@@ -859,7 +859,7 @@ function TestimonialsSection() {
   var hasLongText=items.some(function(t){return t.text.length>truncLen;});
 
   return (
-    <section id="testimonials" style={{...sps,background:"#fff",overflow:"hidden"}}>
+    <section id="testimonials" style={{...sps,paddingBottom:"20px",background:"#fff",overflow:"hidden"}}>
       <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px"}}>
         <div style={{textAlign:"center",marginBottom:"48px"}}>
           <p style={lbs}>Testimonials</p>
@@ -884,7 +884,7 @@ function TestimonialsSection() {
         })}
       </div>
       {hasLongText && (
-        <div style={{textAlign:"center",marginTop:"8px"}}>
+        <div style={{textAlign:"center",marginTop:"4px",marginBottom:"0"}}>
           <button onClick={function(){setExpanded(!expanded);setPaused(true);}} style={{background:"none",border:"none",color:RED,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,padding:"8px 16px"}}>{expanded?"\u25B2 Read less":"\u25BC Read more"}</button>
         </div>
       )}
@@ -941,7 +941,7 @@ function ChatScreenshotsSection() {
       if(ref.scrollLeft>=ref.scrollWidth/2){
         ref.scrollLeft=0;
       } else {
-        ref.scrollLeft+=1;
+        ref.scrollLeft+=0.8;
       }
     },16);
     return function(){clearInterval(interval);};
@@ -959,8 +959,8 @@ function ChatScreenshotsSection() {
 
   return (
     <section style={{padding:"0 0 64px",background:"#fff",overflow:"hidden"}}>
-      <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px",textAlign:"center",marginBottom:"20px"}}>
-        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(18px,3vw,24px)",fontWeight:700,color:DARK,marginTop:0}}>Words That Made Our Day</h3>
+      <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px",textAlign:"center",marginBottom:"16px"}}>
+        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(18px,3vw,24px)",fontWeight:700,color:DARK,margin:0}}>Words That Made Our Day</h3>
       </div>
       <div ref={scrollRef2} onMouseEnter={function(){setPaused2(true);}} onMouseLeave={function(){setPaused2(false);}} onTouchStart={function(){setPaused2(true);}} onTouchEnd={function(){setPaused2(false);}} style={{overflowX:"auto",paddingBottom:"8px",paddingLeft:"24px",paddingRight:"24px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
         <div style={{display:"inline-flex",flexDirection:"column",gap:"12px"}}>
