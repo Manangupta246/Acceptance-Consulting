@@ -958,11 +958,9 @@ function ChatScreenshotsSection() {
   }
 
   return (
-    <section style={{padding:"64px 0",background:LIGHT_GRAY,overflow:"hidden"}}>
-      <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px",textAlign:"center",marginBottom:"40px"}}>
-        <p style={lbs}>Real Conversations</p>
-        <h2 style={hs()}>Words That Made Our Day</h2>
-        <p style={{...bs,maxWidth:"500px",margin:"12px auto 0"}}>Unfiltered messages from applicants who trusted us with their journey.</p>
+    <section style={{padding:"0 0 64px",background:"#fff",overflow:"hidden"}}>
+      <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px",textAlign:"center",marginBottom:"32px"}}>
+        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(18px,3vw,24px)",fontWeight:700,color:DARK}}>Words That Made Our Day</h3>
       </div>
       <div ref={scrollRef2} onMouseEnter={function(){setPaused2(true);}} onMouseLeave={function(){setPaused2(false);}} onTouchStart={function(){setPaused2(true);}} onTouchEnd={function(){setPaused2(false);}} style={{overflowX:"auto",paddingBottom:"8px",paddingLeft:"24px",paddingRight:"24px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
         <div style={{display:"inline-flex",flexDirection:"column",gap:"12px"}}>
