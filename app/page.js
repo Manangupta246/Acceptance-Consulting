@@ -725,10 +725,6 @@ function Hero() {
 function SchoolLogos() {
   return null;
 }
-      </div>
-    </section>
-  );
-}
 
 function NotTypical() {
   return (
