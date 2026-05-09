@@ -606,13 +606,13 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
   }, []);
   const links = [
     { label:"Home", action:()=>{setPage("home");window.scrollTo({top:0,behavior:"smooth"});} },
-    { label:"Blog", action:()=>{setPage("blog");window.scrollTo(0,0);} },
     { label:"Testimonials", action:()=>{setPage("home");setTimeout(()=>document.getElementById("testimonials")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"Our Team", action:()=>{setPage("home");setTimeout(()=>document.getElementById("our-team")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"FAQ", action:()=>{setPage("faq");window.scrollTo(0,0);} },
     { label:"Leaderboard", action:()=>{setPage("leaderboard");window.scrollTo(0,0);} },
     { label:"Study Partner", action:()=>{setPage("partners");window.scrollTo(0,0);} },
     { label:"Forum", action:()=>{setPage("forum");window.scrollTo(0,0);} },
+    { label:"Blog", action:()=>{setPage("blog");window.scrollTo(0,0);} },
   ];
   const isActive = (l) => (page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Study Partner")||(page==="forum"&&l.label==="Forum");
   return (
@@ -989,7 +989,7 @@ function ChatScreenshotsSection() {
       <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px",textAlign:"center",marginBottom:"16px"}}>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(18px,3vw,24px)",fontWeight:700,color:DARK,margin:0}}>Words That Made Our Day</h3>
       </div>
-      <div ref={scrollRef2} onMouseEnter={function(){setPaused2(true);}} onMouseLeave={function(){setPaused2(false);}} onTouchStart={function(){setPaused2(true);}} onTouchEnd={function(){setPaused2(false);}} style={{overflowX:"auto",paddingBottom:"8px",paddingLeft:"24px",paddingRight:"24px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
+      <div ref={scrollRef2} style={{overflowX:"auto",paddingBottom:"8px",paddingLeft:"24px",paddingRight:"24px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
         <div style={{display:"inline-flex",flexDirection:"column",gap:"12px"}}>
           <div style={{display:"flex",gap:"12px"}}>
             {row1.concat(row1).map(function(s,i){return renderCard(s,"r1-"+i);})}
