@@ -27,7 +27,7 @@ const avatar = (n) => `https://api.dicebear.com/7.x/notionists/svg?seed=${encode
 function AnimatedCounter({ target, suffix = "" }) {
   const [c, setC] = useState(0);
   const ref = useRef(null);
-  const num = parseInt(target.replace(/\D/g, ""));
+  const num = parseInt(String(target).replace(/\D/g, ""));
   useEffect(() => {
     const el = ref.current; if (!el) return;
     const obs = new IntersectionObserver(([e]) => {
