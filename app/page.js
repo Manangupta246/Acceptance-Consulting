@@ -77,8 +77,8 @@ const howItWorks = [
   { step: "03", title: "We Build It Together", desc: "From essays to interviews, we walk with you every step. Unlimited revisions, real-time support, midnight voice notes - the works.", icon: "\u{1F91D}" },
 ];
 const team = [
-  { name: "Tanya Mehta", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Profile%20pictures/Tanya2.jpeg", bio: "Tanya Mehta is an MBA graduate, Chartered Accountant (CA) and CFA Level 1 who secured admits from top global business schools and ISB, giving her a well-rounded understanding of MBA admissions worldwide. She also teaches strategy to MBA students, further strengthening her insights into what top schools seek in candidates." },
-  { name: "Manan Gupta", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Profile%20pictures/Manan1.jpeg", bio: "Manan Gupta is an MBA graduate from ISB and a management consultant with 4+ years of work experience at Bain and Kepler Cannon. He brings a wealth of experience in storytelling and career mentorship. With an insider perspective on top-tier MBA programs, he has guided 100+ candidates in crafting high-impact applications that stand out." },
+  { name: "Tanya Mehta", image: avatar("TanyaMehta"), bio: "Tanya Mehta is an MBA graduate, Chartered Accountant (CA) and CFA Level 1 who secured admits from top global business schools and ISB, giving her a well-rounded understanding of MBA admissions worldwide. She also teaches strategy to MBA students, further strengthening her insights into what top schools seek in candidates." },
+  { name: "Manan Gupta", image: avatar("MananGupta"), bio: "Manan Gupta is an MBA graduate from ISB and a management consultant with 4+ years of work experience at Bain and Kepler Cannon. He brings a wealth of experience in storytelling and career mentorship. With an insider perspective on top-tier MBA programs, he has guided 100+ candidates in crafting high-impact applications that stand out." },
 ];
 const testimonialCategories = [
   { category: "Overall Journey", icon: "\u{1F31F}", items: [
@@ -772,30 +772,7 @@ function NotTypical() {
 }
 
 function CommunityProof() {
-  return (
-    <section style={{...sps,background:"#fff"}}>
-      <div style={mws}>
-        <div style={{textAlign:"center",marginBottom:"48px"}}>
-          <p style={lbs}>See It In Action</p>
-          <h2 style={hs()}>Real Conversations. Real Impact.</h2>
-          <p style={{...bs,maxWidth:"550px",margin:"12px auto 0"}}>This is what our community actually looks like - no staged photos, no stock images.</p>
-        </div>
-        <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:"20px"}}>
-          {communityProof.map((c,i)=>(<div key={i} style={{borderRadius:"16px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)"}}>
-            {c.image ? (
-              <div style={{height:"220px",overflow:"hidden"}}><img src={c.image} alt={c.caption} style={{width:"100%",height:"100%",objectFit:"cover"}} /></div>
-            ) : (
-              <div style={{height:"220px",background:c.type==="chat"?"linear-gradient(135deg,#E8F5E9,#C8E6C9)":"linear-gradient(135deg,#E3F2FD,#BBDEFB)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:"8px"}}>
-                <span style={{fontSize:"40px"}}>{c.type==="chat"?"\u{1F4AC}":"\u{1F3A5}"}</span>
-                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:"rgba(0,0,0,0.3)"}}>Upload screenshot</span>
-              </div>
-            )}
-            <div style={{padding:"16px 20px",background:"#fff"}}><p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:DARK,fontWeight:600,margin:0}}>{c.caption}</p></div>
-          </div>))}
-        </div>
-      </div>
-    </section>
-  );
+  return null;
 }
 
 function ServicesSection() {
@@ -822,17 +799,57 @@ function ServicesSection() {
 }
 
 function CommunitySection() {
+  var communityScreenshot = "";
+  var webinarPhoto1 = "";
+  var webinarPhoto2 = "";
   return (
     <section style={{...sps,background:LIGHT_GRAY}}>
-      <div style={{...mws,display:"flex",flexWrap:"wrap",gap:"48px",alignItems:"center",justifyContent:"center"}}>
-        <div style={{flex:"1 1 350px",minWidth:"280px"}}>
+      <div style={mws}>
+        {/* Content on top, centered */}
+        <div style={{textAlign:"center",marginBottom:"40px",maxWidth:"650px",margin:"0 auto 40px"}}>
           <p style={lbs}>Our Community</p>
-          <h2 style={{...hs("clamp(28px,4vw,40px)"),marginBottom:"16px"}}>Free Informational Webinars</h2>
-          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"24px",color:RED,fontWeight:700,marginBottom:"20px"}}>1000+ Applicants Community</h3>
-          <p style={{...bs,marginBottom:"28px"}}>Join a community of ambitious MBA aspirants. We host regular information sharing sessions, Q&As, and discussions to help you navigate the admissions journey.</p>
+          <h2 style={{...hs("clamp(28px,4vw,40px)"),marginBottom:"12px"}}>Free Informational Webinars</h2>
+          <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"22px",color:RED,fontWeight:700,marginBottom:"20px"}}>{"1000+ Applicants' Community"}</h3>
+          <p style={{...bs,marginBottom:"28px",maxWidth:"550px",margin:"0 auto 28px"}}>Join a community of ambitious MBA aspirants. We host regular information sharing sessions, Q&As, and discussions to help you navigate the admissions journey.</p>
           <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bps}>Join Community</a>
         </div>
-        <div style={{flex:"0 0 auto"}}><img src="https://assets.zyrosite.com/cdn-cgi/image/format=auto,w=400,fit=crop/A0xw1L5325CZlXWJ/community-picture-YX4xw5VM0zT9xNPw.jpg" alt="Community" style={{borderRadius:"20px",width:"100%",maxWidth:"380px",boxShadow:"0 8px 30px rgba(0,0,0,0.08)"}} /></div>
+        {/* 3-photo layout: tall screenshot left + 2 shorter photos stacked right */}
+        <div style={{display:"flex",gap:"16px",maxWidth:"800px",margin:"0 auto",alignItems:"stretch"}}>
+          {/* Left: tall community screenshot */}
+          <div style={{flex:"1 1 50%",borderRadius:"16px",overflow:"hidden",background:"#fff",border:"1px solid rgba(0,0,0,0.06)",minHeight:"400px",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            {communityScreenshot ? (
+              <img src={communityScreenshot} alt="Community groups" style={{width:"100%",height:"100%",objectFit:"cover"}} />
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"8px",color:"rgba(0,0,0,0.25)"}}>
+                <span style={{fontSize:"40px"}}>{"\u{1F4F1}"}</span>
+                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px"}}>Community screenshot</span>
+              </div>
+            )}
+          </div>
+          {/* Right: 2 webinar photos stacked */}
+          <div style={{flex:"1 1 50%",display:"flex",flexDirection:"column",gap:"16px"}}>
+            <div style={{flex:1,borderRadius:"16px",overflow:"hidden",background:"#fff",border:"1px solid rgba(0,0,0,0.06)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {webinarPhoto1 ? (
+                <img src={webinarPhoto1} alt="Webinar session" style={{width:"100%",height:"100%",objectFit:"cover"}} />
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"8px",color:"rgba(0,0,0,0.25)",padding:"40px 0"}}>
+                  <span style={{fontSize:"36px"}}>{"\u{1F3A5}"}</span>
+                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px"}}>Webinar photo 1</span>
+                </div>
+              )}
+            </div>
+            <div style={{flex:1,borderRadius:"16px",overflow:"hidden",background:"#fff",border:"1px solid rgba(0,0,0,0.06)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              {webinarPhoto2 ? (
+                <img src={webinarPhoto2} alt="Webinar session" style={{width:"100%",height:"100%",objectFit:"cover"}} />
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"8px",color:"rgba(0,0,0,0.25)",padding:"40px 0"}}>
+                  <span style={{fontSize:"36px"}}>{"\u{1F3A5}"}</span>
+                  <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px"}}>Webinar photo 2</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
