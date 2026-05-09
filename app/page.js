@@ -964,9 +964,8 @@ function ChatScreenshotsSection() {
       <div ref={scrollRef2} onMouseEnter={function(){setPaused2(true);}} onMouseLeave={function(){setPaused2(false);}} onTouchStart={function(){setPaused2(true);}} onTouchEnd={function(){setPaused2(false);}} style={{display:"flex",gap:"16px",overflowX:"auto",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
         {filtered.concat(filtered).map(function(s,i){
           return (
-            <div key={i} onClick={function(){setLightbox(s.image);setPaused2(true);}} style={{minWidth:"220px",maxWidth:"220px",borderRadius:"16px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)",background:"#fff",cursor:"pointer",flexShrink:0,transition:"transform 0.2s,box-shadow 0.2s",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
-              <img src={s.image} alt={s.caption||"Chat screenshot"} style={{width:"100%",height:"300px",objectFit:"cover",display:"block"}} />
-              {s.caption && (<div style={{padding:"10px 14px",fontSize:"12px",fontFamily:"'DM Sans',sans-serif",color:GRAY,fontWeight:500}}>{s.caption}</div>)}
+            <div key={i} onClick={function(){setLightbox(s.image);setPaused2(true);}} style={{minWidth:"200px",maxWidth:"200px",height:"360px",borderRadius:"16px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)",background:"#f5f5f5",cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
+              <img src={s.image} alt={s.caption||"Chat screenshot"} style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain",display:"block"}} />
             </div>
           );
         })}
