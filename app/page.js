@@ -663,33 +663,32 @@ function Hero() {
   ];
   var schoolRing = ["ISB","INSEAD","LBS","Cambridge","Oxford","NUS","HEC Paris","UCLA"];
   var [hovered, setHovered] = useState(-1);
-  var schoolRefs = useRef([]);
-  var peopleRefs = useRef([]);
+  var containerRef = useRef(null);
   var angleRef = useRef(0);
 
   useEffect(function(){
     var animId;
+    var schoolEls = [];
+    var peopleEls = [];
+    var container = containerRef.current;
+    if (!container) return;
+    schoolEls = container.querySelectorAll(".s-item");
+    peopleEls = container.querySelectorAll(".p-item");
+
     function tick(){
       angleRef.current += 0.002;
-      var schoolDeg = angleRef.current * (180/Math.PI);
-      var peopleDeg = -angleRef.current * 0.8 * (180/Math.PI);
-      for(var i=0;i<schoolRefs.current.length;i++){
-        if(!schoolRefs.current[i]) continue;
-        var sBase = (i/schoolRing.length)*2*Math.PI;
-        var sA = sBase + angleRef.current;
+      var a = angleRef.current;
+      for(var i=0;i<schoolEls.length;i++){
+        var sA = (i/8)*2*Math.PI + a;
         var sx = 50 + 50*Math.cos(sA - Math.PI/2);
         var sy = 50 + 50*Math.sin(sA - Math.PI/2);
-        schoolRefs.current[i].style.left = sx+"%";
-        schoolRefs.current[i].style.top = sy+"%";
+        schoolEls[i].style.transform = "translate(-50%,-50%) translate("+((sx-50)*4.2)+"px,"+((sy-50)*4.2)+"px)";
       }
-      for(var j=0;j<peopleRefs.current.length;j++){
-        if(!peopleRefs.current[j]) continue;
-        var pBase = (j/orbitPeople.length)*2*Math.PI;
-        var pA = pBase + (-angleRef.current * 0.8);
+      for(var j=0;j<peopleEls.length;j++){
+        var pA = (j/8)*2*Math.PI + (-a * 0.8);
         var px = 50 + 50*Math.cos(pA - Math.PI/2);
         var py = 50 + 50*Math.sin(pA - Math.PI/2);
-        peopleRefs.current[j].style.left = px+"%";
-        peopleRefs.current[j].style.top = py+"%";
+        peopleEls[j].style.transform = "translate(-50%,-50%) translate("+((px-50)*2.94)+"px,"+((py-50)*2.94)+"px)";
       }
       animId = requestAnimationFrame(tick);
     }
@@ -713,26 +712,20 @@ function Hero() {
           </div>
         </div>
 
-        <div style={{flex:"0 0 auto",position:"relative",width:"min(420px,80vw)",height:"min(420px,80vw)"}}>
+        <div ref={containerRef} style={{flex:"0 0 auto",position:"relative",width:"min(420px,80vw)",height:"min(420px,80vw)"}}>
           {/* School ring */}
           <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.2)"}}>
             {schoolRing.map(function(s,i){
-              var baseAngle=(i/schoolRing.length)*2*Math.PI;
-              var ix=50+50*Math.cos(baseAngle-Math.PI/2);
-              var iy=50+50*Math.sin(baseAngle-Math.PI/2);
-              return (<div key={i} ref={function(el){schoolRefs.current[i]=el;}} style={{position:"absolute",top:iy+"%",left:ix+"%",transform:"translate(-50%,-50%)",padding:"6px 14px",borderRadius:"20px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,color:RED,whiteSpace:"nowrap",willChange:"left,top"}}>{s}</div>);
+              return (<div key={i} className="s-item" style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",padding:"6px 14px",borderRadius:"20px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",boxShadow:"0 2px 8px rgba(0,0,0,0.04)",fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,color:RED,whiteSpace:"nowrap",willChange:"transform"}}>{s}</div>);
             })}
           </div>
 
           {/* People ring */}
           <div style={{position:"absolute",inset:"15%",borderRadius:"50%",border:"1px solid rgba(236,130,131,0.12)"}}>
             {orbitPeople.map(function(p,i){
-              var baseAngle=(i/orbitPeople.length)*2*Math.PI;
-              var ix=50+50*Math.cos(baseAngle-Math.PI/2);
-              var iy=50+50*Math.sin(baseAngle-Math.PI/2);
               var size=56;
               return (
-                <div key={i} ref={function(el){peopleRefs.current[i]=el;}} onMouseEnter={function(){setHovered(i);}} onMouseLeave={function(){setHovered(-1);}} style={{position:"absolute",top:iy+"%",left:ix+"%",width:size+"px",height:size+"px",marginLeft:-size/2+"px",marginTop:-size/2+"px",borderRadius:"50%",overflow:"visible",border:"3px solid "+RED,boxShadow:"0 4px 16px rgba(236,130,131,0.15)",background:"#fff",zIndex:hovered===i?20:3,willChange:"left,top"}}>
+                <div key={i} className="p-item" onMouseEnter={function(){setHovered(i);}} onMouseLeave={function(){setHovered(-1);}} style={{position:"absolute",top:"50%",left:"50%",width:size+"px",height:size+"px",transform:"translate(-50%,-50%)",borderRadius:"50%",overflow:"visible",border:"3px solid "+RED,boxShadow:"0 4px 16px rgba(236,130,131,0.15)",background:"#fff",zIndex:hovered===i?20:3,willChange:"transform"}}>
                   <img src={p.image} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover",borderRadius:"50%"}} />
                   {hovered===i && (<div style={{position:"absolute",top:"100%",left:"50%",transform:"translateX(-50%)",marginTop:"8px",padding:"8px 14px",background:"#fff",border:"1px solid rgba(236,130,131,0.2)",borderRadius:"10px",whiteSpace:"nowrap",boxShadow:"0 4px 20px rgba(0,0,0,0.08)",zIndex:30}}>
                     <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:700,color:DARK}}>{p.name}</div>
