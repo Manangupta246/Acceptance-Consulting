@@ -928,44 +928,51 @@ var chatScreenshots = [
 
 function ChatScreenshotsSection() {
   var filtered=chatScreenshots.filter(function(s){return s.image;});
-  var [page,setPage]=useState(0);
-  var perPage=9;
-  var totalPages=Math.ceil(filtered.length/perPage);
-  var visible=filtered.slice(page*perPage,page*perPage+perPage);
+  var scrollRef2=useRef(null);
+  var [paused2,setPaused2]=useState(false);
+
+  var row1=filtered.filter(function(_,i){return i%2===0;});
+  var row2=filtered.filter(function(_,i){return i%2===1;});
+
+  useEffect(function(){
+    var ref=scrollRef2.current;
+    if(!ref||paused2||filtered.length===0) return;
+    var interval=setInterval(function(){
+      if(ref.scrollLeft>=ref.scrollWidth/2){
+        ref.scrollLeft=0;
+      } else {
+        ref.scrollLeft+=0.8;
+      }
+    },16);
+    return function(){clearInterval(interval);};
+  },[paused2,filtered.length]);
 
   if(filtered.length===0) return null;
 
+  function renderCard(s,i){
+    return (
+      <div key={i} style={{minWidth:"200px",maxWidth:"200px",borderRadius:"12px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.08)",background:"#fff",flexShrink:0,boxShadow:"0 2px 10px rgba(0,0,0,0.05)"}}>
+        <img src={s.image} alt="Chat screenshot" style={{width:"100%",height:"auto",display:"block"}} loading="lazy" />
+      </div>
+    );
+  }
+
   return (
     <section style={{padding:"64px 0",background:LIGHT_GRAY,overflow:"hidden"}}>
-      <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px"}}>
-        <div style={{textAlign:"center",marginBottom:"40px"}}>
-          <p style={lbs}>Real Conversations</p>
-          <h2 style={hs()}>Words That Made Our Day</h2>
-          <p style={{...bs,maxWidth:"500px",margin:"12px auto 0"}}>Unfiltered messages from applicants who trusted us with their journey.</p>
-        </div>
-        {/* Masonry grid */}
-        <div style={{columnCount:3,columnGap:"14px",maxWidth:"900px",margin:"0 auto"}}>
-          {visible.map(function(s,i){
-            return (
-              <div key={page+"-"+i} style={{breakInside:"avoid",marginBottom:"14px",borderRadius:"12px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.08)",background:"#fff",boxShadow:"0 2px 10px rgba(0,0,0,0.05)"}}>
-                <img src={s.image} alt="Chat screenshot" style={{width:"100%",height:"auto",display:"block"}} />
-              </div>
-            );
-          })}
-        </div>
-        {/* Pagination */}
-        {totalPages>1&&(
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:"16px",marginTop:"32px"}}>
-            <button onClick={function(){if(page>0){setPage(page-1);window.scrollTo({top:document.getElementById("chat-screenshots-top").offsetTop-100,behavior:"smooth"});}}} disabled={page===0} style={{width:"44px",height:"44px",borderRadius:"50%",border:page>0?"2px solid "+RED:"1px solid #E5E7EB",background:page>0?"#fff":"#F3F4F6",color:page>0?RED:"#D1D5DB",fontSize:"18px",fontWeight:700,cursor:page>0?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>{"\u2190"}</button>
-            <div style={{display:"flex",gap:"8px"}}>
-              {Array.from({length:totalPages}).map(function(_,i){
-                return (<button key={i} onClick={function(){setPage(i);}} style={{width:page===i?"28px":"10px",height:"10px",borderRadius:"5px",border:"none",cursor:"pointer",background:page===i?RED:"rgba(0,0,0,0.15)",transition:"all 0.3s"}} />);
-              })}
-            </div>
-            <button onClick={function(){if(page<totalPages-1){setPage(page+1);window.scrollTo({top:document.getElementById("chat-screenshots-top").offsetTop-100,behavior:"smooth"});}}} disabled={page>=totalPages-1} style={{width:"44px",height:"44px",borderRadius:"50%",border:page<totalPages-1?"none":"1px solid #E5E7EB",background:page<totalPages-1?RED:"#F3F4F6",color:page<totalPages-1?"#fff":"#D1D5DB",fontSize:"18px",fontWeight:700,cursor:page<totalPages-1?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center"}}>{"\u2192"}</button>
+      <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px",textAlign:"center",marginBottom:"40px"}}>
+        <p style={lbs}>Real Conversations</p>
+        <h2 style={hs()}>Words That Made Our Day</h2>
+        <p style={{...bs,maxWidth:"500px",margin:"12px auto 0"}}>Unfiltered messages from applicants who trusted us with their journey.</p>
+      </div>
+      <div ref={scrollRef2} onMouseEnter={function(){setPaused2(true);}} onMouseLeave={function(){setPaused2(false);}} onTouchStart={function(){setPaused2(true);}} onTouchEnd={function(){setPaused2(false);}} style={{overflowX:"auto",paddingBottom:"8px",paddingLeft:"24px",paddingRight:"24px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
+        <div style={{display:"inline-flex",flexDirection:"column",gap:"12px"}}>
+          <div style={{display:"flex",gap:"12px"}}>
+            {row1.concat(row1).map(function(s,i){return renderCard(s,"r1-"+i);})}
           </div>
-        )}
-        <div id="chat-screenshots-top" style={{position:"relative",top:"-200px"}} />
+          <div style={{display:"flex",gap:"12px"}}>
+            {row2.concat(row2).map(function(s,i){return renderCard(s,"r2-"+i);})}
+          </div>
+        </div>
       </div>
     </section>
   );
