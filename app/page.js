@@ -28,16 +28,21 @@ function AnimatedCounter({ target, suffix = "" }) {
   const [c, setC] = useState(0);
   const ref = useRef(null);
   const num = parseInt(String(target).replace(/\D/g, ""));
+  const hasAnimated = useRef(false);
   useEffect(() => {
     const el = ref.current; if (!el) return;
     const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
+      if (e.isIntersecting && !hasAnimated.current) {
+        hasAnimated.current = true;
         let s = 0; const step = Math.ceil(num / 80);
         const t = setInterval(() => { s += step; if (s >= num) { setC(num); clearInterval(t); } else setC(s); }, 20);
         obs.disconnect();
       }
-    }, { threshold: 0.3 });
-    obs.observe(el); return () => obs.disconnect();
+    }, { threshold: 0.1 });
+    obs.observe(el); 
+    // Fallback: if observer doesn't fire in 2s, animate anyway
+    var fallback = setTimeout(function(){ if(!hasAnimated.current){ hasAnimated.current=true; let s=0; const step=Math.ceil(num/80); const t=setInterval(()=>{s+=step;if(s>=num){setC(num);clearInterval(t);}else setC(s);},20); } },2000);
+    return () => { obs.disconnect(); clearTimeout(fallback); };
   }, [num]);
   return <span ref={ref}>{c}{suffix}</span>;
 }
@@ -665,7 +670,7 @@ function Hero() {
   useEffect(function(){
     var animId;
     function tick(){
-      angleRef.current += 0.015;
+      angleRef.current += 0.002;
       var schoolDeg = angleRef.current * (180/Math.PI);
       var peopleDeg = -angleRef.current * 0.8 * (180/Math.PI);
       for(var i=0;i<schoolRefs.current.length;i++){
