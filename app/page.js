@@ -937,6 +937,10 @@ function ChatScreenshotsSection() {
   var [paused2,setPaused2]=useState(false);
   var filtered=chatScreenshots.filter(function(s){return s.image;});
 
+  // Split into 2 rows alternating
+  var row1=filtered.filter(function(_,i){return i%2===0;});
+  var row2=filtered.filter(function(_,i){return i%2===1;});
+
   useEffect(function(){
     var ref=scrollRef2.current;
     if(!ref||paused2||filtered.length===0) return;
@@ -944,15 +948,21 @@ function ChatScreenshotsSection() {
       if(ref.scrollLeft>=ref.scrollWidth-ref.clientWidth-1){
         ref.scrollLeft=0;
       } else {
-        ref.scrollLeft+=1.2;
+        ref.scrollLeft+=1;
       }
     },16);
     return function(){clearInterval(interval);};
   },[paused2,filtered.length]);
 
-  var [lightbox,setLightbox]=useState(null);
-
   if(filtered.length===0) return null;
+
+  function renderCard(s,i){
+    return (
+      <div key={i} style={{minWidth:"180px",maxWidth:"180px",borderRadius:"12px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)",background:"#fff",flexShrink:0,boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
+        <img src={s.image} alt="Chat screenshot" style={{width:"100%",height:"auto",display:"block"}} />
+      </div>
+    );
+  }
 
   return (
     <section style={{padding:"64px 0",background:LIGHT_GRAY,overflow:"hidden"}}>
@@ -961,20 +971,16 @@ function ChatScreenshotsSection() {
         <h2 style={hs()}>Words That Made Our Day</h2>
         <p style={{...bs,maxWidth:"500px",margin:"12px auto 0"}}>Unfiltered messages from applicants who trusted us with their journey.</p>
       </div>
-      <div ref={scrollRef2} onMouseEnter={function(){setPaused2(true);}} onMouseLeave={function(){setPaused2(false);}} onTouchStart={function(){setPaused2(true);}} onTouchEnd={function(){setPaused2(false);}} style={{display:"flex",gap:"16px",overflowX:"auto",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
-        {filtered.concat(filtered).map(function(s,i){
-          return (
-            <div key={i} onClick={function(){setLightbox(s.image);setPaused2(true);}} style={{minWidth:"200px",maxWidth:"200px",height:"360px",borderRadius:"16px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)",background:"#f5f5f5",cursor:"pointer",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.04)"}}>
-              <img src={s.image} alt={s.caption||"Chat screenshot"} style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain",display:"block"}} />
-            </div>
-          );
-        })}
+      <div ref={scrollRef2} onMouseEnter={function(){setPaused2(true);}} onMouseLeave={function(){setPaused2(false);}} onTouchStart={function(){setPaused2(true);}} onTouchEnd={function(){setPaused2(false);}} style={{overflowX:"auto",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
+        {/* Row 1 */}
+        <div style={{display:"flex",gap:"14px",marginBottom:"14px"}}>
+          {row1.concat(row1).map(function(s,i){return renderCard(s,i);})}
+        </div>
+        {/* Row 2 */}
+        <div style={{display:"flex",gap:"14px"}}>
+          {row2.concat(row2).map(function(s,i){return renderCard(s,i+"r2");})}
+        </div>
       </div>
-      {/* Lightbox */}
-      {lightbox&&(<div onClick={function(){setLightbox(null);setPaused2(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1200,cursor:"pointer",padding:20}}>
-        <img src={lightbox} alt="Chat screenshot" style={{maxWidth:"90vw",maxHeight:"90vh",borderRadius:12,objectFit:"contain"}} />
-        <button style={{position:"absolute",top:20,right:20,background:"none",border:"none",color:"#fff",fontSize:28,cursor:"pointer"}}>{"\u2715"}</button>
-      </div>)}
     </section>
   );
 }
