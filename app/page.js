@@ -951,8 +951,8 @@ function ChatScreenshotsSection() {
 
   function renderCard(s,i){
     return (
-      <div key={i} style={{minWidth:"200px",maxWidth:"200px",borderRadius:"12px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.08)",background:"#fff",flexShrink:0,boxShadow:"0 2px 10px rgba(0,0,0,0.05)"}}>
-        <img src={s.image} alt="Chat screenshot" style={{width:"100%",height:"auto",display:"block"}} loading="lazy" />
+      <div key={i} style={{minWidth:"200px",maxWidth:"200px",borderRadius:"12px",overflow:"hidden",flexShrink:0}}>
+        <img src={s.image} alt="Chat screenshot" style={{width:"100%",height:"auto",display:"block",borderRadius:"12px"}} loading="lazy" />
       </div>
     );
   }
