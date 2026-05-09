@@ -646,23 +646,145 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
 }
 
 function Hero() {
+  var orbitPeople = [
+    { name: "Siddhant ShanBagh", school: "SBS, Oxford; ISB Co'27", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Siddhant1.jpeg" },
+    { name: "Dhiti Gurnani", school: "ISB Co'27", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Dhiti.jpeg" },
+    { name: "Krish Bhansali", school: "ISB Co'27", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Krish.jpeg" },
+    { name: "Sravani", school: "ISB Co'27", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Sravani.jpeg" },
+    { name: "Nandeta Agrawala", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Nandeta.jpeg" },
+    { name: "Rhythm Garg", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Rhythm.jpeg" },
+    { name: "Neelima Sajeev", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Neelima.jpeg" },
+    { name: "Vrinda Gupta", school: "ISB Co'26", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Testimonial%20Pictures/Vrinda1.jpeg" },
+  ];
+  var [hovered, setHovered] = useState(-1);
+
   return (
-    <section id="home" style={{minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center",padding:"140px 24px 80px",background:`linear-gradient(180deg,${RED_BG} 0%,#fff 60%)`}}>
-      <div style={{display:"inline-block",padding:"8px 20px",borderRadius:"50px",border:"1px solid rgba(236,130,131,0.2)",background:"rgba(236,130,131,0.05)",marginBottom:"28px"}}>
-        <span style={{...lbs,marginBottom:0,fontSize:"11px"}}>ISB . INSEAD . LBS . Wharton . & More</span>
+    <section id="home" style={{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",padding:"120px 24px 60px",background:"radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 60%, #050510 100%)",position:"relative",overflow:"hidden"}}>
+      {/* Stars in background */}
+      {Array.from({length:60}).map(function(_,i){
+        var size = 1+Math.random()*2;
+        return <div key={i} className="hero-star" style={{
+          left: Math.random()*100+"%",
+          top: Math.random()*100+"%",
+          width: size+"px",
+          height: size+"px",
+          opacity: 0.2+Math.random()*0.6,
+          animation: "twinkle "+(2+Math.random()*3)+"s ease-in-out infinite",
+          animationDelay: Math.random()*3+"s"
+        }} />;
+      })}
+
+      {/* Subtle nebula glow */}
+      <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"800px",height:"800px",background:"radial-gradient(circle, rgba(236,130,131,0.15) 0%, rgba(236,130,131,0.05) 30%, transparent 60%)",pointerEvents:"none"}} />
+
+      {/* Top label */}
+      <div style={{position:"relative",zIndex:2,display:"inline-block",padding:"8px 20px",borderRadius:"50px",border:"1px solid rgba(236,130,131,0.3)",background:"rgba(236,130,131,0.08)",backdropFilter:"blur(8px)",marginBottom:"28px"}}>
+        <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:700,letterSpacing:"3px",textTransform:"uppercase",color:RED}}>ISB . INSEAD . LBS . Wharton . & More</span>
       </div>
-      <h1 style={{...hs("clamp(40px,7vw,80px)"),maxWidth:"850px",marginBottom:"20px"}}>Get Accepted to Your <span style={{color:RED}}>Dream B-School</span></h1>
-      <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(14px,2vw,18px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"28px"}}>Affordable. Personalised. Proven.</p>
-      <p style={{...bs,fontSize:"clamp(16px,2vw,19px)",maxWidth:"580px",margin:"0 auto 40px"}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
-      <div style={{display:"flex",gap:"16px",flexWrap:"wrap",justifyContent:"center"}}>
+
+      {/* Headline */}
+      <h1 style={{position:"relative",zIndex:2,fontFamily:"'Playfair Display',serif",fontSize:"clamp(36px,6vw,68px)",fontWeight:800,color:"#fff",lineHeight:1.1,maxWidth:"850px",marginBottom:"16px"}}>Get Accepted to Your <span style={{color:RED,fontStyle:"italic"}}>Dream B-School</span></h1>
+
+      {/* Sub headline */}
+      <p style={{position:"relative",zIndex:2,fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(13px,1.8vw,16px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"20px"}}>Affordable. Personalised. Proven.</p>
+
+      {/* Sub-sub headline */}
+      <p style={{position:"relative",zIndex:2,fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(15px,1.8vw,17px)",color:"rgba(255,255,255,0.75)",maxWidth:"600px",margin:"0 auto 50px",lineHeight:1.6}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
+
+      {/* CONSTELLATION */}
+      <div style={{position:"relative",width:"min(560px,90vw)",height:"min(560px,90vw)",margin:"0 auto",zIndex:2}}>
+        {/* Outer rotating ring with markers */}
+        <div style={{position:"absolute",inset:0,animation:"rotateRing 60s linear infinite",borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.15)"}}>
+          {Array.from({length:12}).map(function(_,i){
+            var angle = (i/12)*360;
+            return <div key={i} style={{
+              position:"absolute",
+              top:"50%",
+              left:"50%",
+              width:"4px",
+              height:"4px",
+              background:RED,
+              borderRadius:"50%",
+              opacity:0.4,
+              transform:"translate(-50%,-50%) rotate("+angle+"deg) translateY(-"+(280)+"px)"
+            }} />;
+          })}
+        </div>
+
+        {/* Inner ring */}
+        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"60%",height:"60%",borderRadius:"50%",border:"1px solid rgba(236,130,131,0.15)"}} />
+
+        {/* Center: Number of successful applicants */}
+        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"180px",height:"180px",borderRadius:"50%",background:"radial-gradient(circle, rgba(236,130,131,0.3) 0%, rgba(236,130,131,0.1) 50%, transparent 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:5}}>
+          <div className="pulse-circle p1" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
+          <div className="pulse-circle p2" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
+          <div className="pulse-circle p3" style={{width:"180px",height:"180px",marginLeft:"-90px",marginTop:"-90px"}}/>
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(48px,7vw,72px)",fontWeight:800,color:"#fff",lineHeight:1,textShadow:"0 0 30px rgba(236,130,131,0.5)"}}>
+            <AnimatedCounter target={150} suffix="+"/>
+          </div>
+          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",fontWeight:600,color:RED,letterSpacing:"2px",textTransform:"uppercase",marginTop:"4px"}}>Successful Admits</div>
+        </div>
+
+        {/* Orbit profile photos */}
+        {orbitPeople.map(function(p,i){
+          var angle = (i/orbitPeople.length)*2*Math.PI - Math.PI/2;
+          var radius = 42; // percentage
+          var x = 50 + radius*Math.cos(angle);
+          var y = 50 + radius*Math.sin(angle);
+          var size = 64;
+          return (
+            <div key={i}
+              className="orbit-person"
+              onMouseEnter={function(){setHovered(i);}}
+              onMouseLeave={function(){setHovered(-1);}}
+              style={{
+                position:"absolute",
+                top:y+"%",
+                left:x+"%",
+                width:size+"px",
+                height:size+"px",
+                marginLeft:-size/2+"px",
+                marginTop:-size/2+"px",
+                borderRadius:"50%",
+                overflow:"hidden",
+                border:"3px solid "+RED,
+                boxShadow:"0 0 20px rgba(236,130,131,0.3)",
+                background:"#1a1a2e",
+                animation:"orbitFloat "+(3+i*0.3)+"s ease-in-out infinite",
+                animationDelay:i*0.4+"s",
+                zIndex:hovered===i?20:3
+              }}>
+              <img src={p.image} alt={p.name} style={{width:"100%",height:"100%",objectFit:"cover"}} />
+              {/* Tooltip */}
+              {hovered===i && (
+                <div style={{
+                  position:"absolute",
+                  top:"100%",
+                  left:"50%",
+                  transform:"translateX(-50%)",
+                  marginTop:"12px",
+                  padding:"10px 16px",
+                  background:"rgba(15,15,30,0.95)",
+                  border:"1px solid rgba(236,130,131,0.4)",
+                  borderRadius:"10px",
+                  whiteSpace:"nowrap",
+                  pointerEvents:"none",
+                  boxShadow:"0 8px 30px rgba(0,0,0,0.5)",
+                  zIndex:30
+                }}>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",fontWeight:700,color:"#fff"}}>{p.name}</div>
+                  <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"11px",color:RED,marginTop:"2px"}}>{p.school}</div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* CTAs */}
+      <div className="cta-buttons" style={{position:"relative",zIndex:2,display:"flex",gap:"16px",flexWrap:"wrap",justifyContent:"center",marginTop:"50px"}}>
         <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={bps}>Get Free Profile Evaluation</a>
-        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bos}>Join 1000+ Community</a>
-      </div>
-      <div className="stats-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:"20px",maxWidth:"780px",width:"100%",marginTop:"72px",padding:"36px 28px",background:"#fff",borderRadius:"20px",boxShadow:"0 8px 40px rgba(0,0,0,0.06)",border:"1px solid rgba(0,0,0,0.04)"}}>
-        {stats.map((s,i)=>(<div key={i} style={{textAlign:"center"}}>
-          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,46px)",fontWeight:800,color:RED}}><AnimatedCounter target={s.number} suffix={s.suffix}/></div>
-          <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:GRAY,marginTop:"6px",fontWeight:600,letterSpacing:"0.3px",textTransform:"uppercase"}}>{s.label}</div>
-        </div>))}
+        <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={{...bos,color:"#fff",borderColor:"rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.06)",backdropFilter:"blur(4px)"}}>Join 1000+ Community</a>
       </div>
     </section>
   );
@@ -792,57 +914,62 @@ function TeamSection() {
 
 function TestimonialsSection() {
   const [ac,setAc]=useState(0);
-  const [pg,setPg]=useState(0);
-  const [expanded,setExpanded]=useState(false);
-  const perPage=3;
+  const [expanded,setExpanded]=useState(null);
   const items=testimonialCategories[ac].items;
-  const totalPages=Math.ceil(items.length/perPage);
-  const visible=items.slice(pg*perPage,pg*perPage+perPage);
-  const canPrev=pg>0;
-  const canNext=pg<totalPages-1;
-  const switchCat=(i)=>{setAc(i);setPg(0);setExpanded(false);};
-  const changePage=(p)=>{setPg(p);setExpanded(false);};
-  const arrowBtn=(dir,enabled)=>({
-    width:"44px",height:"44px",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",
-    fontSize:"18px",fontWeight:800,cursor:enabled?"pointer":"default",transition:"all 0.3s",border:"none",
-    background:enabled?(dir==="next"?RED:"#fff"):"rgba(0,0,0,0.05)",
-    color:enabled?(dir==="next"?"#fff":RED):"rgba(0,0,0,0.2)",
-    boxShadow:enabled?(dir==="next"?"0 2px 12px rgba(236,130,131,0.3)":"0 2px 12px rgba(0,0,0,0.1)"):"none",
-    ...(dir==="prev"&&enabled?{border:`2px solid ${RED}`}:{}),
-  });
-  var truncLen = 250;
+  const truncLen=250;
+  const scrollRef=useRef(null);
+  const [paused,setPaused]=useState(false);
+
+  // Auto-scroll horizontally
+  useEffect(function(){
+    var ref=scrollRef.current;
+    if(!ref||paused) return;
+    var speed=0.5;
+    var animId;
+    function step(){
+      if(ref.scrollLeft>=ref.scrollWidth-ref.clientWidth){
+        ref.scrollLeft=0;
+      } else {
+        ref.scrollLeft+=speed;
+      }
+      animId=requestAnimationFrame(step);
+    }
+    animId=requestAnimationFrame(step);
+    return function(){cancelAnimationFrame(animId);};
+  },[ac,paused]);
+
   return (
-    <section id="testimonials" style={{...sps,background:"#fff"}}>
-      <div style={mws}>
+    <section id="testimonials" style={{...sps,background:"#fff",overflow:"hidden"}}>
+      <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px"}}>
         <div style={{textAlign:"center",marginBottom:"48px"}}>
           <p style={lbs}>Testimonials</p>
           <h2 style={hs()}>The Impact We Are Proud Of</h2>
         </div>
         <div style={{display:"flex",justifyContent:"center",gap:"10px",marginBottom:"36px",flexWrap:"wrap"}}>
-          {testimonialCategories.map((c,i)=>(<button key={i} onClick={()=>switchCat(i)} style={{padding:"10px 24px",borderRadius:"50px",border:ac===i?"none":"1px solid rgba(0,0,0,0.1)",background:ac===i?RED:"#fff",color:ac===i?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",cursor:"pointer",transition:"all 0.3s",boxShadow:ac===i?"0 4px 16px rgba(236,130,131,0.2)":"none",display:"flex",alignItems:"center",gap:"8px"}}><span>{c.icon}</span>{c.category}</button>))}
+          {testimonialCategories.map((c,i)=>(<button key={i} onClick={()=>{setAc(i);setExpanded(null);if(scrollRef.current)scrollRef.current.scrollLeft=0;}} style={{padding:"10px 24px",borderRadius:"50px",border:ac===i?"none":"1px solid rgba(0,0,0,0.1)",background:ac===i?RED:"#fff",color:ac===i?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",cursor:"pointer",transition:"all 0.3s",boxShadow:ac===i?"0 4px 16px rgba(236,130,131,0.2)":"none",display:"flex",alignItems:"center",gap:"8px"}}><span>{c.icon}</span>{c.category}</button>))}
         </div>
-        <div style={{position:"relative"}}>
-          {totalPages>1&&(<button onClick={()=>{canPrev&&changePage(pg-1);}} style={{...arrowBtn("prev",canPrev),position:"absolute",left:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2190"}</button>)}
-          <div className="services-grid" style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px",alignItems:"stretch"}}>
-            {visible.map((t,i)=>(<div key={`${ac}-${pg}-${i}`} style={{background:"linear-gradient(180deg, #ffffff 30%, #fdf2f2 70%, #fce8e8 100%)",borderRadius:"20px",padding:"28px 24px",border:"1px solid rgba(236,130,131,0.1)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
-              <img src={t.image} alt={t.name} style={{width:"100px",height:"100px",borderRadius:"50%",objectFit:"cover",border:`3px solid ${RED}`,background:RED_BG,marginBottom:"16px"}} />
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"16px",color:DARK}}>{t.name}</div>
-              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:RED,fontWeight:600,marginBottom:"16px"}}>{t.school}</div>
-              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"28px",color:RED,lineHeight:1,marginBottom:"6px"}}>{"\u201C"}</div>
-              <p style={{...bs,fontSize:"14px",fontStyle:"italic",flex:1,lineHeight:1.7,textAlign:"left"}}>{expanded ? t.text : (t.text.length > truncLen ? t.text.slice(0, truncLen) + "..." : t.text)}</p>
-            </div>))}
-          </div>
-          {totalPages>1&&(<button onClick={()=>{canNext&&changePage(pg+1);}} style={{...arrowBtn("next",canNext),position:"absolute",right:"-22px",top:"50%",transform:"translateY(-50%)",zIndex:2}}>{"\u2192"}</button>)}
-        </div>
-        {/* Read more / Read less toggle for the whole page of cards */}
-        {visible.some(function(t){return t.text.length > truncLen;}) && (
-          <div style={{textAlign:"center",marginTop:"16px"}}>
-            <button onClick={function(){setExpanded(!expanded);}} style={{background:"none",border:"none",color:RED,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"14px",fontWeight:600,padding:"8px 16px"}}>{expanded ? "\u25B2 Read less" : "\u25BC Read more"}</button>
-          </div>
-        )}
-        {totalPages>1&&(<div style={{display:"flex",justifyContent:"center",gap:"8px",marginTop:"28px"}}>
-          {Array.from({length:totalPages}).map((_,i)=>(<button key={i} onClick={()=>changePage(i)} style={{width:pg===i?"28px":"10px",height:"10px",borderRadius:"5px",border:"none",cursor:"pointer",background:pg===i?RED:"rgba(0,0,0,0.15)",transition:"all 0.3s"}} />))}
-        </div>)}
+      </div>
+      {/* Horizontal scrolling carousel */}
+      <div ref={scrollRef} onMouseEnter={function(){setPaused(true);}} onMouseLeave={function(){setPaused(false);}} onTouchStart={function(){setPaused(true);}} onTouchEnd={function(){setPaused(false);}} style={{display:"flex",gap:"24px",overflowX:"auto",scrollBehavior:"auto",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
+        <style>{".testimonial-scroll::-webkit-scrollbar{display:none}"}</style>
+        {/* Double the items for seamless loop */}
+        {items.concat(items).map((t,i)=>{
+          var isExpanded=expanded===i;
+          return (
+            <div key={`${ac}-${i}`} style={{minWidth:"340px",maxWidth:"340px",background:"linear-gradient(180deg, #ffffff 30%, #fdf2f2 70%, #fce8e8 100%)",borderRadius:"20px",padding:"28px 24px",border:"1px solid rgba(236,130,131,0.1)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",flexShrink:0}}>
+              <img src={t.image} alt={t.name} style={{width:"90px",height:"90px",borderRadius:"50%",objectFit:"cover",border:"3px solid "+RED,background:RED_BG,marginBottom:"14px"}} />
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontWeight:700,fontSize:"15px",color:DARK}}>{t.name}</div>
+              <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"12px",color:RED,fontWeight:600,marginBottom:"14px"}}>{t.school}</div>
+              <div style={{fontFamily:"'Playfair Display',serif",fontSize:"24px",color:RED,lineHeight:1,marginBottom:"4px"}}>{"\u201C"}</div>
+              <p style={{...bs,fontSize:"13px",fontStyle:"italic",lineHeight:1.7,textAlign:"left",flex:1}}>{isExpanded?t.text:(t.text.length>truncLen?t.text.slice(0,truncLen)+"...":t.text)}</p>
+              {t.text.length>truncLen&&(<button onClick={function(){setExpanded(isExpanded?null:i);setPaused(true);}} style={{background:"none",border:"none",color:RED,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:"12px",fontWeight:600,padding:"4px 0",marginTop:"8px"}}>{isExpanded?"Read less":"Read more"}</button>)}
+            </div>
+          );
+        })}
+      </div>
+      {/* Scroll hint */}
+      <div style={{textAlign:"center",marginTop:"16px",fontSize:"12px",color:"#9CA3AF",fontFamily:"'DM Sans',sans-serif"}}>
+        {paused?"Scroll paused \u2014 hover away to resume":"Scrolling \u2014 hover to pause"}
       </div>
     </section>
   );
@@ -1102,7 +1229,7 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
         </div>
 
         {/* Loading */}
-        {loading && (<div style={{marginTop: 32}}>{[1, 2, 3, 4, 5].map(function(i) {return <div key={i} style={{background: "linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%)", backgroundSize: "200% 100%", animation: "lbShimmer 1.5s infinite", borderRadius: 8, height: 60, marginBottom: 8}} />;})}<style>{"@keyframes lbShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}"}</style></div>)}
+        {loading && (<div style={{marginTop: 32}}>{[1, 2, 3, 4, 5].map(function(i) {return <div key={i} style={{background: "linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%)", backgroundSize: "200% 100%", animation: "lbShimmer 1.5s infinite", borderRadius: 8, height: 60, marginBottom: 8}} />;})}</div>)}
 
         {/* Empty */}
         {!loading && leaderboardData.length === 0 && (<div style={{textAlign: "center", padding: "80px 20px", color: "#9CA3AF"}}><div style={{fontSize: 48, marginBottom: 16}}>&#128202;</div><h3 style={{fontSize: 20, color: "#374151", marginBottom: 8, fontFamily: "'Playfair Display',serif"}}>No scores yet for this period</h3><p style={{fontSize: 14, maxWidth: 400, margin: "0 auto", lineHeight: 1.6, fontFamily: "'DM Sans',sans-serif"}}>{"Be the first to log your " + examType + " study session and claim the top spot."}</p>{user && (<button onClick={function() {setShowScoreModal(true);}} style={{marginTop: 20, padding: "12px 28px", background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Log Your First Session</button>)}</div>)}
