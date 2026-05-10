@@ -679,8 +679,8 @@ function Hero() {
       angleRef.current += 0.002;
       var a = angleRef.current;
       var cw = container.offsetWidth;
-      var schoolRadius = cw / 2;
-      var peopleRadius = (cw * 0.7) / 2 * 0.5;
+      var schoolRadius = cw * 0.48;
+      var peopleRadius = cw * 0.3;
       for(var i=0;i<schoolEls.length;i++){
         var sA = (i/8)*2*Math.PI + a;
         var sx = schoolRadius*Math.cos(sA - Math.PI/2);
@@ -893,18 +893,15 @@ function TestimonialsSection() {
   useEffect(function(){
     var ref=scrollRef.current;
     if(!ref||paused) return;
-    var animId;
-    function tick(){
+    var interval=setInterval(function(){
       if(!ref) return;
       if(ref.scrollLeft>=ref.scrollWidth/2){
         ref.scrollLeft=0;
       } else {
-        ref.scrollLeft+=0.8;
+        ref.scrollLeft+=1;
       }
-      animId=requestAnimationFrame(tick);
-    }
-    animId=requestAnimationFrame(tick);
-    return function(){cancelAnimationFrame(animId);};
+    },20);
+    return function(){clearInterval(interval);};
   },[ac,paused]);
 
   useEffect(function(){
@@ -991,18 +988,15 @@ function ChatScreenshotsSection() {
   useEffect(function(){
     var ref=scrollRef2.current;
     if(!ref||filtered.length===0) return;
-    var animId;
-    function tick(){
+    var interval=setInterval(function(){
       if(!ref) return;
       if(ref.scrollLeft>=ref.scrollWidth/2){
         ref.scrollLeft=0;
       } else {
-        ref.scrollLeft+=0.8;
+        ref.scrollLeft+=1;
       }
-      animId=requestAnimationFrame(tick);
-    }
-    animId=requestAnimationFrame(tick);
-    return function(){cancelAnimationFrame(animId);};
+    },20);
+    return function(){clearInterval(interval);};
   },[filtered.length]);
 
   if(filtered.length===0) return null;
