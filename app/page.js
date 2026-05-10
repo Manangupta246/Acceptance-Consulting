@@ -3033,6 +3033,14 @@ function HomePage() {
 }
 
 export default function App() {
+  // Force light mode
+  useEffect(function() {
+    var meta = document.querySelector('meta[name="color-scheme"]');
+    if (!meta) { meta = document.createElement("meta"); meta.name = "color-scheme"; document.head.appendChild(meta); }
+    meta.content = "light only";
+    document.documentElement.style.colorScheme = "light only";
+  }, []);
+
   function getInitialPage() {
     if (typeof window !== "undefined") {
       var hash = window.location.hash.replace("#", "");
