@@ -77,8 +77,8 @@ const howItWorks = [
   { step: "03", title: "We Build It Together", desc: "From essays to interviews, we walk with you every step. Unlimited revisions, real-time support, midnight voice notes - the works.", icon: "\u{1F91D}" },
 ];
 const team = [
-  { name: "Tanya Mehta", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Profile%20pictures/Tanya2.jpeg", bio: "Tanya Mehta is an MBA graduate, Chartered Accountant (CA) and CFA Level 1 who secured admits from top global business schools and ISB, giving her a well-rounded understanding of MBA admissions worldwide. She also teaches strategy to MBA students, further strengthening her insights into what top schools seek in candidates." },
-  { name: "Manan Gupta", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Profile%20pictures/Manan1.jpeg", bio: "Manan Gupta is an MBA graduate from ISB and a management consultant with 4+ years of work experience at Bain and Kepler Cannon. He brings a wealth of experience in storytelling and career mentorship. With an insider perspective on top-tier MBA programs, he has guided 100+ candidates in crafting high-impact applications that stand out." },
+  { name: "Tanya Mehta", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Profile%20pictures/Tanya2.jpeg", bio: "Tanya Mehta, CA and MBA (ISB | IESE), has built her career across four countries and multiple industries in finance and strategy. That combination of academic rigor and real international experience means she doesn't just understand what global business schools want, she's walked that path herself. She works closely with candidates targeting top global programs, helping them position their unique stories with the same strategic clarity she's applied throughout her own career." },
+  { name: "Manan Gupta", image: "https://lbrcrknnivxkqvryzamr.supabase.co/storage/v1/object/public/testimonials/Profile%20pictures/Manan1.jpeg", bio: "Manan Gupta, an ISB and Bain & Company alumnus, has sat on both sides: the structured world of top-tier consulting and the unpredictable world of building something from scratch. That range is exactly what makes him effective with candidates across every background, industry, and ambition. Having guided 200+ candidates through high-impact applications, Manan brings a consultant's precision to your narrative and a founder's instinct for what makes it stand out." },
 ];
 const testimonialCategories = [
   { category: "Overall Journey", icon: "\u{1F31F}", items: [
@@ -678,17 +678,20 @@ function Hero() {
     function tick(){
       angleRef.current += 0.002;
       var a = angleRef.current;
+      var cw = container.offsetWidth;
+      var schoolRadius = cw / 2;
+      var peopleRadius = (cw * 0.7) / 2 * 0.5;
       for(var i=0;i<schoolEls.length;i++){
         var sA = (i/8)*2*Math.PI + a;
-        var sx = 50 + 50*Math.cos(sA - Math.PI/2);
-        var sy = 50 + 50*Math.sin(sA - Math.PI/2);
-        schoolEls[i].style.transform = "translate(-50%,-50%) translate("+((sx-50)*4.2)+"px,"+((sy-50)*4.2)+"px)";
+        var sx = schoolRadius*Math.cos(sA - Math.PI/2);
+        var sy = schoolRadius*Math.sin(sA - Math.PI/2);
+        schoolEls[i].style.transform = "translate(-50%,-50%) translate("+sx+"px,"+sy+"px)";
       }
       for(var j=0;j<peopleEls.length;j++){
         var pA = (j/8)*2*Math.PI + (-a * 0.8);
-        var px = 50 + 50*Math.cos(pA - Math.PI/2);
-        var py = 50 + 50*Math.sin(pA - Math.PI/2);
-        peopleEls[j].style.transform = "translate(-50%,-50%) translate("+((px-50)*2.94)+"px,"+((py-50)*2.94)+"px)";
+        var px = peopleRadius*Math.cos(pA - Math.PI/2);
+        var py = peopleRadius*Math.sin(pA - Math.PI/2);
+        peopleEls[j].style.transform = "translate(-50%,-50%) translate("+px+"px,"+py+"px)";
       }
       animId = requestAnimationFrame(tick);
     }
@@ -712,7 +715,7 @@ function Hero() {
           </div>
         </div>
 
-        <div ref={containerRef} style={{flex:"0 0 auto",position:"relative",width:"min(420px,80vw)",height:"min(420px,80vw)"}}>
+        <div ref={containerRef} className="constellation" style={{flex:"0 0 auto",position:"relative",width:"min(380px,75vw)",height:"min(380px,75vw)"}}>
           {/* School ring */}
           <div style={{position:"absolute",inset:0,borderRadius:"50%",border:"1px dashed rgba(236,130,131,0.2)"}}>
             {schoolRing.map(function(s,i){
@@ -739,7 +742,7 @@ function Hero() {
           {/* Center */}
           <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"120px",height:"120px",borderRadius:"50%",background:"linear-gradient(135deg, "+RED+" 0%, #e06060 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 32px rgba(236,130,131,0.25)",zIndex:5}}>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,48px)",fontWeight:800,color:"#fff",lineHeight:1}}>
-              <AnimatedCounter target={150} suffix="+"/>
+              <AnimatedCounter target={230} suffix="+"/>
             </div>
             <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"8px",fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:"1.5px",textTransform:"uppercase",marginTop:"2px"}}>Admits</div>
           </div>
@@ -885,31 +888,27 @@ function TestimonialsSection() {
   const items=testimonialCategories[ac].items;
   const truncLen=400;
   const scrollRef=useRef(null);
-  const innerRef=useRef(null);
   const [paused,setPaused]=useState(false);
-  const posRef=useRef(0);
 
   useEffect(function(){
-    var inner=innerRef.current;
-    if(!inner||paused) return;
+    var ref=scrollRef.current;
+    if(!ref||paused) return;
     var animId;
     function tick(){
-      posRef.current-=0.8;
-      var halfWidth=inner.scrollWidth/2;
-      if(Math.abs(posRef.current)>=halfWidth){
-        posRef.current=0;
+      if(!ref) return;
+      if(ref.scrollLeft>=ref.scrollWidth/2){
+        ref.scrollLeft=0;
+      } else {
+        ref.scrollLeft+=0.8;
       }
-      inner.style.transform="translateX("+posRef.current+"px)";
       animId=requestAnimationFrame(tick);
     }
     animId=requestAnimationFrame(tick);
     return function(){cancelAnimationFrame(animId);};
   },[ac,paused]);
 
-  // Reset position on category switch
   useEffect(function(){
-    posRef.current=0;
-    if(innerRef.current) innerRef.current.style.transform="translateX(0px)";
+    if(scrollRef.current) scrollRef.current.scrollLeft=0;
   },[ac]);
 
   var hasLongText=items.some(function(t){return t.text.length>truncLen;});
@@ -925,8 +924,8 @@ function TestimonialsSection() {
           {testimonialCategories.map((c,i)=>(<button key={i} onClick={()=>{setAc(i);setExpanded(false);if(scrollRef.current)scrollRef.current.scrollLeft=0;}} style={{padding:"10px 24px",borderRadius:"50px",border:ac===i?"none":"1px solid rgba(0,0,0,0.1)",background:ac===i?RED:"#fff",color:ac===i?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",cursor:"pointer",transition:"all 0.3s",boxShadow:ac===i?"0 4px 16px rgba(236,130,131,0.2)":"none",display:"flex",alignItems:"center",gap:"8px"}}><span>{c.icon}</span>{c.category}</button>))}
         </div>
       </div>
-      <div ref={scrollRef} onMouseEnter={function(){setPaused(true);}} onMouseLeave={function(){setPaused(false);}} onTouchStart={function(){setPaused(true);}} onTouchEnd={function(){setPaused(false);}} style={{overflow:"hidden",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px"}}>
-        <div ref={innerRef} style={{display:"flex",gap:"24px",willChange:"transform"}}>
+      <div ref={scrollRef} onMouseEnter={function(){setPaused(true);}} onMouseLeave={function(){setPaused(false);}} onTouchStart={function(){setPaused(true);}} onTouchEnd={function(){setTimeout(function(){setPaused(false);},3000);}} style={{display:"flex",gap:"24px",overflowX:"scroll",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
+        <style>{"div[style*='overflowX']::-webkit-scrollbar{display:none}"}</style>
         {items.concat(items).map((t,i)=>{
           return (
             <div key={`${ac}-${i}`} style={{minWidth:"380px",maxWidth:"380px",background:"linear-gradient(180deg, #ffffff 30%, #fdf2f2 70%, #fce8e8 100%)",borderRadius:"20px",padding:"32px 28px",border:"1px solid rgba(236,130,131,0.1)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",flexShrink:0}}>
@@ -938,7 +937,6 @@ function TestimonialsSection() {
             </div>
           );
         })}
-        </div>
       </div>
       {hasLongText && (
         <div style={{textAlign:"center",marginTop:"4px",marginBottom:"0"}}>
@@ -985,23 +983,22 @@ var chatScreenshots = [
 
 function ChatScreenshotsSection() {
   var filtered=chatScreenshots.filter(function(s){return s.image;});
-  var innerRef2=useRef(null);
-  var posRef2=useRef(0);
+  var scrollRef2=useRef(null);
 
   var row1=filtered.filter(function(_,i){return i%2===0;});
   var row2=filtered.filter(function(_,i){return i%2===1;});
 
   useEffect(function(){
-    var inner=innerRef2.current;
-    if(!inner||filtered.length===0) return;
+    var ref=scrollRef2.current;
+    if(!ref||filtered.length===0) return;
     var animId;
     function tick(){
-      posRef2.current-=0.8;
-      var halfWidth=inner.scrollWidth/2;
-      if(Math.abs(posRef2.current)>=halfWidth){
-        posRef2.current=0;
+      if(!ref) return;
+      if(ref.scrollLeft>=ref.scrollWidth/2){
+        ref.scrollLeft=0;
+      } else {
+        ref.scrollLeft+=0.8;
       }
-      inner.style.transform="translateX("+posRef2.current+"px)";
       animId=requestAnimationFrame(tick);
     }
     animId=requestAnimationFrame(tick);
@@ -1023,8 +1020,8 @@ function ChatScreenshotsSection() {
       <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px",textAlign:"center",marginBottom:"16px"}}>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(18px,3vw,24px)",fontWeight:700,color:DARK,margin:0}}>Words That Made Our Day</h3>
       </div>
-      <div style={{overflow:"hidden",paddingBottom:"8px",paddingLeft:"24px",paddingRight:"24px"}}>
-        <div ref={innerRef2} style={{display:"inline-flex",flexDirection:"column",gap:"12px",willChange:"transform"}}>
+      <div ref={scrollRef2} style={{overflowX:"scroll",paddingBottom:"8px",paddingLeft:"24px",paddingRight:"24px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
+        <div style={{display:"inline-flex",flexDirection:"column",gap:"12px"}}>
           <div style={{display:"flex",gap:"12px"}}>
             {row1.concat(row1).map(function(s,i){return renderCard(s,"r1-"+i);})}
           </div>
