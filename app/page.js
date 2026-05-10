@@ -1451,6 +1451,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
   var [showProfileModal, setShowProfileModal] = useState(false);
   var [profileForm, setProfileForm] = useState({ target_exam:"GMAT", target_score:"", exam_date:"", target_schools:"", study_style:"", bio:"" });
   var [saving, setSaving] = useState(false);
+  var [examFilter, setExamFilter] = useState("all");
 
   // Fetch my profile
   useEffect(function() {
@@ -1713,9 +1714,16 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
 
         {/* Browse Tab */}
         {tab==="browse" && (
-          <div className="partner-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16,marginBottom:60}}>
-            {profiles.length===0 && (<div style={{gridColumn:"1/-1",textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}><div style={{fontSize:40,marginBottom:12}}>&#128100;</div><p style={{fontSize:14}}>No profiles found yet. Be the first to set up your study profile.</p></div>)}
-            {profiles.map(function(p){
+          <div style={{marginBottom:60}}>
+            {/* Exam Filter */}
+            <div style={{display:"flex",gap:8,marginBottom:20}}>
+              {[{key:"all",label:"All"},{key:"GMAT",label:"GMAT"},{key:"GRE",label:"GRE"}].map(function(f){
+                return (<button key={f.key} onClick={function(){setExamFilter(f.key);}} style={{padding:"8px 18px",border:"1px solid "+(examFilter===f.key?RED:"#E5E7EB"),background:examFilter===f.key?RED:"white",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:600,color:examFilter===f.key?"white":"#6B7280",fontFamily:"'DM Sans',sans-serif"}}>{f.label}</button>);
+              })}
+            </div>
+            <div className="partner-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:16}}>
+            {profiles.filter(function(p){return examFilter==="all"||p.target_exam===examFilter;}).length===0 && (<div style={{gridColumn:"1/-1",textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}><div style={{fontSize:40,marginBottom:12}}>&#128100;</div><p style={{fontSize:14}}>{examFilter!=="all"?"No "+examFilter+" profiles found.":"No profiles found yet. Be the first to set up your study profile."}</p></div>)}
+            {profiles.filter(function(p){return examFilter==="all"||p.target_exam===examFilter;}).map(function(p){
               var connStatus = getConnectionStatus(p.id);
               var initials = (p.full_name||"A").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
               var colors=["#ec8283","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
@@ -1745,14 +1753,21 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                 </div>
               );
             })}
+            </div>
           </div>
         )}
 
         {/* Suggested Tab */}
         {tab==="suggested" && (
           <div style={{marginBottom:60}}>
-            {suggested.length===0 && (<div style={{textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}><div style={{fontSize:40,marginBottom:12}}>&#128269;</div><p style={{fontSize:14}}>No suggested matches yet. Complete your profile with exam date and target score for better matching.</p></div>)}
-            {suggested.map(function(s,idx){
+            {/* Exam Filter */}
+            <div style={{display:"flex",gap:8,marginBottom:20}}>
+              {[{key:"all",label:"All"},{key:"GMAT",label:"GMAT"},{key:"GRE",label:"GRE"}].map(function(f){
+                return (<button key={f.key} onClick={function(){setExamFilter(f.key);}} style={{padding:"8px 18px",border:"1px solid "+(examFilter===f.key?RED:"#E5E7EB"),background:examFilter===f.key?RED:"white",borderRadius:8,cursor:"pointer",fontSize:13,fontWeight:600,color:examFilter===f.key?"white":"#6B7280",fontFamily:"'DM Sans',sans-serif"}}>{f.label}</button>);
+              })}
+            </div>
+            {suggested.filter(function(s){return examFilter==="all"||s.profile.target_exam===examFilter;}).length===0 && (<div style={{textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}><div style={{fontSize:40,marginBottom:12}}>&#128269;</div><p style={{fontSize:14}}>{examFilter!=="all"?"No "+examFilter+" matches found. Try a different filter.":"No suggested matches yet. Complete your profile with exam date and target score for better matching."}</p></div>)}
+            {suggested.filter(function(s){return examFilter==="all"||s.profile.target_exam===examFilter;}).map(function(s,idx){
               var p = s.profile;
               var matchPct = Math.min(Math.round(s.score), 100);
               var connStatus = getConnectionStatus(p.id);
