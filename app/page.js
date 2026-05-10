@@ -1153,22 +1153,27 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
   function getPeriodDates(p) {
     var now = new Date();
     var todayAt4am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0);
-    var effectiveDate = now < todayAt4am ? new Date(now.getTime() - 86400000) : now;
+    var effectiveDate = now < todayAt4am ? new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1) : now;
     var ed = new Date(effectiveDate.getFullYear(), effectiveDate.getMonth(), effectiveDate.getDate());
-    var today = ed.toISOString().split("T")[0];
+
+    function localDateStr(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+
+    var today = localDateStr(ed);
 
     if (p === "daily") {
       return { start: today, end: today, exact: true };
     } else if (p === "weekly") {
       var day = ed.getDay();
       var mondayOffset = day === 0 ? 6 : day - 1;
-      var monday = new Date(ed.getTime() - mondayOffset * 86400000);
-      var sunday = new Date(monday.getTime() + 6 * 86400000);
-      return { start: monday.toISOString().split("T")[0], end: sunday.toISOString().split("T")[0], exact: false };
+      var monday = new Date(ed.getFullYear(), ed.getMonth(), ed.getDate() - mondayOffset);
+      var sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+      return { start: localDateStr(monday), end: localDateStr(sunday), exact: false };
     } else if (p === "monthly") {
       var monthStart = new Date(ed.getFullYear(), ed.getMonth(), 1);
       var monthEnd = new Date(ed.getFullYear(), ed.getMonth() + 1, 0);
-      return { start: monthStart.toISOString().split("T")[0], end: monthEnd.toISOString().split("T")[0], exact: false };
+      return { start: localDateStr(monthStart), end: localDateStr(monthEnd), exact: false };
     }
     return { start: "2020-01-01", end: "2099-12-31", exact: false };
   }
