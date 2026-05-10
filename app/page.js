@@ -3031,7 +3031,33 @@ function HomePage() {
 }
 
 export default function App() {
-  const [page,setPage]=useState("home");
+  function getInitialPage() {
+    if (typeof window !== "undefined") {
+      var hash = window.location.hash.replace("#", "");
+      if (["home","blog","faq","leaderboard","partners","forum","admin"].indexOf(hash) !== -1) return hash;
+    }
+    return "home";
+  }
+  const [page,setPageState]=useState(getInitialPage);
+  function setPage(p) {
+    setPageState(p);
+    if (typeof window !== "undefined") {
+      window.location.hash = p === "home" ? "" : p;
+    }
+  }
+  // Listen for browser back/forward
+  useEffect(function() {
+    function onHashChange() {
+      var hash = window.location.hash.replace("#", "");
+      if (["home","blog","faq","leaderboard","partners","forum","admin"].indexOf(hash) !== -1) {
+        setPageState(hash);
+      } else {
+        setPageState("home");
+      }
+    }
+    window.addEventListener("hashchange", onHashChange);
+    return function() { window.removeEventListener("hashchange", onHashChange); };
+  }, []);
   const [user,setUser]=useState(null);
   const [showAuth,setShowAuth]=useState(false);
   const [chatOpen,setChatOpen]=useState(false);
