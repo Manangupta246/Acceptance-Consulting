@@ -58,6 +58,8 @@ body { -webkit-font-smoothing: antialiased; overflow-x: hidden; }
   .rankings-grid { grid-template-columns: 1fr 1fr !important; }
   .community-photos { flex-direction: column !important; }
   .community-photos > div { flex: none !important; min-height: 250px !important; }
+  .constellation { width: min(320px, 85vw) !important; height: min(320px, 85vw) !important; }
+  .constellation .s-item { font-size: 9px !important; padding: 4px 10px !important; }
 }
 
 @media (max-width: 480px) {
