@@ -1231,10 +1231,12 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
   async function handleSubmitScore(e) {
     e.preventDefault();
     if (!user) { if (onLoginClick) onLoginClick(); return; }
-    setSubmitting(true);
-    var logDate = scoreForm.log_date || new Date().toISOString().split("T")[0];
     var qSolved = Number(scoreForm.questions_solved) || 0;
     var qCorrect = Number(scoreForm.questions_correct) || 0;
+    if (qCorrect > qSolved) { alert("Questions Correct (" + qCorrect + ") cannot be more than Questions Attempted (" + qSolved + "). Please fix this before submitting."); return; }
+    if (qSolved <= 0) { alert("Please enter the number of questions attempted."); return; }
+    setSubmitting(true);
+    var logDate = scoreForm.log_date || new Date().toISOString().split("T")[0];
     var payload = { user_id: user.id, exam_type: examType, log_date: logDate, study_hours: Number(scoreForm.study_hours) || 0, questions_solved: qSolved, questions_correct: qCorrect, questions_wrong: qSolved - qCorrect, section: "general" };
     var { error } = await supabase.from("daily_scores").insert([payload]);
     if (error) { alert("Error submitting score: " + error.message); }
