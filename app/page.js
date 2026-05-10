@@ -705,8 +705,8 @@ function Hero() {
       <div style={{position:"absolute",bottom:"-100px",left:"-100px",width:"400px",height:"400px",borderRadius:"50%",background:"radial-gradient(circle, rgba(236,130,131,0.06) 0%, transparent 70%)",pointerEvents:"none"}} />
 
       <div style={{maxWidth:"1200px",margin:"0 auto",display:"flex",alignItems:"center",gap:"60px",width:"100%",flexWrap:"wrap",justifyContent:"center"}}>
-        <div style={{flex:"1 1 420px",maxWidth:"560px",textAlign:"left"}}>
-          <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,58px)",fontWeight:800,color:DARK,lineHeight:1.1,marginBottom:"16px"}}>Get Accepted to Your <span style={{color:RED,fontStyle:"italic"}}>Dream B-School</span></h1>
+        <div className="hero-text" style={{flex:"1 1 420px",maxWidth:"560px",textAlign:"left"}}>
+          <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,58px)",fontWeight:800,color:DARK,lineHeight:1.1,marginBottom:"16px"}}>Get Accepted to Your{" "}<span style={{color:RED,fontStyle:"italic",whiteSpace:"nowrap"}}>Dream B-School</span></h1>
           <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(12px,1.5vw,14px)",fontWeight:700,color:RED,letterSpacing:"4px",textTransform:"uppercase",marginBottom:"20px"}}>Affordable. Personalised. Proven.</p>
           <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"clamp(14px,1.5vw,16px)",color:GRAY,maxWidth:"480px",lineHeight:1.7,marginBottom:"36px"}}>Not your typical consultants. We are the friends who have been in your shoes, sat in those classrooms, and now sit in your corner.</p>
           <div className="cta-buttons" style={{display:"flex",gap:"16px",flexWrap:"wrap"}}>
