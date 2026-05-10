@@ -1916,7 +1916,7 @@ function ForumPage({ user, onLoginClick }) {
   useEffect(function() {
     async function loadPosts() {
       setLoading(true);
-      var query = supabase.from("forum_posts").select("*, profiles:author_id(full_name, avatar_url), forum_categories(name, slug, icon)");
+      var query = supabase.from("forum_posts").select("*, profiles:forum_posts_author_id_fkey(full_name, avatar_url), forum_categories(name, slug, icon)");
       if (selectedCategory) query = query.eq("category_id", selectedCategory);
       if (sortBy === "newest") query = query.order("is_pinned", { ascending: false }).order("created_at", { ascending: false });
       else if (sortBy === "popular") query = query.order("is_pinned", { ascending: false }).order("upvotes", { ascending: false });
@@ -1947,7 +1947,7 @@ function ForumPage({ user, onLoginClick }) {
   useEffect(function() {
     if (!selectedPost) { setComments([]); return; }
     async function loadComments() {
-      var { data } = await supabase.from("forum_comments").select("*, profiles:author_id(full_name, avatar_url)").eq("post_id", selectedPost.id).order("created_at", { ascending: true });
+      var { data } = await supabase.from("forum_comments").select("*, profiles:forum_comments_author_id_fkey(full_name, avatar_url)").eq("post_id", selectedPost.id).order("created_at", { ascending: true });
       setComments(data || []);
     }
     loadComments();
@@ -2000,7 +2000,7 @@ function ForumPage({ user, onLoginClick }) {
     if (!user) { onLoginClick(); return; }
     if (!postForm.title.trim() || !postForm.content.trim() || !postForm.category_id) return;
     setSubmitting(true);
-    var { data, error } = await supabase.from("forum_posts").insert([{ title: postForm.title.trim(), content: postForm.content.trim(), category_id: postForm.category_id, author_id: user.id }]).select("*, profiles:author_id(full_name, avatar_url), forum_categories(name, slug, icon)").single();
+    var { data, error } = await supabase.from("forum_posts").insert([{ title: postForm.title.trim(), content: postForm.content.trim(), category_id: postForm.category_id, author_id: user.id }]).select("*, profiles:forum_posts_author_id_fkey(full_name, avatar_url), forum_categories(name, slug, icon)").single();
     if (error) { alert("Error creating post: " + error.message); }
     else { setPosts(function(prev) { return [data].concat(prev); }); setShowNewPost(false); setPostForm({ title:"", content:"", category_id:"" }); }
     setSubmitting(false);
@@ -2012,7 +2012,7 @@ function ForumPage({ user, onLoginClick }) {
     if (!user) { onLoginClick(); return; }
     if (!newComment.trim() || !selectedPost) return;
     setSubmitting(true);
-    var { data, error } = await supabase.from("forum_comments").insert([{ post_id: selectedPost.id, author_id: user.id, content: newComment.trim(), parent_id: null }]).select("*, profiles:author_id(full_name, avatar_url)").single();
+    var { data, error } = await supabase.from("forum_comments").insert([{ post_id: selectedPost.id, author_id: user.id, content: newComment.trim(), parent_id: null }]).select("*, profiles:forum_comments_author_id_fkey(full_name, avatar_url)").single();
     if (error) { alert("Error adding comment: " + error.message); }
     else {
       setComments(function(prev) { return prev.concat([data]); });
@@ -2028,7 +2028,7 @@ function ForumPage({ user, onLoginClick }) {
     e.preventDefault();
     if (!user || !replyContent.trim() || !replyTo || !selectedPost) return;
     setSubmitting(true);
-    var { data, error } = await supabase.from("forum_comments").insert([{ post_id: selectedPost.id, author_id: user.id, content: replyContent.trim(), parent_id: replyTo }]).select("*, profiles:author_id(full_name, avatar_url)").single();
+    var { data, error } = await supabase.from("forum_comments").insert([{ post_id: selectedPost.id, author_id: user.id, content: replyContent.trim(), parent_id: replyTo }]).select("*, profiles:forum_comments_author_id_fkey(full_name, avatar_url)").single();
     if (error) { alert("Error adding reply: " + error.message); }
     else {
       setComments(function(prev) { return prev.concat([data]); });
