@@ -814,7 +814,7 @@ function CommunitySection() {
           <a href={WHATSAPP_COMMUNITY} target="_blank" rel="noreferrer" style={bps}>Join Community</a>
         </div>
         {/* 3-photo layout: tall screenshot left + 2 shorter photos stacked right */}
-        <div style={{display:"flex",gap:"16px",maxWidth:"800px",margin:"0 auto",alignItems:"stretch"}}>
+        <div className="community-photos" style={{display:"flex",gap:"16px",maxWidth:"800px",margin:"0 auto",alignItems:"stretch"}}>
           {/* Left: tall community screenshot */}
           <div style={{flex:"1 1 50%",borderRadius:"16px",overflow:"hidden",background:"#fff",border:"1px solid rgba(0,0,0,0.06)",minHeight:"400px",display:"flex",alignItems:"center",justifyContent:"center"}}>
             {communityScreenshot ? (
@@ -885,20 +885,32 @@ function TestimonialsSection() {
   const items=testimonialCategories[ac].items;
   const truncLen=400;
   const scrollRef=useRef(null);
+  const innerRef=useRef(null);
   const [paused,setPaused]=useState(false);
+  const posRef=useRef(0);
 
   useEffect(function(){
-    var ref=scrollRef.current;
-    if(!ref||paused) return;
-    var interval=setInterval(function(){
-      if(ref.scrollLeft>=ref.scrollWidth-ref.clientWidth-1){
-        ref.scrollLeft=0;
-      } else {
-        ref.scrollLeft+=0.8;
+    var inner=innerRef.current;
+    if(!inner||paused) return;
+    var animId;
+    function tick(){
+      posRef.current-=0.8;
+      var halfWidth=inner.scrollWidth/2;
+      if(Math.abs(posRef.current)>=halfWidth){
+        posRef.current=0;
       }
-    },16);
-    return function(){clearInterval(interval);};
+      inner.style.transform="translateX("+posRef.current+"px)";
+      animId=requestAnimationFrame(tick);
+    }
+    animId=requestAnimationFrame(tick);
+    return function(){cancelAnimationFrame(animId);};
   },[ac,paused]);
+
+  // Reset position on category switch
+  useEffect(function(){
+    posRef.current=0;
+    if(innerRef.current) innerRef.current.style.transform="translateX(0px)";
+  },[ac]);
 
   var hasLongText=items.some(function(t){return t.text.length>truncLen;});
 
@@ -913,8 +925,8 @@ function TestimonialsSection() {
           {testimonialCategories.map((c,i)=>(<button key={i} onClick={()=>{setAc(i);setExpanded(false);if(scrollRef.current)scrollRef.current.scrollLeft=0;}} style={{padding:"10px 24px",borderRadius:"50px",border:ac===i?"none":"1px solid rgba(0,0,0,0.1)",background:ac===i?RED:"#fff",color:ac===i?"#fff":DARK,fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"14px",cursor:"pointer",transition:"all 0.3s",boxShadow:ac===i?"0 4px 16px rgba(236,130,131,0.2)":"none",display:"flex",alignItems:"center",gap:"8px"}}><span>{c.icon}</span>{c.category}</button>))}
         </div>
       </div>
-      <div ref={scrollRef} onMouseEnter={function(){setPaused(true);}} onMouseLeave={function(){setPaused(false);}} onTouchStart={function(){setPaused(true);}} onTouchEnd={function(){setPaused(false);}} style={{display:"flex",gap:"24px",overflowX:"auto",scrollBehavior:"auto",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
-        <style>{".testimonial-scroll::-webkit-scrollbar{display:none}"}</style>
+      <div ref={scrollRef} onMouseEnter={function(){setPaused(true);}} onMouseLeave={function(){setPaused(false);}} onTouchStart={function(){setPaused(true);}} onTouchEnd={function(){setPaused(false);}} style={{overflow:"hidden",paddingBottom:"16px",paddingLeft:"40px",paddingRight:"40px"}}>
+        <div ref={innerRef} style={{display:"flex",gap:"24px",willChange:"transform"}}>
         {items.concat(items).map((t,i)=>{
           return (
             <div key={`${ac}-${i}`} style={{minWidth:"380px",maxWidth:"380px",background:"linear-gradient(180deg, #ffffff 30%, #fdf2f2 70%, #fce8e8 100%)",borderRadius:"20px",padding:"32px 28px",border:"1px solid rgba(236,130,131,0.1)",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",flexShrink:0}}>
@@ -926,6 +938,7 @@ function TestimonialsSection() {
             </div>
           );
         })}
+        </div>
       </div>
       {hasLongText && (
         <div style={{textAlign:"center",marginTop:"4px",marginBottom:"0"}}>
@@ -972,24 +985,28 @@ var chatScreenshots = [
 
 function ChatScreenshotsSection() {
   var filtered=chatScreenshots.filter(function(s){return s.image;});
-  var scrollRef2=useRef(null);
-  var [paused2,setPaused2]=useState(false);
+  var innerRef2=useRef(null);
+  var posRef2=useRef(0);
 
   var row1=filtered.filter(function(_,i){return i%2===0;});
   var row2=filtered.filter(function(_,i){return i%2===1;});
 
   useEffect(function(){
-    var ref=scrollRef2.current;
-    if(!ref||paused2||filtered.length===0) return;
-    var interval=setInterval(function(){
-      if(ref.scrollLeft>=ref.scrollWidth/2){
-        ref.scrollLeft=0;
-      } else {
-        ref.scrollLeft+=0.8;
+    var inner=innerRef2.current;
+    if(!inner||filtered.length===0) return;
+    var animId;
+    function tick(){
+      posRef2.current-=0.8;
+      var halfWidth=inner.scrollWidth/2;
+      if(Math.abs(posRef2.current)>=halfWidth){
+        posRef2.current=0;
       }
-    },16);
-    return function(){clearInterval(interval);};
-  },[paused2,filtered.length]);
+      inner.style.transform="translateX("+posRef2.current+"px)";
+      animId=requestAnimationFrame(tick);
+    }
+    animId=requestAnimationFrame(tick);
+    return function(){cancelAnimationFrame(animId);};
+  },[filtered.length]);
 
   if(filtered.length===0) return null;
 
@@ -1006,8 +1023,8 @@ function ChatScreenshotsSection() {
       <div style={{maxWidth:"1200px",margin:"0 auto",padding:"0 20px",textAlign:"center",marginBottom:"16px"}}>
         <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(18px,3vw,24px)",fontWeight:700,color:DARK,margin:0}}>Words That Made Our Day</h3>
       </div>
-      <div ref={scrollRef2} style={{overflowX:"auto",paddingBottom:"8px",paddingLeft:"24px",paddingRight:"24px",scrollbarWidth:"none",msOverflowStyle:"none",WebkitOverflowScrolling:"touch"}}>
-        <div style={{display:"inline-flex",flexDirection:"column",gap:"12px"}}>
+      <div style={{overflow:"hidden",paddingBottom:"8px",paddingLeft:"24px",paddingRight:"24px"}}>
+        <div ref={innerRef2} style={{display:"inline-flex",flexDirection:"column",gap:"12px",willChange:"transform"}}>
           <div style={{display:"flex",gap:"12px"}}>
             {row1.concat(row1).map(function(s,i){return renderCard(s,"r1-"+i);})}
           </div>
