@@ -742,7 +742,7 @@ function Hero() {
           {/* Center */}
           <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:"120px",height:"120px",borderRadius:"50%",background:"linear-gradient(135deg, "+RED+" 0%, #e06060 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",boxShadow:"0 8px 32px rgba(236,130,131,0.25)",zIndex:5}}>
             <div style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(32px,5vw,48px)",fontWeight:800,color:"#fff",lineHeight:1}}>
-              <AnimatedCounter target={230} suffix="+"/>
+              <AnimatedCounter target={180} suffix="+"/>
             </div>
             <div style={{fontFamily:"'DM Sans',sans-serif",fontSize:"8px",fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:"1.5px",textTransform:"uppercase",marginTop:"2px"}}>Admits</div>
           </div>
