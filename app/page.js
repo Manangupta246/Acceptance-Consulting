@@ -1617,10 +1617,14 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
       return (c.requester_id === user.id && c.receiver_id === receiverId) || (c.receiver_id === user.id && c.requester_id === receiverId);
     });
     if (existing && existing.status === "rejected") {
-      // Delete the old rejected connection first so we can send a fresh request
       await supabase.from("connections").delete().eq("id", existing.id);
+    } else if (existing && existing.status === "pending") {
+      alert("A connection request already exists with this person.");
+      return;
+    } else if (existing && existing.status === "accepted") {
+      alert("You are already connected with this person.");
+      return;
     } else if (existing) {
-      alert("You already have a connection with this person.");
       return;
     }
     var { error } = await supabase.from("connections").insert([{ requester_id: user.id, receiver_id: receiverId, status: "pending" }]);
@@ -1630,8 +1634,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
       } else {
         alert("Error sending request: " + error.message);
       }
-    }
-    else {
+    } else {
       setConnRefresh(function(prev) { return prev + 1; });
     }
   }
@@ -1846,7 +1849,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                     {user && !hasProfile && !connStatus && (<button onClick={function(){setShowProfileModal(true);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
                     {user && hasProfile && !connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
                     {user && connStatus && connStatus.status==="pending" && connStatus.isRequester && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> Invite Sent</span>)}
-                    {user && connStatus && connStatus.status==="pending" && !connStatus.isRequester && (<><button onClick={function(){updateConnection(connStatus.id,"accepted");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"#059669",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccCheckIcon/> Accept Invite</button><button onClick={function(){updateConnection(connStatus.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccXIcon/> Decline</button></>)}
+                    {user && connStatus && connStatus.status==="pending" && !connStatus.isRequester && (<><button onClick={function(){updateConnection(connStatus.id,"accepted");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"#059669",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccCheckIcon/> Accept Request</button><button onClick={function(){updateConnection(connStatus.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccXIcon/> Decline</button></>)}
                     {user && connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
                     {user && connStatus && connStatus.status!=="blocked" && (<button onClick={function(){blockUser(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 12px",background:"none",color:"#D1D5DB",border:"none",borderRadius:8,fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}} title="Block user"><AccXIcon/> Block</button>)}
                     {p.linkedin_url && (<a href={p.linkedin_url} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:32,height:32,borderRadius:"50%",background:"#0A66C2",marginLeft:"auto",flexShrink:0}} title="LinkedIn Profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>)}
