@@ -1703,20 +1703,8 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
 
   var accInputStyle = { width:"100%", padding:"12px 16px", border:"1px solid #E5E7EB", borderRadius:"10px", fontSize:"14px", fontFamily:"'DM Sans',sans-serif", outline:"none", background:"#FAFAFA", boxSizing:"border-box" };
 
-  // Profile not set up (only for logged-in users)
-  if (!loading && user && (!myProfile || !myProfile.target_exam)) {
-    return (
-      <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
-        <div style={{maxWidth:600,margin:"0 auto",padding:"80px 20px",textAlign:"center"}}>
-          <div style={{fontSize:48,marginBottom:16}}>&#128221;</div>
-          <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:700,color:"#111827",marginBottom:12}}>Complete Your Profile</h1>
-          <p style={{fontSize:15,color:"#6B7280",lineHeight:1.7,fontFamily:"'DM Sans',sans-serif",maxWidth:450,margin:"0 auto 24px"}}>Tell us about your exam goals so we can match you with the right study partners.</p>
-          <button onClick={function(){setShowProfileModal(true);}} style={{padding:"14px 36px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Set Up Profile</button>
-          {renderProfileModal()}
-        </div>
-      </div>
-    );
-  }
+  // Determine user state for conditional UI
+  var hasProfile = user && myProfile && myProfile.target_exam;
 
   function renderProfileModal() {
     if (!showProfileModal) return null;
@@ -1769,7 +1757,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
     <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
       <div style={{maxWidth:1100,margin:"0 auto",padding:"0 20px"}}>
 
-        {/* Login prompt for non-logged-in users */}
+        {/* Banner for non-logged-in users */}
         {!user && (
           <div style={{background:"linear-gradient(135deg, #fdf0f0, #fff)",border:"1px solid rgba(236,130,131,0.2)",borderRadius:16,padding:"20px 24px",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
             <div>
@@ -1780,13 +1768,24 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
           </div>
         )}
 
+        {/* Banner for logged-in users without profile set up */}
+        {user && !hasProfile && !loading && (
+          <div style={{background:"linear-gradient(135deg, #fdf0f0, #fff)",border:"1px solid rgba(236,130,131,0.2)",borderRadius:16,padding:"20px 24px",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+            <div>
+              <div style={{fontSize:16,fontWeight:700,color:DARK,fontFamily:"'DM Sans',sans-serif",marginBottom:4}}>Set up your profile to find study partners</div>
+              <div style={{fontSize:13,color:"#6B7280",fontFamily:"'DM Sans',sans-serif"}}>Tell us about your exam goals so we can match you with the right people.</div>
+            </div>
+            <button onClick={function(){setShowProfileModal(true);}} style={{padding:"10px 24px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>Set Up Profile</button>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,marginBottom:24}}>
           <div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,4vw,36px)",fontWeight:700,color:"#111827",margin:0}}>Accountability Partners</h1>
             <p style={{fontSize:15,color:"#6B7280",marginTop:6,marginBottom:0,fontFamily:"'DM Sans',sans-serif"}}>Find study partners preparing for the same exam around the same time.</p>
           </div>
-          {user && (<button onClick={function(){setShowProfileModal(true);}} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"10px 20px",background:"white",color:"#374151",border:"1px solid #E5E7EB",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccEditIcon/> Edit Profile</button>)}
+          {user && (<button onClick={function(){setShowProfileModal(true);}} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"10px 20px",background:"white",color:"#374151",border:"1px solid #E5E7EB",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccEditIcon/> {hasProfile ? "Edit Profile" : "Set Up Profile"}</button>)}
         </div>
 
         {/* My Profile Card */}
@@ -1806,7 +1805,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
 
         {/* Tabs */}
         <div className="tab-scroll" style={{display:"flex",borderBottom:"2px solid #F3F4F6",gap:0,marginBottom:24}}>
-          {[{key:"browse",label:"Browse Profiles"},{key:"suggested",label:"Suggested Matches" + (suggested.length>0?" ("+suggested.length+")":""),auth:true},{key:"connections",label:"My Connections" + (pendingReceived.length>0?" ("+pendingReceived.length+" new)":""),auth:true}].filter(function(t){return !t.auth||user;}).map(function(t){
+          {[{key:"browse",label:"Browse Profiles"},{key:"suggested",label:"Suggested Matches" + (suggested.length>0?" ("+suggested.length+")":""),auth:true},{key:"connections",label:"My Connections" + (pendingReceived.length>0?" ("+pendingReceived.length+" new)":""),auth:true}].filter(function(t){return !t.auth||hasProfile;}).map(function(t){
             return (<button key={t.key} onClick={function(){setTab(t.key);}} style={{padding:"10px 20px",border:"none",background:"transparent",cursor:"pointer",fontSize:14,fontWeight:tab===t.key?600:500,color:tab===t.key?RED:"#6B7280",borderBottom:tab===t.key?"3px solid "+RED:"3px solid transparent",fontFamily:"'DM Sans',sans-serif"}}>{t.label}</button>);
           })}
         </div>
@@ -1844,7 +1843,8 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                   {p.bio && (<p style={{fontSize:13,color:"#6B7280",margin:0,lineHeight:1.5}}>{p.bio}</p>)}
                   <div style={{marginTop:"auto",paddingTop:8,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
                     {!user && (<button onClick={function(){onLoginClick();}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
-                    {user && !connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
+                    {user && !hasProfile && !connStatus && (<button onClick={function(){setShowProfileModal(true);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
+                    {user && hasProfile && !connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
                     {user && connStatus && connStatus.status==="pending" && connStatus.isRequester && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> Invite Sent</span>)}
                     {user && connStatus && connStatus.status==="pending" && !connStatus.isRequester && (<><button onClick={function(){updateConnection(connStatus.id,"accepted");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"#059669",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccCheckIcon/> Accept Invite</button><button onClick={function(){updateConnection(connStatus.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccXIcon/> Decline</button></>)}
                     {user && connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
