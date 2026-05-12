@@ -75,49 +75,37 @@ function playNotificationSound() {
 }
 
 function requestNotificationPermission() {
-  // Don't show if already granted or denied, or if not supported
-  if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "default") return;
-  // Check if user already dismissed the prompt this session
-  try { if (sessionStorage.getItem("ac_notif_dismissed")) return; } catch(e) {}
-  // Show custom prompt after a short delay
-  setTimeout(function() {
-    var overlay = document.createElement("div");
-    overlay.id = "ac-notif-prompt";
-    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;";
-    var box = document.createElement("div");
-    box.style.cssText = "background:white;border-radius:20px;padding:32px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.15);position:relative;z-index:10000;";
-    box.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">\u{1F514}</div>' +
-      '<h3 style="font-family:Playfair Display,serif;font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:8px;">Stay in the loop!</h3>' +
-      '<p style="font-size:14px;color:#6B7280;line-height:1.6;margin-bottom:24px;">Allow notifications so you know when your study partners text you. You can turn this off anytime from your browser settings.</p>' +
-      '<div style="display:flex;gap:12px;justify-content:center;">' +
-      '<button id="ac-notif-deny" style="padding:12px 28px;border:1px solid #E5E7EB;background:white;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;color:#6B7280;font-family:DM Sans,sans-serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation;">Not now</button>' +
-      '<button id="ac-notif-allow" style="padding:12px 28px;border:none;background:#ec8283;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;color:white;font-family:DM Sans,sans-serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation;">Allow</button>' +
-      '</div>';
-    // Prevent overlay click from interfering with buttons
-    box.addEventListener("click", function(e) { e.stopPropagation(); });
-    // Close overlay if clicking outside the box
-    overlay.addEventListener("click", function() {
-      overlay.remove();
-      try { sessionStorage.setItem("ac_notif_dismissed", "1"); } catch(e2) {}
-    });
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-    // Use addEventListener instead of onclick for reliability
-    document.getElementById("ac-notif-allow").addEventListener("click", function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var el = document.getElementById("ac-notif-prompt");
-      if (el) el.remove();
-      Notification.requestPermission();
-    });
-    document.getElementById("ac-notif-deny").addEventListener("click", function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var el = document.getElementById("ac-notif-prompt");
-      if (el) el.remove();
-      try { sessionStorage.setItem("ac_notif_dismissed", "1"); } catch(e2) {}
-    });
-  }, 3000);
+  // This is now handled by the NotificationPrompt React component
+  // Just a no-op — the component checks permission state directly
+}
+
+function NotificationPrompt({ user }) {
+  var [show, setShow] = useState(false);
+
+  useEffect(function() {
+    if (!user) return;
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission !== "default") return;
+    try { if (sessionStorage.getItem("ac_notif_dismissed")) return; } catch(e) {}
+    var timer = setTimeout(function() { setShow(true); }, 3000);
+    return function() { clearTimeout(timer); };
+  }, [user]);
+
+  if (!show) return null;
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',sans-serif",padding:24}} onClick={function(){setShow(false);try{sessionStorage.setItem("ac_notif_dismissed","1");}catch(e){}}}>
+      <div onClick={function(e){e.stopPropagation();}} style={{background:"white",borderRadius:20,padding:32,maxWidth:380,width:"90%",textAlign:"center",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}}>
+        <div style={{fontSize:40,marginBottom:12}}>{"\u{1F514}"}</div>
+        <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:20,fontWeight:700,color:"#1a1a1a",marginBottom:8}}>Stay in the loop!</h3>
+        <p style={{fontSize:14,color:"#6B7280",lineHeight:1.6,marginBottom:24}}>Allow notifications so you know when your study partners text you. You can turn this off anytime from your browser settings.</p>
+        <div style={{display:"flex",gap:12,justifyContent:"center"}}>
+          <button onClick={function(){setShow(false);try{sessionStorage.setItem("ac_notif_dismissed","1");}catch(e){}}} style={{padding:"12px 28px",border:"1px solid #E5E7EB",background:"white",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer",color:"#6B7280",fontFamily:"'DM Sans',sans-serif"}}>Not now</button>
+          <button onClick={function(){setShow(false);Notification.requestPermission();}} style={{padding:"12px 28px",border:"none",background:"#ec8283",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer",color:"white",fontFamily:"'DM Sans',sans-serif"}}>Allow</button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function sendBrowserNotification(title, body) {
@@ -3308,11 +3296,6 @@ export default function App() {
     } catch(e) {}
   }, []);
 
-  // Request browser notification permission when user logs in
-  useEffect(function() {
-    if (user) requestNotificationPermission();
-  }, [user]);
-
   // Global notification subscription — works even when chat panel is closed
   useEffect(function() {
     if (!user) return;
@@ -3409,6 +3392,7 @@ export default function App() {
       )}
       <ChatPanel user={user} isOpen={chatOpen} onClose={()=>{setChatOpen(false);setChatDmUserId(null);setChatDmUserName(null);}} initialDmUserId={chatDmUserId} initialDmUserName={chatDmUserName} onMarkSeen={markRoomSeen} />
       {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
+      <NotificationPrompt user={user} />
     </div>
   );
 }
