@@ -85,24 +85,38 @@ function requestNotificationPermission() {
     overlay.id = "ac-notif-prompt";
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;";
     var box = document.createElement("div");
-    box.style.cssText = "background:white;border-radius:20px;padding:32px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.15);";
+    box.style.cssText = "background:white;border-radius:20px;padding:32px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.15);position:relative;z-index:10000;";
     box.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">\u{1F514}</div>' +
       '<h3 style="font-family:Playfair Display,serif;font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:8px;">Stay in the loop!</h3>' +
       '<p style="font-size:14px;color:#6B7280;line-height:1.6;margin-bottom:24px;">Allow notifications so you know when your study partners text you. You can turn this off anytime from your browser settings.</p>' +
       '<div style="display:flex;gap:12px;justify-content:center;">' +
-      '<button id="ac-notif-deny" style="padding:10px 24px;border:1px solid #E5E7EB;background:white;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:#6B7280;font-family:DM Sans,sans-serif;">Not now</button>' +
-      '<button id="ac-notif-allow" style="padding:10px 24px;border:none;background:#ec8283;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:white;font-family:DM Sans,sans-serif;">Allow</button>' +
+      '<button id="ac-notif-deny" style="padding:12px 28px;border:1px solid #E5E7EB;background:white;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;color:#6B7280;font-family:DM Sans,sans-serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation;">Not now</button>' +
+      '<button id="ac-notif-allow" style="padding:12px 28px;border:none;background:#ec8283;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;color:white;font-family:DM Sans,sans-serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation;">Allow</button>' +
       '</div>';
+    // Prevent overlay click from interfering with buttons
+    box.addEventListener("click", function(e) { e.stopPropagation(); });
+    // Close overlay if clicking outside the box
+    overlay.addEventListener("click", function() {
+      overlay.remove();
+      try { sessionStorage.setItem("ac_notif_dismissed", "1"); } catch(e2) {}
+    });
     overlay.appendChild(box);
     document.body.appendChild(overlay);
-    document.getElementById("ac-notif-allow").onclick = function() {
-      document.getElementById("ac-notif-prompt").remove();
+    // Use addEventListener instead of onclick for reliability
+    document.getElementById("ac-notif-allow").addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var el = document.getElementById("ac-notif-prompt");
+      if (el) el.remove();
       Notification.requestPermission();
-    };
-    document.getElementById("ac-notif-deny").onclick = function() {
-      document.getElementById("ac-notif-prompt").remove();
-      try { sessionStorage.setItem("ac_notif_dismissed", "1"); } catch(e) {}
-    };
+    });
+    document.getElementById("ac-notif-deny").addEventListener("click", function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var el = document.getElementById("ac-notif-prompt");
+      if (el) el.remove();
+      try { sessionStorage.setItem("ac_notif_dismissed", "1"); } catch(e2) {}
+    });
   }, 3000);
 }
 
