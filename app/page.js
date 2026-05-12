@@ -3240,6 +3240,58 @@ function AdminDashboard({ user }) {
   );
 }
 
+function ResetPasswordModal({ onClose }) {
+  var [newPassword, setNewPassword] = useState("");
+  var [confirmPassword, setConfirmPassword] = useState("");
+  var [loading, setLoading] = useState(false);
+  var [error, setError] = useState("");
+  var [success, setSuccess] = useState("");
+
+  var handleReset = async function() {
+    setError(""); setSuccess("");
+    if (!newPassword.trim()) { setError("Please enter a new password."); return; }
+    if (newPassword.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (newPassword !== confirmPassword) { setError("Passwords do not match."); return; }
+    setLoading(true);
+    try {
+      var { error: err } = await supabase.auth.updateUser({ password: newPassword });
+      if (err) throw err;
+      setSuccess("Password updated successfully! You can now log in with your new password.");
+      setTimeout(function() { onClose(); }, 2000);
+    } catch(err) {
+      setError(err.message || "Failed to update password. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  var inputStyle = {
+    width: "100%", padding: "14px 16px", borderRadius: "12px",
+    border: "1px solid rgba(0,0,0,0.12)", fontFamily: "'DM Sans',sans-serif",
+    fontSize: "15px", outline: "none", boxSizing: "border-box"
+  };
+
+  return (
+    <div style={{position:"fixed",inset:0,zIndex:2000,background:"rgba(0,0,0,0.5)",backdropFilter:"blur(4px)",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px"}}>
+      <div onClick={function(e){e.stopPropagation();}} style={{background:"#fff",borderRadius:"24px",padding:"40px 32px",maxWidth:"420px",width:"100%",position:"relative",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}}>
+        <div style={{textAlign:"center",marginBottom:"28px"}}>
+          <div style={{fontSize:40,marginBottom:12}}>{"\u{1F512}"}</div>
+          <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"22px",color:DARK,marginBottom:"4px"}}>Set New Password</div>
+          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:GRAY,margin:0}}>Enter your new password below.</p>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
+          <input type="password" placeholder="New password" value={newPassword} onChange={function(e){setNewPassword(e.target.value);}} style={inputStyle} />
+          <input type="password" placeholder="Confirm new password" value={confirmPassword} onChange={function(e){setConfirmPassword(e.target.value);}} style={inputStyle} onKeyDown={function(e){if(e.key==="Enter")handleReset();}} />
+        </div>
+        {error && <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:"#DC2626",margin:"12px 0 0",textAlign:"center"}}>{error}</p>}
+        {success && <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:"#16A34A",margin:"12px 0 0",textAlign:"center"}}>{success}</p>}
+        <button onClick={handleReset} disabled={loading} style={{...bps,width:"100%",marginTop:"20px",textAlign:"center",opacity:loading?0.6:1}}>
+          {loading ? "Updating..." : "Update Password"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function HomePage() {
   return (<><Hero/><SchoolLogos/><ServicesSection/><TestimonialsSection/><ChatScreenshotsSection/><NotTypical/><TeamSection/><CommunitySection/><CommunityProof/><CTA/></>);
 }
@@ -3282,6 +3334,7 @@ export default function App() {
   }, []);
   const [user,setUser]=useState(null);
   const [showAuth,setShowAuth]=useState(false);
+  const [showResetPassword,setShowResetPassword]=useState(false);
   const [chatOpen,setChatOpen]=useState(false);
   const [chatDmUserId,setChatDmUserId]=useState(null);
   const [chatDmUserName,setChatDmUserName]=useState(null);
@@ -3356,8 +3409,11 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === "PASSWORD_RECOVERY") {
+        setShowResetPassword(true);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -3392,6 +3448,7 @@ export default function App() {
       )}
       <ChatPanel user={user} isOpen={chatOpen} onClose={()=>{setChatOpen(false);setChatDmUserId(null);setChatDmUserName(null);}} initialDmUserId={chatDmUserId} initialDmUserName={chatDmUserName} onMarkSeen={markRoomSeen} />
       {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
+      {showResetPassword && <ResetPasswordModal onClose={()=>setShowResetPassword(false)} />}
       <NotificationPrompt user={user} />
     </div>
   );
