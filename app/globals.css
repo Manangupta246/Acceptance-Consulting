@@ -8,6 +8,8 @@ body { -webkit-font-smoothing: antialiased; overflow-x: hidden; background-color
 @keyframes pulseRing { 0%{transform:scale(1);opacity:0.5} 100%{transform:scale(1.4);opacity:0} }
 @keyframes rotateRing { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
 @keyframes lbShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+@keyframes typingDots { 0%{opacity:0.2} 50%{opacity:1} 100%{opacity:0.2} }
+.typing-dots { display:inline-block; animation: typingDots 1.4s infinite; }
 .hero-star { position: absolute; background: #fff; border-radius: 50%; }
 .orbit-person { transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer; }
 .orbit-person:hover { transform: scale(1.18) !important; box-shadow: 0 0 30px rgba(236,130,131,0.6) !important; }
