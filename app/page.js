@@ -1703,21 +1703,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
 
   var accInputStyle = { width:"100%", padding:"12px 16px", border:"1px solid #E5E7EB", borderRadius:"10px", fontSize:"14px", fontFamily:"'DM Sans',sans-serif", outline:"none", background:"#FAFAFA", boxSizing:"border-box" };
 
-  // Not logged in
-  if (!user) {
-    return (
-      <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
-        <div style={{maxWidth:600,margin:"0 auto",padding:"80px 20px",textAlign:"center"}}>
-          <div style={{fontSize:48,marginBottom:16}}>&#129309;</div>
-          <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:700,color:"#111827",marginBottom:12}}>Find Your Study Partner</h1>
-          <p style={{fontSize:15,color:"#6B7280",lineHeight:1.7,fontFamily:"'DM Sans',sans-serif",maxWidth:450,margin:"0 auto 24px"}}>Get matched with fellow aspirants preparing for the same exam around the same time. Hold each other accountable and stay on track.</p>
-          <button onClick={onLoginClick} style={{padding:"14px 36px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Sign In to Get Started</button>
-        </div>
-      </div>
-    );
-  }
-
-  // Profile not set up
+  // Profile not set up (only for logged-in users)
   if (!loading && user && (!myProfile || !myProfile.target_exam)) {
     return (
       <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
