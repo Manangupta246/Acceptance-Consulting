@@ -1550,7 +1550,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
   var [loading, setLoading] = useState(true);
   var [myProfile, setMyProfile] = useState(null);
   var [showProfileModal, setShowProfileModal] = useState(false);
-  var [profileForm, setProfileForm] = useState({ target_exam:"GMAT", target_score:"", exam_date:"", target_schools:"", study_style:"", bio:"" });
+  var [profileForm, setProfileForm] = useState({ target_exam:"GMAT", target_score:"", exam_date:"", target_schools:"", study_style:"", bio:"", linkedin_url:"" });
   var [saving, setSaving] = useState(false);
   var [examFilter, setExamFilter] = useState("all");
 
@@ -1562,7 +1562,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
       var { data: prof } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       if (prof) {
         setMyProfile(prof);
-        setProfileForm({ target_exam:prof.target_exam||"GMAT", target_score:prof.target_score||"", exam_date:prof.exam_date||"", target_schools:prof.target_schools||"", study_style:prof.study_style||"", bio:prof.bio||"" });
+        setProfileForm({ target_exam:prof.target_exam||"GMAT", target_score:prof.target_score||"", exam_date:prof.exam_date||"", target_schools:prof.target_schools||"", study_style:prof.study_style||"", bio:prof.bio||"", linkedin_url:prof.linkedin_url||"" });
       }
       setLoading(false);
     }
@@ -1571,11 +1571,11 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
 
   // Fetch browse profiles
   useEffect(function() {
-    if (!user) return;
+    
     async function loadProfiles() {
-      var { data } = await supabase.from("profiles").select("*").neq("id", user.id).not("target_exam", "is", null);
+      var query = supabase.from("profiles").select("*").not("target_exam", "is", null); if (user) query = query.neq("id", user.id); var { data } = await query;
       // Filter out blocked users
-      var blockedIds = connections.filter(function(c) { return c.status === "blocked"; }).map(function(c) { return c.requester_id === user.id ? c.receiver_id : c.requester_id; });
+      var blockedIds = user ? connections.filter(function(c) { return c.status === "blocked"; }).map(function(c) { return c.requester_id === user.id ? c.receiver_id : c.requester_id; }) : [];
       var filtered = (data || []).filter(function(p) { return blockedIds.indexOf(p.id) === -1; });
       setProfiles(filtered);
     }
@@ -1599,7 +1599,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
-    var payload = { id:user.id, target_exam:profileForm.target_exam, target_score:profileForm.target_score||null, exam_date:profileForm.exam_date||null, target_schools:profileForm.target_schools||null, study_style:profileForm.study_style||null, bio:profileForm.bio||null };
+    var payload = { id:user.id, target_exam:profileForm.target_exam, target_score:profileForm.target_score||null, exam_date:profileForm.exam_date||null, target_schools:profileForm.target_schools||null, study_style:profileForm.study_style||null, bio:profileForm.bio||null, linkedin_url:profileForm.linkedin_url||null };
     var { error } = await supabase.from("profiles").upsert(payload, { onConflict: "id" });
     if (error) { alert("Error saving profile: " + error.message); }
     else {
@@ -1765,6 +1765,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
               </select>
             </div>
             <div style={{marginBottom:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Short Bio</label><textarea style={{...accInputStyle,resize:"vertical"}} rows={3} placeholder="Tell potential study partners about yourself..." value={profileForm.bio} onChange={function(e){setProfileForm(Object.assign({},profileForm,{bio:e.target.value}));}}/></div>
+            <div style={{marginBottom:16}}><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>LinkedIn Profile <span style={{color:"#9CA3AF",fontWeight:400}}>(optional)</span></label><input type="url" style={accInputStyle} placeholder="https://www.linkedin.com/in/yourprofile" value={profileForm.linkedin_url} onChange={function(e){setProfileForm(Object.assign({},profileForm,{linkedin_url:e.target.value}));}}/></div>
             <button type="submit" disabled={saving||!profileForm.target_exam} style={{width:"100%",padding:14,background:saving?"#D1D5DB":RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:saving?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>{saving?"Saving...":"Save Profile"}</button>
           </form>
         </div>
@@ -1782,17 +1783,28 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
     <div style={{paddingTop:"120px",minHeight:"100vh",background:"#FAFAFA"}}>
       <div style={{maxWidth:1100,margin:"0 auto",padding:"0 20px"}}>
 
+        {/* Login prompt for non-logged-in users */}
+        {!user && (
+          <div style={{background:"linear-gradient(135deg, #fdf0f0, #fff)",border:"1px solid rgba(236,130,131,0.2)",borderRadius:16,padding:"20px 24px",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+            <div>
+              <div style={{fontSize:16,fontWeight:700,color:DARK,fontFamily:"'DM Sans',sans-serif",marginBottom:4}}>Log in to find your study partner</div>
+              <div style={{fontSize:13,color:"#6B7280",fontFamily:"'DM Sans',sans-serif"}}>Fill in your details to get matched with applicants preparing for the same exam.</div>
+            </div>
+            <button onClick={onLoginClick} style={{padding:"10px 24px",background:RED,color:"white",border:"none",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>Log In / Sign Up</button>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:16,marginBottom:24}}>
           <div>
             <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,4vw,36px)",fontWeight:700,color:"#111827",margin:0}}>Accountability Partners</h1>
             <p style={{fontSize:15,color:"#6B7280",marginTop:6,marginBottom:0,fontFamily:"'DM Sans',sans-serif"}}>Find study partners preparing for the same exam around the same time.</p>
           </div>
-          <button onClick={function(){setShowProfileModal(true);}} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"10px 20px",background:"white",color:"#374151",border:"1px solid #E5E7EB",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccEditIcon/> Edit Profile</button>
+          {user && (<button onClick={function(){setShowProfileModal(true);}} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"10px 20px",background:"white",color:"#374151",border:"1px solid #E5E7EB",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccEditIcon/> Edit Profile</button>)}
         </div>
 
         {/* My Profile Card */}
-        {myProfile && (
+        {user && myProfile && (
           <div style={{background:"white",borderRadius:16,border:"1px solid #E5E7EB",padding:"20px 24px",marginBottom:24,display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
             <div style={{width:48,height:48,borderRadius:"50%",background:RED,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18,color:"white"}}>{(myProfile.full_name||"M").charAt(0).toUpperCase()}</div>
             <div style={{flex:1,minWidth:200}}>
@@ -1808,7 +1820,7 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
 
         {/* Tabs */}
         <div className="tab-scroll" style={{display:"flex",borderBottom:"2px solid #F3F4F6",gap:0,marginBottom:24}}>
-          {[{key:"browse",label:"Browse Profiles"},{key:"suggested",label:"Suggested Matches" + (suggested.length>0?" ("+suggested.length+")":"")},{key:"connections",label:"My Connections" + (pendingReceived.length>0?" ("+pendingReceived.length+" new)":"")}].map(function(t){
+          {[{key:"browse",label:"Browse Profiles"},{key:"suggested",label:"Suggested Matches" + (suggested.length>0?" ("+suggested.length+")":""),auth:true},{key:"connections",label:"My Connections" + (pendingReceived.length>0?" ("+pendingReceived.length+" new)":""),auth:true}].filter(function(t){return !t.auth||user;}).map(function(t){
             return (<button key={t.key} onClick={function(){setTab(t.key);}} style={{padding:"10px 20px",border:"none",background:"transparent",cursor:"pointer",fontSize:14,fontWeight:tab===t.key?600:500,color:tab===t.key?RED:"#6B7280",borderBottom:tab===t.key?"3px solid "+RED:"3px solid transparent",fontFamily:"'DM Sans',sans-serif"}}>{t.label}</button>);
           })}
         </div>
@@ -1845,11 +1857,13 @@ function AccountabilityPage({ user, onLoginClick, onOpenChat }) {
                   </div>
                   {p.bio && (<p style={{fontSize:13,color:"#6B7280",margin:0,lineHeight:1.5}}>{p.bio}</p>)}
                   <div style={{marginTop:"auto",paddingTop:8,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                    {!connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
-                    {connStatus && connStatus.status==="pending" && connStatus.isRequester && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> Invite Sent</span>)}
-                    {connStatus && connStatus.status==="pending" && !connStatus.isRequester && (<><button onClick={function(){updateConnection(connStatus.id,"accepted");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"#059669",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccCheckIcon/> Accept Invite</button><button onClick={function(){updateConnection(connStatus.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccXIcon/> Decline</button></>)}
-                    {connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
-                    {connStatus && connStatus.status!=="blocked" && (<button onClick={function(){blockUser(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 12px",background:"none",color:"#D1D5DB",border:"none",borderRadius:8,fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}} title="Block user"><AccXIcon/> Block</button>)}
+                    {!user && (<button onClick={function(){onLoginClick();}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
+                    {user && !connStatus && (<button onClick={function(){sendRequest(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:RED,color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccSendIcon/> Connect</button>)}
+                    {user && connStatus && connStatus.status==="pending" && connStatus.isRequester && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#FEF3C7",color:"#92400E",borderRadius:8,fontSize:13,fontWeight:600}}><AccClockIcon/> Invite Sent</span>)}
+                    {user && connStatus && connStatus.status==="pending" && !connStatus.isRequester && (<><button onClick={function(){updateConnection(connStatus.id,"accepted");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"#059669",color:"white",border:"none",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccCheckIcon/> Accept Invite</button><button onClick={function(){updateConnection(connStatus.id,"rejected");}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 16px",background:"white",color:"#6B7280",border:"1px solid #E5E7EB",borderRadius:8,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}><AccXIcon/> Decline</button></>)}
+                    {user && connStatus && connStatus.status==="accepted" && (<span style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 20px",background:"#D1FAE5",color:"#065F46",borderRadius:8,fontSize:13,fontWeight:600}}><AccCheckIcon/> Connected</span>)}
+                    {user && connStatus && connStatus.status!=="blocked" && (<button onClick={function(){blockUser(p.id);}} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"8px 12px",background:"none",color:"#D1D5DB",border:"none",borderRadius:8,fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}} title="Block user"><AccXIcon/> Block</button>)}
+                    {p.linkedin_url && (<a href={p.linkedin_url} target="_blank" rel="noreferrer" style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:32,height:32,borderRadius:"50%",background:"#0A66C2",marginLeft:"auto",flexShrink:0}} title="LinkedIn Profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>)}
                   </div>
                 </div>
               );
@@ -2363,10 +2377,15 @@ function ForumPage({ user, onLoginClick }) {
 }
 
 /* ── Chat Panel ── */
-function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, onMarkSeen }) {
+function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, onMarkSeen, activeRoomRef }) {
   var [rooms, setRooms] = useState([]);
   var [activeRoom, setActiveRoom] = useState(null);
   var [activeRoomName, setActiveRoomName] = useState("");
+
+  // Sync active room to parent ref so global notifications can skip it
+  useEffect(function() {
+    if (activeRoomRef) activeRoomRef.current = activeRoom;
+  }, [activeRoom, activeRoomRef]);
   var [messages, setMessages] = useState([]);
   var [newMessage, setNewMessage] = useState("");
   var [sending, setSending] = useState(false);
@@ -3336,10 +3355,12 @@ export default function App() {
   const [showAuth,setShowAuth]=useState(false);
   const [showResetPassword,setShowResetPassword]=useState(false);
   const [chatOpen,setChatOpen]=useState(false);
+  const chatOpenRef=useRef(false);
   const [chatDmUserId,setChatDmUserId]=useState(null);
   const [chatDmUserName,setChatDmUserName]=useState(null);
   const [unreadCount,setUnreadCount]=useState(0);
   const lastSeenRef=useRef({});
+  const activeRoomRef=useRef(null);
 
   // Load lastSeen from localStorage on mount
   useEffect(function() {
@@ -3350,22 +3371,29 @@ export default function App() {
   }, []);
 
   // Global notification subscription — works even when chat panel is closed
+  var lastNotifIdRef = useRef(null);
+  useEffect(function() { chatOpenRef.current = chatOpen; }, [chatOpen]);
   useEffect(function() {
     if (!user) return;
     var notifChannel = supabase.channel("global-notif-" + user.id + "-" + Date.now()).on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, function(payload) {
       var newMsg = payload.new;
-      if (newMsg.sender_id !== user.id) {
-        // Check if this room belongs to the user
-        supabase.from("chat_members").select("room_id").eq("user_id", user.id).eq("room_id", newMsg.room_id).then(function(res) {
-          if (res.data && res.data.length > 0) {
-            playNotificationSound();
-            supabase.from("profiles").select("full_name").eq("id", newMsg.sender_id).single().then(function(pRes) {
-              var senderName = (pRes.data && pRes.data.full_name) ? pRes.data.full_name : "Someone";
-              sendBrowserNotification("New message from " + senderName, newMsg.content ? (newMsg.content.length > 50 ? newMsg.content.slice(0, 50) + "..." : newMsg.content) : "Sent a message");
-            });
-          }
-        });
-      }
+      // Skip own messages
+      if (newMsg.sender_id === user.id) return;
+      // Skip if user is currently viewing this room with chat open
+      if (chatOpenRef.current && activeRoomRef.current === newMsg.room_id) return;
+      // Skip duplicate notifications (same message ID)
+      if (lastNotifIdRef.current === newMsg.id) return;
+      lastNotifIdRef.current = newMsg.id;
+      // Check if this room belongs to the user
+      supabase.from("chat_members").select("room_id").eq("user_id", user.id).eq("room_id", newMsg.room_id).then(function(res) {
+        if (res.data && res.data.length > 0) {
+          playNotificationSound();
+          supabase.from("profiles").select("full_name").eq("id", newMsg.sender_id).single().then(function(pRes) {
+            var senderName = (pRes.data && pRes.data.full_name) ? pRes.data.full_name : "Someone";
+            sendBrowserNotification("New message from " + senderName, newMsg.content ? (newMsg.content.length > 50 ? newMsg.content.slice(0, 50) + "..." : newMsg.content) : "Sent a message");
+          });
+        }
+      });
     }).subscribe();
     return function() { supabase.removeChannel(notifChannel); };
   }, [user]);
@@ -3446,7 +3474,7 @@ export default function App() {
           {unreadCount > 0 && (<span style={{position:"absolute",top:-2,right:-2,width:22,height:22,borderRadius:"50%",background:"#EF4444",color:"white",fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",border:"2px solid white",fontFamily:"'DM Sans',sans-serif"}}>{unreadCount > 9 ? "9+" : unreadCount}</span>)}
         </button>
       )}
-      <ChatPanel user={user} isOpen={chatOpen} onClose={()=>{setChatOpen(false);setChatDmUserId(null);setChatDmUserName(null);}} initialDmUserId={chatDmUserId} initialDmUserName={chatDmUserName} onMarkSeen={markRoomSeen} />
+      <ChatPanel user={user} isOpen={chatOpen} onClose={()=>{setChatOpen(false);setChatDmUserId(null);setChatDmUserName(null);activeRoomRef.current=null;}} initialDmUserId={chatDmUserId} initialDmUserName={chatDmUserName} onMarkSeen={markRoomSeen} activeRoomRef={activeRoomRef} />
       {showAuth && <AuthModal onClose={()=>setShowAuth(false)} onAuth={setUser} />}
       {showResetPassword && <ResetPasswordModal onClose={()=>setShowResetPassword(false)} />}
       <NotificationPrompt user={user} />
