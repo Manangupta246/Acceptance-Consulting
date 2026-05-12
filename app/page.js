@@ -226,7 +226,7 @@ function AuthModal({ onClose, onAuth }) {
       if (mode === "forgot") {
         if (!email.trim()) { setError("Please enter your email address."); setLoading(false); return; }
         const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin
+          redirectTo: "https://www.acceptanceconsulting.com"
         });
         if (err) throw err;
         setSuccess("Password reset link sent! Check your email inbox (and spam folder) for a link to reset your password.");
@@ -257,7 +257,7 @@ function AuthModal({ onClose, onAuth }) {
     try {
       const { error: err } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: window.location.origin + "/auth/callback" }
+        options: { redirectTo: "https://www.acceptanceconsulting.com/auth/callback" }
       });
       if (err) throw err;
     } catch (err) {
