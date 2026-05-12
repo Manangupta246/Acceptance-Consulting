@@ -47,6 +47,77 @@ function AnimatedCounter({ target, suffix = "" }) {
   return <span ref={ref}>{c}{suffix}</span>;
 }
 
+/* ── Notification Utilities ── */
+function playNotificationSound() {
+  try {
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 880;
+    osc.type = "sine";
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.3);
+    var osc2 = audioCtx.createOscillator();
+    var gain2 = audioCtx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(audioCtx.destination);
+    osc2.frequency.value = 1320;
+    osc2.type = "sine";
+    gain2.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.1);
+    gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+    osc2.start(audioCtx.currentTime + 0.1);
+    osc2.stop(audioCtx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+function requestNotificationPermission() {
+  // Don't show if already granted or denied, or if not supported
+  if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "default") return;
+  // Check if user already dismissed the prompt this session
+  try { if (sessionStorage.getItem("ac_notif_dismissed")) return; } catch(e) {}
+  // Show custom prompt after a short delay
+  setTimeout(function() {
+    var overlay = document.createElement("div");
+    overlay.id = "ac-notif-prompt";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;";
+    var box = document.createElement("div");
+    box.style.cssText = "background:white;border-radius:20px;padding:32px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.15);";
+    box.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">\u{1F514}</div>' +
+      '<h3 style="font-family:Playfair Display,serif;font-size:20px;font-weight:700;color:#1a1a1a;margin-bottom:8px;">Stay in the loop!</h3>' +
+      '<p style="font-size:14px;color:#6B7280;line-height:1.6;margin-bottom:24px;">Allow notifications so you know when your study partners text you. You can turn this off anytime from your browser settings.</p>' +
+      '<div style="display:flex;gap:12px;justify-content:center;">' +
+      '<button id="ac-notif-deny" style="padding:10px 24px;border:1px solid #E5E7EB;background:white;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:#6B7280;font-family:DM Sans,sans-serif;">Not now</button>' +
+      '<button id="ac-notif-allow" style="padding:10px 24px;border:none;background:#ec8283;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:white;font-family:DM Sans,sans-serif;">Allow</button>' +
+      '</div>';
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    document.getElementById("ac-notif-allow").onclick = function() {
+      document.getElementById("ac-notif-prompt").remove();
+      Notification.requestPermission();
+    };
+    document.getElementById("ac-notif-deny").onclick = function() {
+      document.getElementById("ac-notif-prompt").remove();
+      try { sessionStorage.setItem("ac_notif_dismissed", "1"); } catch(e) {}
+    };
+  }, 3000);
+}
+
+function sendBrowserNotification(title, body) {
+  try {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      if (document.hidden || !document.hasFocus()) {
+        var notif = new Notification(title, { body: body, icon: "/icon.png", badge: "/icon.png", tag: "ac-chat-" + Date.now() });
+        notif.onclick = function() { window.focus(); notif.close(); };
+        setTimeout(function() { notif.close(); }, 5000);
+      }
+    }
+  } catch(e) {}
+}
+
 /* ── Data ── */
 const stats = [
   { number: "150", suffix: "+", label: "Successful Applicants" },
@@ -150,7 +221,14 @@ function AuthModal({ onClose, onAuth }) {
   const handleEmailAuth = async () => {
     setError(""); setSuccess(""); setLoading(true);
     try {
-      if (mode === "signup") {
+      if (mode === "forgot") {
+        if (!email.trim()) { setError("Please enter your email address."); setLoading(false); return; }
+        const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin
+        });
+        if (err) throw err;
+        setSuccess("Password reset link sent! Check your email inbox (and spam folder) for a link to reset your password.");
+      } else if (mode === "signup") {
         const { data, error: err } = await supabase.auth.signUp({
           email, password,
           options: { data: { full_name: name } }
@@ -199,32 +277,46 @@ function AuthModal({ onClose, onAuth }) {
         <button onClick={onClose} style={{position:"absolute",top:"16px",right:"20px",background:"none",border:"none",fontSize:"22px",color:GRAY,cursor:"pointer"}}>{"\u2715"}</button>
         <div style={{textAlign:"center",marginBottom:"28px"}}>
           <div style={{fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:"22px",color:DARK,marginBottom:"4px"}}><span style={{color:RED}}>Acceptance</span> Consulting</div>
-          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:GRAY,margin:0}}>{mode==="login"?"Welcome back!":"Create your account"}</p>
+          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:GRAY,margin:0}}>{mode==="login"?"Welcome back!":mode==="signup"?"Create your account":"Reset your password"}</p>
         </div>
-        <button onClick={handleGoogle} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:"12px",border:"1px solid rgba(0,0,0,0.12)",background:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"15px",color:DARK,marginBottom:"20px",transition:"background 0.2s"}}>
-          <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
-          Continue with Google
-        </button>
-        <div style={{display:"flex",alignItems:"center",gap:"12px",margin:"20px 0"}}>
-          <div style={{flex:1,height:"1px",background:"rgba(0,0,0,0.1)"}}></div>
-          <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:GRAY}}>or</span>
-          <div style={{flex:1,height:"1px",background:"rgba(0,0,0,0.1)"}}></div>
-        </div>
+        {mode !== "forgot" && (
+          <button onClick={handleGoogle} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:"12px",border:"1px solid rgba(0,0,0,0.12)",background:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:"10px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,fontSize:"15px",color:DARK,marginBottom:"20px",transition:"background 0.2s"}}>
+            <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+            Continue with Google
+          </button>
+        )}
+        {mode !== "forgot" && (
+          <div style={{display:"flex",alignItems:"center",gap:"12px",margin:"20px 0"}}>
+            <div style={{flex:1,height:"1px",background:"rgba(0,0,0,0.1)"}}></div>
+            <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:GRAY}}>or</span>
+            <div style={{flex:1,height:"1px",background:"rgba(0,0,0,0.1)"}}></div>
+          </div>
+        )}
+        {mode === "forgot" && (
+          <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:GRAY,textAlign:"center",marginBottom:"20px",lineHeight:1.6}}>Enter the email address associated with your account and we will send you a link to reset your password.</p>
+        )}
         <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
           {mode==="signup" && (
             <input type="text" placeholder="Full Name" value={name} onChange={e=>setName(e.target.value)} style={inputStyle} />
           )}
           <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} style={inputStyle} />
-          <input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} style={inputStyle}
-            onKeyDown={e=>{if(e.key==="Enter")handleEmailAuth();}} />
+          {mode !== "forgot" && (
+            <input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} style={inputStyle}
+              onKeyDown={e=>{if(e.key==="Enter")handleEmailAuth();}} />
+          )}
         </div>
+        {mode === "login" && (
+          <div style={{textAlign:"right",marginTop:"8px"}}>
+            <span onClick={()=>{setMode("forgot");setError("");setSuccess("");}} style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:RED,cursor:"pointer",fontWeight:500}}>Forgot password?</span>
+          </div>
+        )}
         {error && <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:"#DC2626",margin:"12px 0 0",textAlign:"center"}}>{error}</p>}
         {success && <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"13px",color:"#16A34A",margin:"12px 0 0",textAlign:"center"}}>{success}</p>}
         <button onClick={handleEmailAuth} disabled={loading} style={{...bps,width:"100%",marginTop:"20px",textAlign:"center",opacity:loading?0.6:1}}>
-          {loading ? "Please wait..." : (mode==="login" ? "Log In" : "Sign Up")}
+          {loading ? "Please wait..." : (mode==="login" ? "Log In" : mode==="signup" ? "Sign Up" : "Send Reset Link")}
         </button>
         <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"14px",color:GRAY,textAlign:"center",margin:"20px 0 0"}}>
-          {mode==="login" ? "Do not have an account? " : "Already have an account? "}
+          {mode==="login" ? "Do not have an account? " : mode==="signup" ? "Already have an account? " : "Remember your password? "}
           <span onClick={()=>{setMode(mode==="login"?"signup":"login");setError("");setSuccess("");}} style={{color:RED,fontWeight:700,cursor:"pointer"}}>
             {mode==="login" ? "Sign Up" : "Log In"}
           </span>
@@ -2292,6 +2384,51 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
   var [showAddMember, setShowAddMember] = useState(false);
   var messagesEndRef = useRef(null);
   var subscriptionRef = useRef(null);
+  var roomSubRef = useRef(null);
+
+  // Reusable loadRooms function
+  var loadRoomsRef = useRef(null);
+  loadRoomsRef.current = async function loadRooms(showLoading) {
+    if (showLoading) setLoadingRooms(true);
+    var { data: memberships } = await supabase.from("chat_members").select("room_id, chat_rooms(id, name, room_type, max_members, created_at)").eq("user_id", user.id);
+    if (memberships) {
+      var roomList = memberships.map(function(m) { return m.chat_rooms; }).filter(Boolean);
+      var enriched = [];
+      for (var i = 0; i < roomList.length; i++) {
+        var r = roomList[i];
+        if (r.room_type === "direct") {
+          var { data: members } = await supabase.from("chat_members").select("user_id").eq("room_id", r.id).neq("user_id", user.id);
+          var otherUserId = (members && members[0]) ? members[0].user_id : null;
+          r.other_user_id = otherUserId;
+          if (otherUserId) {
+            var { data: profile } = await supabase.from("profiles").select("full_name").eq("id", otherUserId).single();
+            r.display_name = (profile && profile.full_name) ? profile.full_name : "Chat";
+          } else {
+            r.display_name = "Chat";
+          }
+        } else {
+          r.display_name = r.name || "Study Group";
+        }
+        var { data: lastMsgs } = await supabase.from("chat_messages").select("content, created_at, sender_id").eq("room_id", r.id).order("created_at", { ascending: false }).limit(1);
+        if (lastMsgs && lastMsgs[0]) {
+          r.last_message = lastMsgs[0].content;
+          r.last_message_time = lastMsgs[0].created_at;
+          r.last_message_sender = lastMsgs[0].sender_id;
+        } else {
+          r.last_message = null;
+          r.last_message_time = null;
+        }
+        enriched.push(r);
+      }
+      enriched.sort(function(a, b) {
+        var ta = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
+        var tb = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
+        return tb - ta;
+      });
+      setRooms(enriched);
+    }
+    if (showLoading) setLoadingRooms(false);
+  };
 
   // Fetch accepted connections as contacts for group creation
   useEffect(function() {
@@ -2309,53 +2446,29 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
     loadContacts();
   }, [user, isOpen]);
 
-  // Load rooms
+  // Load rooms and subscribe to new messages for room list updates
+  var roomRefreshTimer = useRef(null);
+  var isMountedRef = useRef(true);
+  useEffect(function() { return function() { isMountedRef.current = false; }; }, []);
+
   useEffect(function() {
     if (!user || !isOpen) return;
-    async function loadRooms() {
-      setLoadingRooms(true);
-      var { data: memberships } = await supabase.from("chat_members").select("room_id, chat_rooms(id, name, room_type, max_members, created_at)").eq("user_id", user.id);
-      if (memberships) {
-        var roomList = memberships.map(function(m) { return m.chat_rooms; }).filter(Boolean);
-        var enriched = [];
-        for (var i = 0; i < roomList.length; i++) {
-          var r = roomList[i];
-          if (r.room_type === "direct") {
-            var { data: members } = await supabase.from("chat_members").select("user_id").eq("room_id", r.id).neq("user_id", user.id);
-            var otherUserId = (members && members[0]) ? members[0].user_id : null;
-            r.other_user_id = otherUserId;
-            if (otherUserId) {
-              var { data: profile } = await supabase.from("profiles").select("full_name").eq("id", otherUserId).single();
-              r.display_name = (profile && profile.full_name) ? profile.full_name : "Chat";
-            } else {
-              r.display_name = "Chat";
-            }
-          } else {
-            r.display_name = r.name || "Study Group";
-          }
-          // Fetch last message for preview
-          var { data: lastMsgs } = await supabase.from("chat_messages").select("content, created_at, sender_id").eq("room_id", r.id).order("created_at", { ascending: false }).limit(1);
-          if (lastMsgs && lastMsgs[0]) {
-            r.last_message = lastMsgs[0].content;
-            r.last_message_time = lastMsgs[0].created_at;
-            r.last_message_sender = lastMsgs[0].sender_id;
-          } else {
-            r.last_message = null;
-            r.last_message_time = null;
-          }
-          enriched.push(r);
-        }
-        // Sort by last message time (most recent first)
-        enriched.sort(function(a, b) {
-          var ta = a.last_message_time ? new Date(a.last_message_time).getTime() : 0;
-          var tb = b.last_message_time ? new Date(b.last_message_time).getTime() : 0;
-          return tb - ta;
-        });
-        setRooms(enriched);
-      }
-      setLoadingRooms(false);
-    }
-    loadRooms();
+    loadRoomsRef.current(true);
+
+    // Subscribe to ALL new messages to update room list — debounced to max once per 3 seconds
+    var channelName = "room-list-" + user.id + "-" + Date.now();
+    var roomChannel = supabase.channel(channelName).on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, function(payload) {
+      if (roomRefreshTimer.current) clearTimeout(roomRefreshTimer.current);
+      roomRefreshTimer.current = setTimeout(function() {
+        if (isMountedRef.current && loadRoomsRef.current) loadRoomsRef.current(false);
+      }, 3000);
+    }).subscribe();
+    roomSubRef.current = roomChannel;
+
+    return function() {
+      if (roomSubRef.current) supabase.removeChannel(roomSubRef.current);
+      if (roomRefreshTimer.current) clearTimeout(roomRefreshTimer.current);
+    };
   }, [user, isOpen]);
 
   // Handle initial DM open
@@ -2437,7 +2550,6 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
     if (subscriptionRef.current) { supabase.removeChannel(subscriptionRef.current); }
     var channel = supabase.channel("room-" + activeRoom).on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: "room_id=eq." + activeRoom }, function(payload) {
       var newMsg = payload.new;
-      // Fetch sender name
       supabase.from("profiles").select("full_name").eq("id", newMsg.sender_id).single().then(function(res) {
         if (res.data) {
           setProfileNames(function(prev) {
@@ -2535,9 +2647,13 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
         await supabase.from("chat_rooms").delete().eq("id", roomId);
       }
     } else {
-      // DM: clear all messages but keep the room and memberships
-      if (!confirm("Clear this conversation? All messages will be deleted for both users.")) return;
-      await supabase.from("chat_messages").delete().eq("room_id", roomId);
+      // DM: clear messages only for the current user (store cutoff timestamp in localStorage)
+      if (!confirm("Clear this conversation? Messages will be hidden for you only.")) return;
+      try {
+        var cleared = JSON.parse(localStorage.getItem("ac_chat_cleared") || "{}");
+        cleared[roomId] = new Date().toISOString();
+        localStorage.setItem("ac_chat_cleared", JSON.stringify(cleared));
+      } catch(e2) {}
     }
     setRooms(function(prev) {
       if (room.room_type === "group") {
@@ -2550,6 +2666,76 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
       }
     });
     if (activeRoom === roomId) { setMessages([]); if (room.room_type === "group") { setActiveRoom(null); setView("rooms"); } }
+  }
+
+  // Filter messages based on user's clear timestamp
+  function getVisibleMessages() {
+    try {
+      var cleared = JSON.parse(localStorage.getItem("ac_chat_cleared") || "{}");
+      var cutoff = cleared[activeRoom];
+      if (!cutoff) return messages;
+      return messages.filter(function(m) { return new Date(m.created_at) > new Date(cutoff); });
+    } catch(e) { return messages; }
+  }
+
+  // Typing indicator state
+  var [typingUsers, setTypingUsers] = useState([]);
+  var typingChannelRef = useRef(null);
+  var typingTimeoutRef = useRef(null);
+
+  // Setup typing presence channel for active room
+  useEffect(function() {
+    if (!activeRoom || !user) return;
+    var channelName = "typing-" + activeRoom;
+    var channel = supabase.channel(channelName, { config: { presence: { key: user.id } } });
+
+    channel.on("presence", { event: "sync" }, function() {
+      var state = channel.presenceState();
+      var typers = [];
+      Object.keys(state).forEach(function(key) {
+        if (key !== user.id) {
+          var presences = state[key];
+          if (presences && presences[0] && presences[0].typing) {
+            typers.push(presences[0].name || "Someone");
+          }
+        }
+      });
+      setTypingUsers(typers);
+    });
+
+    channel.subscribe(async function(status) {
+      if (status === "SUBSCRIBED") {
+        await channel.track({ typing: false, name: "", user_id: user.id });
+      }
+    });
+
+    typingChannelRef.current = channel;
+    return function() {
+      if (typingChannelRef.current) {
+        supabase.removeChannel(typingChannelRef.current);
+        typingChannelRef.current = null;
+      }
+      setTypingUsers([]);
+    };
+  }, [activeRoom, user]);
+
+  // Broadcast typing status
+  function handleTyping() {
+    if (!typingChannelRef.current || !user) return;
+    // Get user's name
+    var myName = "";
+    try {
+      var p = profileNames[user.id];
+      myName = p || user.email || "Someone";
+    } catch(e) { myName = "Someone"; }
+
+    typingChannelRef.current.track({ typing: true, name: myName, user_id: user.id });
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(function() {
+      if (typingChannelRef.current) {
+        typingChannelRef.current.track({ typing: false, name: myName, user_id: user.id });
+      }
+    }, 2000);
   }
 
   // Join group
@@ -2716,10 +2902,14 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
 
           {!loadingRooms && rooms.length === 0 && (<div style={{padding:"40px 20px",textAlign:"center",color:"#9CA3AF"}}><div style={{fontSize:32,marginBottom:8}}>&#128172;</div><p style={{fontSize:13,margin:0}}>No conversations yet. Connect with a study partner to start chatting.</p></div>)}
 
-          {rooms.filter(function(r) {
-            if (!chatSearch.trim()) return true;
-            return (r.display_name || "").toLowerCase().indexOf(chatSearch.toLowerCase()) !== -1;
-          }).map(function(r) {
+          {/* Read lastSeen once for all rooms */}
+          {(function() {
+            var savedSeen = {};
+            try { var s = localStorage.getItem("ac_chat_last_seen"); if (s) savedSeen = JSON.parse(s); } catch(e) {}
+            return rooms.filter(function(r) {
+              if (!chatSearch.trim()) return true;
+              return (r.display_name || "").toLowerCase().indexOf(chatSearch.toLowerCase()) !== -1;
+            }).map(function(r) {
             var initials = (r.display_name || "C").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
             var colors = ["#ec8283","#2563EB","#059669","#7C3AED","#D97706"];
             var color = r.room_type === "group" ? "#7C3AED" : colors[(r.display_name||"C").length % colors.length];
@@ -2732,20 +2922,32 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
               else if (diff < 86400) timeStr = Math.floor(diff / 3600) + "h";
               else timeStr = Math.floor(diff / 86400) + "d";
             }
+            // Check if room has unread messages
+            var hasUnread = false;
+            var roomLastSeen = savedSeen[r.id] || null;
+            if (r.last_message_time && r.last_message_sender !== user.id) {
+              if (!roomLastSeen || new Date(r.last_message_time) > new Date(roomLastSeen)) {
+                hasUnread = true;
+              }
+            }
             return (
-              <div key={r.id} onClick={function(){setActiveRoom(r.id);setActiveRoomName(r.display_name);setView("chat");if(onMarkSeen)onMarkSeen(r.id);}} style={{padding:"14px 20px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",borderBottom:"1px solid #F3F4F6",transition:"background 0.15s"}}>
-                <div style={{width:44,height:44,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:15,color:"white",flexShrink:0}}>{r.room_type==="group"?"G":initials}</div>
+              <div key={r.id} onClick={function(){setActiveRoom(r.id);setActiveRoomName(r.display_name);setView("chat");if(onMarkSeen)onMarkSeen(r.id);}} style={{padding:"14px 20px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",borderBottom:"1px solid #F3F4F6",transition:"background 0.15s",background:hasUnread?"#fdf8f8":"transparent"}}>
+                <div style={{position:"relative",width:44,height:44,flexShrink:0}}>
+                  <div style={{width:44,height:44,borderRadius:"50%",background:color,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:15,color:"white"}}>{r.room_type==="group"?"G":initials}</div>
+                  {hasUnread && (<div style={{position:"absolute",top:0,right:0,width:12,height:12,borderRadius:"50%",background:"#2563EB",border:"2px solid white"}} />)}
+                </div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div style={{fontSize:14,fontWeight:600,color:"#111827",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.display_name}</div>
-                    {timeStr && (<span style={{fontSize:11,color:"#9CA3AF",flexShrink:0,marginLeft:8}}>{timeStr}</span>)}
+                    <div style={{fontSize:14,fontWeight:hasUnread?800:600,color:"#111827",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{r.display_name}</div>
+                    {timeStr && (<span style={{fontSize:11,color:hasUnread?"#2563EB":"#9CA3AF",fontWeight:hasUnread?700:400,flexShrink:0,marginLeft:8}}>{timeStr}</span>)}
                   </div>
-                  <div style={{fontSize:12,color:"#9CA3AF",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:2}}>{preview}</div>
+                  <div style={{fontSize:12,color:hasUnread?"#374151":"#9CA3AF",fontWeight:hasUnread?600:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",marginTop:2}}>{preview}</div>
                 </div>
                 <button onClick={function(e){deleteChat(r.id,e);}} style={{background:"none",border:"none",color:"#D1D5DB",cursor:"pointer",padding:4,flexShrink:0,fontSize:14}} title="Delete chat">&#128465;</button>
               </div>
             );
-          })}
+          });
+          })()}
         </div>
       )}
 
@@ -2754,8 +2956,8 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
         <div style={{flex:1,display:"flex",flexDirection:"column",minHeight:0}}>
           {/* Messages */}
           <div style={{flex:1,overflowY:"auto",padding:"16px 20px",display:"flex",flexDirection:"column",gap:8}}>
-            {messages.length===0 && (<div style={{textAlign:"center",padding:"40px 0",color:"#9CA3AF",fontSize:13}}>No messages yet. Say hello!</div>)}
-            {messages.map(function(msg, idx) {
+            {getVisibleMessages().length===0 && (<div style={{textAlign:"center",padding:"40px 0",color:"#9CA3AF",fontSize:13}}>No messages yet. Say hello!</div>)}
+            {getVisibleMessages().map(function(msg, idx) {
               var isMe = msg.sender_id === user.id;
               var senderName = profileNames[msg.sender_id] || "User";
               var time = new Date(msg.created_at).toLocaleTimeString("en-US", { hour:"numeric", minute:"2-digit" });
@@ -2772,9 +2974,17 @@ function ChatPanel({ user, isOpen, onClose, initialDmUserId, initialDmUserName, 
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Typing indicator */}
+          {typingUsers.length > 0 && (
+            <div style={{padding:"4px 20px",fontSize:12,color:"#9CA3AF",fontStyle:"italic",fontFamily:"'DM Sans',sans-serif",flexShrink:0}}>
+              {typingUsers.length === 1 ? typingUsers[0] + " is typing" : typingUsers.slice(0, 2).join(" & ") + (typingUsers.length > 2 ? " and others are" : " are") + " typing"}
+              <span className="typing-dots">...</span>
+            </div>
+          )}
+
           {/* Input */}
           <form onSubmit={handleSend} style={{padding:"12px 16px",borderTop:"1px solid #E5E7EB",display:"flex",gap:8,background:"white",flexShrink:0}}>
-            <input type="text" placeholder="Type a message..." value={newMessage} onChange={function(e){setNewMessage(e.target.value);}} style={chatInputStyle} />
+            <input type="text" placeholder="Type a message..." value={newMessage} onChange={function(e){setNewMessage(e.target.value);handleTyping();}} style={chatInputStyle} />
             <button type="submit" disabled={sending||!newMessage.trim()} style={{width:42,height:42,borderRadius:"50%",background:newMessage.trim()?RED:"#E5E7EB",color:"white",border:"none",cursor:newMessage.trim()?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:16}}>&#10148;</button>
           </form>
         </div>
@@ -3076,15 +3286,52 @@ export default function App() {
   const [unreadCount,setUnreadCount]=useState(0);
   const lastSeenRef=useRef({});
 
+  // Load lastSeen from localStorage on mount
+  useEffect(function() {
+    try {
+      var saved = localStorage.getItem("ac_chat_last_seen");
+      if (saved) lastSeenRef.current = JSON.parse(saved);
+    } catch(e) {}
+  }, []);
+
+  // Request browser notification permission when user logs in
+  useEffect(function() {
+    if (user) requestNotificationPermission();
+  }, [user]);
+
+  // Global notification subscription — works even when chat panel is closed
+  useEffect(function() {
+    if (!user) return;
+    var notifChannel = supabase.channel("global-notif-" + user.id + "-" + Date.now()).on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages" }, function(payload) {
+      var newMsg = payload.new;
+      if (newMsg.sender_id !== user.id) {
+        // Check if this room belongs to the user
+        supabase.from("chat_members").select("room_id").eq("user_id", user.id).eq("room_id", newMsg.room_id).then(function(res) {
+          if (res.data && res.data.length > 0) {
+            playNotificationSound();
+            supabase.from("profiles").select("full_name").eq("id", newMsg.sender_id).single().then(function(pRes) {
+              var senderName = (pRes.data && pRes.data.full_name) ? pRes.data.full_name : "Someone";
+              sendBrowserNotification("New message from " + senderName, newMsg.content ? (newMsg.content.length > 50 ? newMsg.content.slice(0, 50) + "..." : newMsg.content) : "Sent a message");
+            });
+          }
+        });
+      }
+    }).subscribe();
+    return function() { supabase.removeChannel(notifChannel); };
+  }, [user]);
+
+  // Save lastSeen to localStorage whenever it changes
+  function saveLastSeen() {
+    try { localStorage.setItem("ac_chat_last_seen", JSON.stringify(lastSeenRef.current)); } catch(e) {}
+  }
+
   // Poll for unread messages every 10 seconds
   useEffect(() => {
     if (!user) { setUnreadCount(0); return; }
     async function checkUnread() {
-      // Get all rooms user is in
       var { data: memberships } = await supabase.from("chat_members").select("room_id").eq("user_id", user.id);
       if (!memberships || memberships.length === 0) { setUnreadCount(0); return; }
       var roomIds = memberships.map(function(m) { return m.room_id; });
-      // Get latest message in each room not sent by current user
       var count = 0;
       for (var i = 0; i < roomIds.length; i++) {
         var { data: msgs } = await supabase.from("chat_messages").select("id, sender_id, created_at").eq("room_id", roomIds[i]).order("created_at", { ascending: false }).limit(1);
@@ -3105,6 +3352,7 @@ export default function App() {
   // Mark room as seen when chat opens
   const markRoomSeen = (roomId) => {
     lastSeenRef.current[roomId] = new Date().toISOString();
+    saveLastSeen();
   };
 
   useEffect(() => {
