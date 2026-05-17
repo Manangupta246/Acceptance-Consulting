@@ -3445,10 +3445,10 @@ function SchoolFinderPage({ user, onLoginClick }) {
       <div className="sf-card-layout" style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:16,flexWrap:"wrap"}}>
         <div className="sf-card-main" style={{flex:1,minWidth:200}}>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
-            <span style={{background:isTop?RED:"#111827",color:"white",width:28,height:28,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,flexShrink:0}}>{rank}</span>
+            <span style={{background:isTop?RED:"rgba(236,130,131,0.15)",color:isTop?"white":RED,width:28,height:28,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,flexShrink:0}}>{rank}</span>
             <h3 style={{margin:0,fontSize:16,fontWeight:700,color:"#111827",fontFamily:"'Playfair Display',serif"}}>{school.short_name}</h3>
           </div>
-          <p style={{margin:"0 0 0 38px",fontSize:12,color:"#6B7280"}}>{school.city}, {school.country}{ft?" \u00B7 "+ft:""}</p>
+          <p style={{margin:"0 0 0 38px",fontSize:12,color:"#6B7280"}}>{school.city}, {school.country}{ft?" · "+ft:""}</p>
         </div>
         <div className="sf-card-stats" style={{display:"flex",gap:12,flexWrap:"wrap",fontSize:13}}>
           {school.avg_gmat && <div style={{textAlign:"center",padding:"6px 10px",background:"#F9FAFB",borderRadius:8,minWidth:48}}><div style={{color:"#9CA3AF",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>GMAT</div><div style={{fontWeight:700,color:"#111827",fontSize:15}}>{school.avg_gmat}</div></div>}
@@ -3483,9 +3483,9 @@ function SchoolFinderPage({ user, onLoginClick }) {
         </div>
         {school.top_sectors && <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:700,color:"#111827",marginBottom:6}}>Top Recruiting Sectors</div><p style={{fontSize:13,color:"#6B7280",margin:0,lineHeight:1.6}}>{school.top_sectors}</p></div>}
         {school.post_study_visa && <div style={{marginBottom:16,background:"#EFF6FF",padding:14,borderRadius:10}}><div style={{fontSize:13,fontWeight:700,color:"#1E40AF",marginBottom:6}}>Post-Study Work Visa</div><p style={{fontSize:12,color:"#3B82F6",margin:0,lineHeight:1.6}}>{school.post_study_visa}</p></div>}
-        {school.ft_ranking && school.ft_ranking!=="NR" && <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:700,color:"#111827",marginBottom:6}}>Rankings</div><p style={{fontSize:13,color:"#6B7280",margin:0}}>FT 2026: #{school.ft_ranking}{school.qs_ranking?" \u00B7 QS 2025: "+school.qs_ranking:""}</p></div>}
-        {school.ft_ranking==="NR" && <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:700,color:"#111827",marginBottom:6}}>Rankings</div><p style={{fontSize:13,color:"#6B7280",margin:0}}>FT 2026: N/A{school.qs_ranking?" \u00B7 QS 2025: "+school.qs_ranking:""}</p></div>}
-        {school.website_url && <a href={school.website_url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"10px 20px",background:RED,color:"white",borderRadius:10,fontSize:14,fontWeight:600,textDecoration:"none"}}>Visit School Website \u2197</a>}
+        {school.ft_ranking && school.ft_ranking!=="NR" && <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:700,color:"#111827",marginBottom:6}}>Rankings</div><p style={{fontSize:13,color:"#6B7280",margin:0}}>FT 2026: #{school.ft_ranking}{school.qs_ranking?" · QS 2025: "+school.qs_ranking:""}</p></div>}
+        {school.ft_ranking==="NR" && <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:700,color:"#111827",marginBottom:6}}>Rankings</div><p style={{fontSize:13,color:"#6B7280",margin:0}}>FT 2026: N/A{school.qs_ranking?" · QS 2025: "+school.qs_ranking:""}</p></div>}
+        {school.website_url && <a href={school.website_url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"10px 20px",background:RED,color:"white",borderRadius:10,fontSize:14,fontWeight:600,textDecoration:"none"}}>Visit School Website ↗</a>}
       </div>
     </div>);
   }
@@ -3499,8 +3499,8 @@ function SchoolFinderPage({ user, onLoginClick }) {
           <p style={{fontSize:15,color:"#6B7280",maxWidth:480,margin:"0 auto",lineHeight:1.7}}>Explore top MBA programs or find the ones that match your profile, budget, and career ambitions.</p>
         </div>
         <div style={{textAlign:"center",marginBottom:28}}>
-          {!hasSearched ? (<button onClick={function(){setShowFilters(!showFilters);}} style={{padding:"14px 32px",background:showFilters?"#111827":RED,color:"white",border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer",boxShadow:"0 4px 14px rgba(197,48,48,0.25)",transition:"all 0.2s"}}>{showFilters?"Hide Filters \u25B2":"\uD83C\uDFAF Find Schools That Match My Profile"}</button>
-          ) : (<button onClick={resetFilters} style={{padding:"12px 28px",background:"white",color:RED,border:"2px solid "+RED,borderRadius:12,fontSize:13,fontWeight:600,cursor:"pointer"}}>\u2190 Clear Filters \u00B7 Show All Schools</button>)}
+          {!hasSearched ? (<button onClick={function(){setShowFilters(!showFilters);}} style={{padding:"14px 32px",background:showFilters?"#111827":RED,color:"white",border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer",boxShadow:"0 4px 14px rgba(197,48,48,0.25)",transition:"all 0.2s"}}>{showFilters?"Hide Filters ▲":"🎯 Find Schools That Match My Profile"}</button>
+          ) : (<button onClick={resetFilters} style={{padding:"12px 28px",background:"white",color:RED,border:"2px solid "+RED,borderRadius:12,fontSize:13,fontWeight:600,cursor:"pointer"}}>← Clear Filters · Show All Schools</button>)}
         </div>
         {showFilters && !hasSearched && (<div style={{background:"white",borderRadius:16,padding:28,boxShadow:"0 4px 20px rgba(0,0,0,0.06)",border:"1px solid #E5E7EB",marginBottom:28}}>
           <h2 style={{fontSize:16,fontWeight:700,color:"#111827",margin:"0 0 20px",fontFamily:"'Playfair Display',serif"}}>Tell us about yourself</h2>
@@ -3516,20 +3516,20 @@ function SchoolFinderPage({ user, onLoginClick }) {
           <button onClick={findSchools} disabled={loading} style={{width:"100%",marginTop:20,padding:14,background:RED,color:"white",border:"none",borderRadius:12,fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 14px rgba(197,48,48,0.25)"}}>Find My Schools</button>
         </div>)}
         {hasSearched && (<div>
-          <div className="sf-results-pill" style={{background:"white",borderRadius:12,padding:"12px 16px",marginBottom:24,fontSize:13,color:"#111827",border:"1px solid #E5E7EB"}}>Matching: <strong>{filters.exam_type} {filters.score}</strong>{filters.work_exp && <span> \u00B7 {filters.work_exp} yrs</span>}{filters.budget && <span> \u00B7 {filters.budget}</span>}{filters.region && <span> \u00B7 {filters.region}</span>}{filters.career_sector && <span> \u00B7 {filters.career_sector}</span>}</div>
-          {results.top.length>0 && (<div style={{marginBottom:32}}><h3 style={{fontSize:16,fontWeight:700,color:"#111827",marginBottom:12,fontFamily:"'Playfair Display',serif"}}>\uD83C\uDFAF Top Recommended Schools</h3><div style={{display:"flex",flexDirection:"column",gap:10}}>{results.top.map(function(s,i){return <SchoolCard key={s.id} school={s} rank={i+1} isTop={true}/>;})}</div></div>)}
+          <div className="sf-results-pill" style={{background:"white",borderRadius:12,padding:"12px 16px",marginBottom:24,fontSize:13,color:"#111827",border:"1px solid #E5E7EB"}}>Matching: <strong>{filters.exam_type} {filters.score}</strong>{filters.work_exp && <span> · {filters.work_exp} yrs</span>}{filters.budget && <span> · {filters.budget}</span>}{filters.region && <span> · {filters.region}</span>}{filters.career_sector && <span> · {filters.career_sector}</span>}</div>
+          {results.top.length>0 && (<div style={{marginBottom:32}}><h3 style={{fontSize:16,fontWeight:700,color:"#111827",marginBottom:12,fontFamily:"'Playfair Display',serif"}}>🎯 Top Recommended Schools</h3><div style={{display:"flex",flexDirection:"column",gap:10}}>{results.top.map(function(s,i){return <SchoolCard key={s.id} school={s} rank={i+1} isTop={true}/>;})}</div></div>)}
           {results.other.length>0 && (<div style={{marginBottom:32}}><h3 style={{fontSize:16,fontWeight:700,color:"#6B7280",marginBottom:12,fontFamily:"'Playfair Display',serif"}}>Other Schools to Consider</h3><div style={{display:"flex",flexDirection:"column",gap:10}}>{results.other.map(function(s,i){return <SchoolCard key={s.id} school={s} rank={results.top.length+i+1} isTop={false}/>;})}</div></div>)}
-          {results.top.length===0 && results.other.length===0 && (<div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16}}>\uD83D\uDD0D</div><h3 style={{fontSize:18,color:"#111827",marginBottom:8,fontFamily:"'Playfair Display',serif"}}>No matches found</h3><p style={{fontSize:14,color:"#6B7280",maxWidth:400,margin:"0 auto"}}>Try adjusting your filters to see more results.</p></div>)}
+          {results.top.length===0 && results.other.length===0 && (<div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16}}>🔍</div><h3 style={{fontSize:18,color:"#111827",marginBottom:8,fontFamily:"'Playfair Display',serif"}}>No matches found</h3><p style={{fontSize:14,color:"#6B7280",maxWidth:400,margin:"0 auto"}}>Try adjusting your filters to see more results.</p></div>)}
         </div>)}
         {!hasSearched && (<div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><h2 style={{fontSize:18,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>All MBA Programs</h2><span style={{fontSize:12,color:"#9CA3AF",fontWeight:500}}>{schools.length} schools \u00B7 FT 2026 Ranking</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><h2 style={{fontSize:18,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>All MBA Programs</h2><span style={{fontSize:12,color:"#9CA3AF",fontWeight:500}}>{schools.length} schools · FT 2026 Ranking</span></div>
           {loading && <div style={{textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}>Loading schools...</div>}
           <div style={{display:"flex",flexDirection:"column",gap:8}}>{schools.map(function(s,i){return <SchoolCard key={s.id} school={s} rank={i+1} isTop={false}/>;})}</div>
         </div>)}
-        <div style={{marginTop:48,background:"#111827",borderRadius:20,padding:"48px 32px",textAlign:"center"}}>
+        <div style={{marginTop:48,background:RED,borderRadius:20,padding:"48px 32px",textAlign:"center"}}>
           <h2 style={{fontSize:24,fontWeight:700,color:"white",marginBottom:12,fontFamily:"'Playfair Display',serif",lineHeight:1.3}}>Found your dream schools?</h2>
-          <p style={{fontSize:15,color:"#D1D5DB",maxWidth:440,margin:"0 auto 24px",lineHeight:1.7}}>Start your application journey with expert guidance. We help you craft compelling applications for your target schools.</p>
-          <a href={WHATSAPP_CONNECT + encodeURIComponent("Hi! I found some schools on your School Finder and I would like to start my application.")} target="_blank" rel="noreferrer" style={{display:"inline-block",padding:"14px 36px",background:RED,color:"white",borderRadius:12,fontSize:15,fontWeight:700,textDecoration:"none",boxShadow:"0 4px 14px rgba(197,48,48,0.3)"}}>Start Your Application With Us \u2192</a>
+          <p style={{fontSize:15,color:"rgba(255,255,255,0.85)",maxWidth:440,margin:"0 auto 24px",lineHeight:1.7}}>Start your application journey with expert guidance. We help you craft compelling applications for your target schools.</p>
+          <a href={WHATSAPP_CONNECT + encodeURIComponent("Hi! I found some schools on your School Finder and I would like to start my application.")} target="_blank" rel="noreferrer" style={{display:"inline-block",padding:"14px 36px",background:RED,color:"white",borderRadius:12,fontSize:15,fontWeight:700,textDecoration:"none",boxShadow:"0 4px 14px rgba(197,48,48,0.3)"}}>Start Your Application With Us →</a>
         </div>
       </div>
       {selectedSchool && <SchoolDetailModal school={selectedSchool} onClose={function(){setSelectedSchool(null);}}/> }
