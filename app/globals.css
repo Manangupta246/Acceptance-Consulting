@@ -21,6 +21,11 @@ body { -webkit-font-smoothing: antialiased; overflow-x: hidden; background-color
 @media (max-width: 900px) {
   .dt-nav { display: none !important; }
   .mob-btn { display: block !important; }
+  .sf-filter-grid { grid-template-columns: 1fr !important; }
+  .sf-card-stats { flex-direction: column !important; gap: 8px !important; align-items: flex-start !important; }
+  .sf-card-stats > div { text-align: left !important; display: flex !important; gap: 6px !important; align-items: center !important; }
+  .sf-detail-grid { grid-template-columns: 1fr 1fr !important; }
+  .sf-card-layout { flex-direction: column !important; }
 }
 
 .blog-content h2 { font-size: 28px; font-weight: 800; margin: 32px 0 16px; }
@@ -78,4 +83,9 @@ body { -webkit-font-smoothing: antialiased; overflow-x: hidden; background-color
   .rankings-grid { grid-template-columns: 1fr !important; }
   .school-grid { grid-template-columns: repeat(3, 1fr) !important; }
   .masonry-grid { column-count: 2 !important; }
+  .sf-filter-grid { grid-template-columns: 1fr !important; }
+  .sf-detail-grid { grid-template-columns: 1fr !important; }
+  .sf-card-main { min-width: 0 !important; }
+  .sf-results-pill { flex-wrap: wrap !important; }
+}
 }
