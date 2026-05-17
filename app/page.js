@@ -3399,7 +3399,12 @@ function SchoolFinderPage({ user, onLoginClick }) {
   useEffect(function () {
     supabase.from("schools").select("*").then(function (res) {
       if (res.data) {
-        res.data.sort(function(a, b) { return (parseInt(a.ft_ranking) || 999) - (parseInt(b.ft_ranking) || 999); });
+        res.data.sort(function(a, b) {
+          var estPos = {"Stanford GSB":3,"Columbia":15,"SDA Bocconi":55,"ESSEC Asia-Pacific":25,"Kelley":75,"Schulich":88,"Melbourne BS":70,"Monash":90,"Smith":80,"Mays":92,"Fisher":85,"Carlson":88,"Vlerick":87,"TBS Education":95,"HHL Leipzig":96,"Lancaster":94,"Strathclyde":95,"NTU Taiwan":93,"KAIST":80,"Babson Olin":89,"Smeal":91,"McDonough":49,"Haskayne":95,"QUT":96,"Kozminski":98,"WU Vienna":93,"Aalto":94,"Antai (SJTU)":60,"Macquarie":95,"UQ Business School":96,"Deakin":97,"UWA":98};
+          var aRank = parseInt(a.ft_ranking) || (estPos[a.short_name] || 999);
+          var bRank = parseInt(b.ft_ranking) || (estPos[b.short_name] || 999);
+          return aRank - bRank;
+        });
         setSchools(res.data);
       }
       setLoading(false);
@@ -3479,6 +3484,7 @@ function SchoolFinderPage({ user, onLoginClick }) {
         {school.top_sectors && <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:700,color:"#2D2A26",marginBottom:6}}>Top Recruiting Sectors</div><p style={{fontSize:13,color:"#6B7280",margin:0,lineHeight:1.6}}>{school.top_sectors}</p></div>}
         {school.post_study_visa && <div style={{marginBottom:16,background:"#EFF6FF",padding:14,borderRadius:10}}><div style={{fontSize:13,fontWeight:700,color:"#1E40AF",marginBottom:6}}>Post-Study Work Visa</div><p style={{fontSize:12,color:"#3B82F6",margin:0,lineHeight:1.6}}>{school.post_study_visa}</p></div>}
         {school.ft_ranking && school.ft_ranking!=="NR" && <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:700,color:"#2D2A26",marginBottom:6}}>Rankings</div><p style={{fontSize:13,color:"#6B7280",margin:0}}>FT 2026: #{school.ft_ranking}{school.qs_ranking?" \u00B7 QS 2025: "+school.qs_ranking:""}</p></div>}
+        {school.ft_ranking==="NR" && <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:700,color:"#2D2A26",marginBottom:6}}>Rankings</div><p style={{fontSize:13,color:"#6B7280",margin:0}}>FT 2026: N/A{school.qs_ranking?" \u00B7 QS 2025: "+school.qs_ranking:""}</p></div>}
         {school.website_url && <a href={school.website_url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",padding:"10px 20px",background:RED,color:"white",borderRadius:10,fontSize:14,fontWeight:600,textDecoration:"none"}}>Visit School Website \u2197</a>}
       </div>
     </div>);
