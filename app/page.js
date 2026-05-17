@@ -701,14 +701,14 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
   const links = [
     { label:"Home", action:()=>{setPage("home");window.scrollTo({top:0,behavior:"smooth"});} },
     { label:"Testimonials", action:()=>{setPage("home");setTimeout(()=>document.getElementById("testimonials")?.scrollIntoView({behavior:"smooth"}),50);} },
-    { label:"Our Team", action:()=>{setPage("home");setTimeout(()=>document.getElementById("our-team")?.scrollIntoView({behavior:"smooth"}),50);} },
     { label:"FAQ", action:()=>{setPage("faq");window.scrollTo(0,0);} },
+    { label:"School Finder", action:()=>{setPage("schools");window.scrollTo(0,0);} },
     { label:"Leaderboard", action:()=>{setPage("leaderboard");window.scrollTo(0,0);} },
     { label:"Study Partner", action:()=>{setPage("partners");window.scrollTo(0,0);} },
     { label:"Forum", action:()=>{setPage("forum");window.scrollTo(0,0);} },
     { label:"Blog", action:()=>{setPage("blog");window.scrollTo(0,0);} },
   ];
-  const isActive = (l) => (page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Study Partner")||(page==="forum"&&l.label==="Forum");
+  const isActive = (l) => (page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Study Partner")||(page==="forum"&&l.label==="Forum")||(page==="schools"&&l.label==="School Finder");
   return (
     <>
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"8px 24px":"12px 24px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",alignItems:"center",gap:"16px"}}>
@@ -3370,6 +3370,355 @@ function ResetPasswordModal({ onClose }) {
   );
 }
 
+/* ── School Finder Page ── */
+function SchoolFinderPage({ user, onLoginClick }) {
+  var [schools, setSchools] = useState([]);
+  var [loading, setLoading] = useState(true);
+  var [showResults, setShowResults] = useState(false);
+  var [results, setResults] = useState({ top: [], other: [] });
+  var [selectedSchool, setSelectedSchool] = useState(null);
+  var [filters, setFilters] = useState({
+    exam_type: "GMAT",
+    score: "",
+    work_exp: "",
+    budget: "",
+    duration: "",
+    region: "",
+    career_sector: "",
+  });
+
+  var budgetRanges = [
+    { label: "Under $50K", min: 0, max: 50000 },
+    { label: "$50K - $100K", min: 50000, max: 100000 },
+    { label: "$100K - $150K", min: 100000, max: 150000 },
+    { label: "$150K - $200K", min: 150000, max: 200000 },
+    { label: "$200K+", min: 200000, max: 999999 },
+  ];
+
+  var regions = ["USA", "UK", "Europe", "Canada", "Singapore", "Hong Kong", "Australia", "India"];
+  var durations = [
+    { label: "1 year (10-14 months)", min: 10, max: 14 },
+    { label: "1.5 years (15-19 months)", min: 15, max: 19 },
+    { label: "2 years (20-24 months)", min: 20, max: 24 },
+  ];
+  var sectors = ["Consulting", "Finance", "Tech", "Healthcare", "FMCG/CPG", "Energy", "General Management", "Entrepreneurship"];
+
+  useEffect(function () {
+    supabase.from("schools").select("*").order("ft_ranking", { ascending: true, nullsFirst: false }).then(function (res) {
+      if (res.data) setSchools(res.data);
+      setLoading(false);
+    });
+  }, []);
+
+  function updateFilter(key, value) {
+    setFilters(Object.assign({}, filters, { [key]: value }));
+  }
+
+  function findSchools() {
+    if (!filters.score) { alert("Please enter your exam score"); return; }
+    var score = parseInt(filters.score);
+    var workExp = filters.work_exp ? parseFloat(filters.work_exp) : null;
+    var top = [];
+    var other = [];
+
+    schools.forEach(function (s) {
+      var reasons = [];
+      var matchScore = 0;
+      var totalCriteria = 0;
+
+      // 1. Score check
+      if (s.avg_gmat || s.avg_gre) {
+        totalCriteria++;
+        var schoolScore = filters.exam_type === "GMAT" ? s.avg_gmat : s.avg_gre;
+        if (schoolScore) {
+          if (score >= schoolScore) {
+            matchScore++;
+          } else if (score >= schoolScore - 20) {
+            matchScore += 0.5;
+            reasons.push("Your " + filters.exam_type + " (" + score + ") is slightly below avg (" + schoolScore + ")");
+          } else {
+            reasons.push("Your " + filters.exam_type + " (" + score + ") is below avg (" + schoolScore + ")");
+          }
+        }
+      }
+
+      // 2. Work experience check
+      if (workExp !== null && s.avg_work_exp) {
+        totalCriteria++;
+        if (workExp >= s.avg_work_exp - 1) {
+          matchScore++;
+        } else {
+          reasons.push("Avg work exp is " + s.avg_work_exp + " yrs (you have " + workExp + ")");
+        }
+      }
+
+      // 3. Budget check (total cost = tuition + living)
+      if (filters.budget) {
+        totalCriteria++;
+        var budget = budgetRanges.find(function (b) { return b.label === filters.budget; });
+        var schoolCost = s.total_cost_usd || s.tuition_usd;
+        if (budget && schoolCost) {
+          if (schoolCost <= budget.max && schoolCost >= budget.min) {
+            matchScore++;
+          } else if (schoolCost > budget.max) {
+            reasons.push("Total cost $" + (schoolCost / 1000).toFixed(0) + "K exceeds your budget");
+          } else {
+            matchScore += 0.5;
+          }
+        }
+      }
+
+      // 4. Duration check
+      if (filters.duration) {
+        totalCriteria++;
+        var dur = durations.find(function (d) { return d.label === filters.duration; });
+        if (dur && s.duration_months) {
+          if (s.duration_months >= dur.min && s.duration_months <= dur.max) {
+            matchScore++;
+          } else {
+            reasons.push("Duration is " + s.duration_months + " months");
+          }
+        }
+      }
+
+      // 5. Region check
+      if (filters.region) {
+        totalCriteria++;
+        var regionMatch = (s.region && s.region.toLowerCase() === filters.region.toLowerCase()) ||
+          (s.country && s.country.toLowerCase().indexOf(filters.region.toLowerCase()) >= 0);
+        if (regionMatch) {
+          matchScore++;
+        } else {
+          reasons.push("Located in " + (s.country || s.region));
+        }
+      }
+
+      // 6. Career sector check
+      if (filters.career_sector && s.top_sectors) {
+        totalCriteria++;
+        if (s.top_sectors.toLowerCase().indexOf(filters.career_sector.toLowerCase()) >= 0) {
+          matchScore++;
+        } else {
+          reasons.push("Top sectors: " + s.top_sectors.substring(0, 60) + "...");
+        }
+      }
+
+      var matchPct = totalCriteria > 0 ? (matchScore / totalCriteria) * 100 : 0;
+      var schoolResult = Object.assign({}, s, { matchPct: Math.round(matchPct), reasons: reasons });
+
+      if (matchPct >= 80) {
+        top.push(schoolResult);
+      } else if (matchPct >= 40) {
+        other.push(schoolResult);
+      }
+    });
+
+    // Sort by match pct, then FT ranking
+    var sortFn = function (a, b) {
+      if (b.matchPct !== a.matchPct) return b.matchPct - a.matchPct;
+      var aRank = parseInt(a.ft_ranking) || 999;
+      var bRank = parseInt(b.ft_ranking) || 999;
+      return aRank - bRank;
+    };
+    top.sort(sortFn);
+    other.sort(sortFn);
+
+    setResults({ top: top.slice(0, 5), other: other.slice(0, 15) });
+    setShowResults(true);
+  }
+
+  function resetFilters() {
+    setFilters({ exam_type: "GMAT", score: "", work_exp: "", budget: "", duration: "", region: "", career_sector: "" });
+    setShowResults(false);
+    setResults({ top: [], other: [] });
+  }
+
+  var sfInput = { width: "100%", padding: "12px 16px", border: "1px solid #E5E7EB", borderRadius: 10, fontSize: 14, fontFamily: "'DM Sans',sans-serif", outline: "none", background: "#FAFAFA", boxSizing: "border-box" };
+
+  function SchoolCard({ school, rank, isTop }) {
+    var ftRank = school.ft_ranking && school.ft_ranking !== "N/R" ? "#" + school.ft_ranking + " FT" : "";
+    return (
+      <div onClick={function () { setSelectedSchool(school); }} style={{ background: "white", borderRadius: 16, padding: "20px 24px", border: isTop ? "2px solid " + RED : "1px solid #E5E7EB", cursor: "pointer", transition: "all 0.2s", position: "relative" }}
+        onMouseEnter={function (e) { e.currentTarget.style.boxShadow = "0 8px 25px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+        onMouseLeave={function (e) { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}>
+        {isTop && <div style={{ position: "absolute", top: -1, right: 20, background: RED, color: "white", padding: "4px 12px", borderRadius: "0 0 8px 8px", fontSize: 11, fontWeight: 700 }}>TOP MATCH</div>}
+        <div className="sf-card-layout" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
+          <div className="sf-card-main" style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              {rank && <span style={{ background: isTop ? RED : "#F3F4F6", color: isTop ? "white" : "#6B7280", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{rank}</span>}
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#111827", fontFamily: "'Playfair Display',serif" }}>{school.short_name}</h3>
+              {school.verified && ""}
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: "#6B7280", fontFamily: "'DM Sans',sans-serif" }}>{school.city}, {school.country} {ftRank && " · " + ftRank}</p>
+          </div>
+          <div className="sf-card-stats" style={{ display: "flex", gap: 20, flexWrap: "wrap", fontSize: 13, fontFamily: "'DM Sans',sans-serif" }}>
+            {school.avg_gmat && <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>GMAT</div><div style={{ fontWeight: 700, color: "#111827" }}>{school.avg_gmat}</div></div>}
+            {school.avg_salary_usd && <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>Salary</div><div style={{ fontWeight: 700, color: "#111827" }}>${(school.avg_salary_usd / 1000).toFixed(0)}K</div></div>}
+            {school.tuition_usd && <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>Total Cost</div><div style={{ fontWeight: 700, color: "#111827" }}>${((school.total_cost_usd || school.tuition_usd) / 1000).toFixed(0)}K</div></div>}
+            {school.duration_months && <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>Duration</div><div style={{ fontWeight: 700, color: "#111827" }}>{school.duration_months}mo</div></div>}
+            <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>Match</div><div style={{ fontWeight: 700, color: school.matchPct >= 80 ? "#059669" : school.matchPct >= 60 ? "#D97706" : "#9CA3AF" }}>{school.matchPct}%</div></div>
+          </div>
+        </div>
+        {school.reasons && school.reasons.length > 0 && (
+          <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {school.reasons.slice(0, 2).map(function (r, i) { return (<span key={i} style={{ fontSize: 11, background: "#FEF3C7", color: "#92400E", padding: "3px 8px", borderRadius: 6 }}>{r}</span>); })}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function SchoolDetailModal({ school, onClose }) {
+    if (!school) return null;
+    return (
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: 20 }}>
+        <div onClick={function (e) { e.stopPropagation(); }} style={{ background: "white", borderRadius: 20, padding: 32, width: "100%", maxWidth: 600, maxHeight: "90vh", overflowY: "auto", boxShadow: "0 25px 60px rgba(0,0,0,0.15)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700, fontFamily: "'Playfair Display',serif", color: "#111827" }}>{school.short_name}</h2>
+              <p style={{ margin: "4px 0 0", fontSize: 14, color: "#6B7280", fontFamily: "'DM Sans',sans-serif" }}>{school.full_name}</p>
+              <p style={{ margin: "4px 0 0", fontSize: 13, color: "#9CA3AF" }}>{school.city}, {school.country}</p>
+            </div>
+            <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, color: "#9CA3AF", cursor: "pointer" }}>&#10005;</button>
+          </div>
+
+          {false && school.verified && <div style={{ background: "#D1FAE5", color: "#065F46", padding: "8px 14px", borderRadius: 10, fontSize: 12, fontWeight: 600, marginBottom: 16 }}>✓ Data verified from official sources (Clear Admit)</div>}
+
+          <div className="sf-detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+            {school.avg_gmat && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Avg GMAT</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>{school.avg_gmat}</div></div>}
+            {school.avg_gre && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Avg GRE</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>{school.avg_gre}</div></div>}
+            {school.avg_salary_usd && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Avg Salary Post-MBA</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>${school.avg_salary_usd.toLocaleString()}</div></div>}
+            {school.tuition_usd && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Tuition (USD)</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>${school.tuition_usd.toLocaleString()}</div></div>}
+            {school.total_cost_usd && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Total Cost (Tuition + Living)</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>${school.total_cost_usd.toLocaleString()}</div></div>}
+            {school.batch_size && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Class Size</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>{school.batch_size}</div></div>}
+            {school.avg_work_exp && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Avg Work Experience</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>{school.avg_work_exp} yrs</div></div>}
+            {school.duration_months && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Duration</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>{school.duration_months} months</div></div>}
+            {school.acceptance_rate && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Acceptance Rate</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>{school.acceptance_rate}%</div></div>}
+          </div>
+
+          {school.top_sectors && <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Top Recruiting Sectors</div><p style={{ fontSize: 13, color: "#6B7280", margin: 0, lineHeight: 1.6 }}>{school.top_sectors}</p></div>}
+
+          {school.post_study_visa && <div style={{ marginBottom: 16, background: "#EFF6FF", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 13, fontWeight: 700, color: "#1E40AF", marginBottom: 6 }}>🛂 Post-Study Work Visa</div><p style={{ fontSize: 12, color: "#3B82F6", margin: 0, lineHeight: 1.6 }}>{school.post_study_visa}</p></div>}
+
+          {school.ft_ranking && <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 6 }}>Rankings</div><p style={{ fontSize: 13, color: "#6B7280", margin: 0 }}>FT 2025: {school.ft_ranking}{school.qs_ranking ? " · QS 2025: " + school.qs_ranking : ""}</p></div>}
+
+          {school.website_url && <a href={school.website_url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "10px 20px", background: RED, color: "white", borderRadius: 10, fontSize: 14, fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans',sans-serif" }}>Visit School Website ↗</a>}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 20px", fontFamily: "'DM Sans',sans-serif" }}>
+      <div style={{ textAlign: "center", marginBottom: 40 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8, fontFamily: "'Playfair Display',serif" }}>School Finder</h1>
+        <p style={{ fontSize: 15, color: "#6B7280", maxWidth: 500, margin: "0 auto", lineHeight: 1.6 }}>Find the best MBA programs that match your profile, budget, and career goals.</p>
+      </div>
+
+      {!showResults ? (
+        <div style={{ background: "white", borderRadius: 20, padding: 32, boxShadow: "0 4px 20px rgba(0,0,0,0.06)", border: "1px solid #F3F4F6" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: "0 0 24px", fontFamily: "'Playfair Display',serif" }}>Tell us about yourself</h2>
+
+          <div className="sf-filter-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block" }}>Exam Type *</label>
+              <select style={sfInput} value={filters.exam_type} onChange={function (e) { updateFilter("exam_type", e.target.value); }}>
+                <option value="GMAT">GMAT</option>
+                <option value="GRE">GRE</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block" }}>{filters.exam_type} Score *</label>
+              <input type="number" style={sfInput} placeholder={filters.exam_type === "GMAT" ? "e.g. 700" : "e.g. 320"} value={filters.score} onChange={function (e) { updateFilter("score", e.target.value); }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block" }}>Work Experience (years)</label>
+              <input type="number" step="0.5" style={sfInput} placeholder="e.g. 4" value={filters.work_exp} onChange={function (e) { updateFilter("work_exp", e.target.value); }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block" }}>Total Budget (Tuition + Living)</label>
+              <select style={sfInput} value={filters.budget} onChange={function (e) { updateFilter("budget", e.target.value); }}>
+                <option value="">Any budget</option>
+                {budgetRanges.map(function (b) { return <option key={b.label} value={b.label}>{b.label}</option>; })}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block" }}>Preferred Duration</label>
+              <select style={sfInput} value={filters.duration} onChange={function (e) { updateFilter("duration", e.target.value); }}>
+                <option value="">Any duration</option>
+                {durations.map(function (d) { return <option key={d.label} value={d.label}>{d.label}</option>; })}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block" }}>Preferred Region</label>
+              <select style={sfInput} value={filters.region} onChange={function (e) { updateFilter("region", e.target.value); }}>
+                <option value="">Any region</option>
+                {regions.map(function (r) { return <option key={r} value={r}>{r}</option>; })}
+              </select>
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block" }}>Target Career Sector</label>
+              <select style={sfInput} value={filters.career_sector} onChange={function (e) { updateFilter("career_sector", e.target.value); }}>
+                <option value="">Any sector</option>
+                {sectors.map(function (s) { return <option key={s} value={s}>{s}</option>; })}
+              </select>
+            </div>
+          </div>
+
+          <button onClick={findSchools} disabled={loading} style={{ width: "100%", marginTop: 24, padding: 16, background: RED, color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+            {loading ? "Loading schools..." : "Find My Schools"}
+          </button>
+
+          <p style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", marginTop: 12 }}>Based on data from {schools.length} MBA programs worldwide</p>
+        </div>
+      ) : (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#111827", margin: 0, fontFamily: "'Playfair Display',serif" }}>Your Matches</h2>
+            <button onClick={resetFilters} style={{ padding: "8px 20px", background: "white", color: RED, border: "2px solid " + RED, borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>← Modify Search</button>
+          </div>
+
+          <div className="sf-results-pill" style={{ background: "#FEF2F2", borderRadius: 12, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: "#991B1B" }}>
+            Showing results for: <strong>{filters.exam_type} {filters.score}</strong>
+            {filters.work_exp && <span> · {filters.work_exp} yrs exp</span>}
+            {filters.budget && <span> · {filters.budget}</span>}
+            {filters.region && <span> · {filters.region}</span>}
+            {filters.career_sector && <span> · {filters.career_sector}</span>}
+          </div>
+
+          {results.top.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 12, fontFamily: "'Playfair Display',serif" }}>🎯 Top Recommended Schools</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {results.top.map(function (s, i) { return <SchoolCard key={s.id} school={s} rank={i + 1} isTop={true} />; })}
+              </div>
+            </div>
+          )}
+
+          {results.other.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: "#374151", marginBottom: 12, fontFamily: "'Playfair Display',serif" }}>Other Schools to Consider</h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {results.other.map(function (s, i) { return <SchoolCard key={s.id} school={s} rank={results.top.length + i + 1} isTop={false} />; })}
+              </div>
+            </div>
+          )}
+
+          {results.top.length === 0 && results.other.length === 0 && (
+            <div style={{ textAlign: "center", padding: "60px 20px" }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+              <h3 style={{ fontSize: 18, color: "#374151", marginBottom: 8, fontFamily: "'Playfair Display',serif" }}>No matches found</h3>
+              <p style={{ fontSize: 14, color: "#6B7280", maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>Try adjusting your filters — remove some criteria to see more results.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {selectedSchool && <SchoolDetailModal school={selectedSchool} onClose={function () { setSelectedSchool(null); }} />}
+    </div>
+  );
+}
+
 function HomePage() {
   return (<><Hero/><SchoolLogos/><ServicesSection/><TestimonialsSection/><ChatScreenshotsSection/><NotTypical/><TeamSection/><CommunitySection/><CommunityProof/><CTA/></>);
 }
@@ -3524,6 +3873,7 @@ export default function App() {
       {page==="blog"&&<BlogPage user={user}/>}
       {page==="leaderboard"&&<LeaderboardPage user={user} onOpenChat={openChat} onLoginClick={()=>setShowAuth(true)}/>}
       {page==="partners"&&<AccountabilityPage user={user} onLoginClick={()=>setShowAuth(true)} onOpenChat={openChat}/>}
+      {page==="schools"&&<SchoolFinderPage user={user} onLoginClick={()=>setShowAuth(true)}/>}
       {page==="forum"&&<ForumPage user={user} onLoginClick={()=>setShowAuth(true)}/>}
       {page==="admin"&&<AdminDashboard user={user}/>}
       <Footer/>
