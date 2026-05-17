@@ -3374,7 +3374,8 @@ function ResetPasswordModal({ onClose }) {
 function SchoolFinderPage({ user, onLoginClick }) {
   var [schools, setSchools] = useState([]);
   var [loading, setLoading] = useState(true);
-  var [showResults, setShowResults] = useState(false);
+  var [showFilters, setShowFilters] = useState(false);
+  var [hasSearched, setHasSearched] = useState(false);
   var [results, setResults] = useState({ top: [], other: [] });
   var [selectedSchool, setSelectedSchool] = useState(null);
   var [filters, setFilters] = useState({
@@ -3404,8 +3405,16 @@ function SchoolFinderPage({ user, onLoginClick }) {
   var sectors = ["Consulting", "Finance", "Tech", "Healthcare", "FMCG/CPG", "Energy", "General Management", "Entrepreneurship"];
 
   useEffect(function () {
-    supabase.from("schools").select("*").order("ft_ranking", { ascending: true, nullsFirst: false }).then(function (res) {
-      if (res.data) setSchools(res.data);
+    supabase.from("schools").select("*").then(function (res) {
+      if (res.data) {
+        // Sort by FT ranking (numeric, nulls last)
+        res.data.sort(function(a, b) {
+          var aRank = parseInt(a.ft_ranking) || 999;
+          var bRank = parseInt(b.ft_ranking) || 999;
+          return aRank - bRank;
+        });
+        setSchools(res.data);
+      }
       setLoading(false);
     });
   }, []);
@@ -3513,7 +3522,6 @@ function SchoolFinderPage({ user, onLoginClick }) {
       }
     });
 
-    // Sort by match pct, then FT ranking
     var sortFn = function (a, b) {
       if (b.matchPct !== a.matchPct) return b.matchPct - a.matchPct;
       var aRank = parseInt(a.ft_ranking) || 999;
@@ -3524,12 +3532,13 @@ function SchoolFinderPage({ user, onLoginClick }) {
     other.sort(sortFn);
 
     setResults({ top: top.slice(0, 5), other: other.slice(0, 15) });
-    setShowResults(true);
+    setHasSearched(true);
+    setShowFilters(false);
   }
 
   function resetFilters() {
     setFilters({ exam_type: "GMAT", score: "", work_exp: "", budget: "", duration: "", region: "", career_sector: "" });
-    setShowResults(false);
+    setHasSearched(false);
     setResults({ top: [], other: [] });
   }
 
@@ -3547,7 +3556,6 @@ function SchoolFinderPage({ user, onLoginClick }) {
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
               {rank && <span style={{ background: isTop ? RED : "#F3F4F6", color: isTop ? "white" : "#6B7280", width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{rank}</span>}
               <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: "#111827", fontFamily: "'Playfair Display',serif" }}>{school.short_name}</h3>
-              {school.verified && ""}
             </div>
             <p style={{ margin: 0, fontSize: 13, color: "#6B7280", fontFamily: "'DM Sans',sans-serif" }}>{school.city}, {school.country} {ftRank && " · " + ftRank}</p>
           </div>
@@ -3556,7 +3564,7 @@ function SchoolFinderPage({ user, onLoginClick }) {
             {school.avg_salary_usd && <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>Salary</div><div style={{ fontWeight: 700, color: "#111827" }}>${(school.avg_salary_usd / 1000).toFixed(0)}K</div></div>}
             {school.tuition_usd && <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>Total Cost</div><div style={{ fontWeight: 700, color: "#111827" }}>${((school.total_cost_usd || school.tuition_usd) / 1000).toFixed(0)}K</div></div>}
             {school.duration_months && <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>Duration</div><div style={{ fontWeight: 700, color: "#111827" }}>{school.duration_months}mo</div></div>}
-            <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>Match</div><div style={{ fontWeight: 700, color: school.matchPct >= 80 ? "#059669" : school.matchPct >= 60 ? "#D97706" : "#9CA3AF" }}>{school.matchPct}%</div></div>
+            {school.matchPct !== undefined && school.matchPct > 0 && <div style={{ textAlign: "center" }}><div style={{ color: "#9CA3AF", fontSize: 11 }}>Match</div><div style={{ fontWeight: 700, color: school.matchPct >= 80 ? "#059669" : school.matchPct >= 60 ? "#D97706" : "#9CA3AF" }}>{school.matchPct}%</div></div>}
           </div>
         </div>
         {school.reasons && school.reasons.length > 0 && (
@@ -3581,8 +3589,6 @@ function SchoolFinderPage({ user, onLoginClick }) {
             </div>
             <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, color: "#9CA3AF", cursor: "pointer" }}>&#10005;</button>
           </div>
-
-          {false && school.verified && <div style={{ background: "#D1FAE5", color: "#065F46", padding: "8px 14px", borderRadius: 10, fontSize: 12, fontWeight: 600, marginBottom: 16 }}>✓ Data verified from official sources (Clear Admit)</div>}
 
           <div className="sf-detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
             {school.avg_gmat && <div style={{ background: "#F9FAFB", padding: 14, borderRadius: 10 }}><div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 4 }}>Avg GMAT</div><div style={{ fontSize: 18, fontWeight: 700, color: "#111827" }}>{school.avg_gmat}</div></div>}
@@ -3609,17 +3615,28 @@ function SchoolFinderPage({ user, onLoginClick }) {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 20px", fontFamily: "'DM Sans',sans-serif" }}>
-      <div style={{ textAlign: "center", marginBottom: 40 }}>
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "100px 20px 40px", fontFamily: "'DM Sans',sans-serif" }}>
+      <div style={{ textAlign: "center", marginBottom: 32 }}>
         <h1 style={{ fontSize: 32, fontWeight: 700, color: "#111827", marginBottom: 8, fontFamily: "'Playfair Display',serif" }}>School Finder</h1>
         <p style={{ fontSize: 15, color: "#6B7280", maxWidth: 500, margin: "0 auto", lineHeight: 1.6 }}>Find the best MBA programs that match your profile, budget, and career goals.</p>
       </div>
 
-      {!showResults ? (
-        <div style={{ background: "white", borderRadius: 20, padding: 32, boxShadow: "0 4px 20px rgba(0,0,0,0.06)", border: "1px solid #F3F4F6" }}>
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: "0 0 24px", fontFamily: "'Playfair Display',serif" }}>Tell us about yourself</h2>
+      {/* Filter toggle button */}
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        {!hasSearched ? (
+          <button onClick={function() { setShowFilters(!showFilters); }} style={{ padding: "12px 28px", background: showFilters ? "#374151" : RED, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+            {showFilters ? "Hide Filters ▲" : "🎯 Find Schools That Match My Profile"}
+          </button>
+        ) : (
+          <button onClick={resetFilters} style={{ padding: "10px 24px", background: "white", color: RED, border: "2px solid " + RED, borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>← Clear Filters · Show All Schools</button>
+        )}
+      </div>
 
-          <div className="sf-filter-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      {/* Collapsible filter form */}
+      {showFilters && !hasSearched && (
+        <div style={{ background: "white", borderRadius: 20, padding: 28, boxShadow: "0 4px 20px rgba(0,0,0,0.06)", border: "1px solid #F3F4F6", marginBottom: 28 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111827", margin: "0 0 20px", fontFamily: "'Playfair Display',serif" }}>Tell us about yourself</h2>
+          <div className="sf-filter-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6, display: "block" }}>Exam Type *</label>
               <select style={sfInput} value={filters.exam_type} onChange={function (e) { updateFilter("exam_type", e.target.value); }}>
@@ -3664,22 +3681,17 @@ function SchoolFinderPage({ user, onLoginClick }) {
               </select>
             </div>
           </div>
-
-          <button onClick={findSchools} disabled={loading} style={{ width: "100%", marginTop: 24, padding: 16, background: RED, color: "white", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
-            {loading ? "Loading schools..." : "Find My Schools"}
+          <button onClick={findSchools} disabled={loading} style={{ width: "100%", marginTop: 20, padding: 14, background: RED, color: "white", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>
+            {loading ? "Loading..." : "Find My Schools"}
           </button>
-
-          <p style={{ fontSize: 12, color: "#9CA3AF", textAlign: "center", marginTop: 12 }}>Based on data from {schools.length} MBA programs worldwide</p>
         </div>
-      ) : (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#111827", margin: 0, fontFamily: "'Playfair Display',serif" }}>Your Matches</h2>
-            <button onClick={resetFilters} style={{ padding: "8px 20px", background: "white", color: RED, border: "2px solid " + RED, borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}>← Modify Search</button>
-          </div>
+      )}
 
+      {/* Results from matching */}
+      {hasSearched && (
+        <div>
           <div className="sf-results-pill" style={{ background: "#FEF2F2", borderRadius: 12, padding: "12px 16px", marginBottom: 24, fontSize: 13, color: "#991B1B" }}>
-            Showing results for: <strong>{filters.exam_type} {filters.score}</strong>
+            Showing matches for: <strong>{filters.exam_type} {filters.score}</strong>
             {filters.work_exp && <span> · {filters.work_exp} yrs exp</span>}
             {filters.budget && <span> · {filters.budget}</span>}
             {filters.region && <span> · {filters.region}</span>}
@@ -3714,6 +3726,20 @@ function SchoolFinderPage({ user, onLoginClick }) {
         </div>
       )}
 
+      {/* Default: Show all schools sorted by FT ranking */}
+      {!hasSearched && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#111827", margin: 0, fontFamily: "'Playfair Display',serif" }}>All MBA Programs</h2>
+            <span style={{ fontSize: 13, color: "#9CA3AF" }}>{schools.length} schools · sorted by FT Ranking</span>
+          </div>
+          {loading && <div style={{ textAlign: "center", padding: "60px 20px", color: "#9CA3AF" }}>Loading schools...</div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {schools.map(function (s, i) { return <SchoolCard key={s.id} school={s} rank={i + 1} isTop={false} />; })}
+          </div>
+        </div>
+      )}
+
       {selectedSchool && <SchoolDetailModal school={selectedSchool} onClose={function () { setSelectedSchool(null); }} />}
     </div>
   );
@@ -3735,7 +3761,7 @@ export default function App() {
   function getInitialPage() {
     if (typeof window !== "undefined") {
       var hash = window.location.hash.replace("#", "");
-      if (["home","blog","faq","leaderboard","partners","forum","admin"].indexOf(hash) !== -1) return hash;
+      if (["home","blog","faq","leaderboard","partners","forum","admin","schools"].indexOf(hash) !== -1) return hash;
     }
     return "home";
   }
@@ -3750,7 +3776,7 @@ export default function App() {
   useEffect(function() {
     function onHashChange() {
       var hash = window.location.hash.replace("#", "");
-      if (["home","blog","faq","leaderboard","partners","forum","admin"].indexOf(hash) !== -1) {
+      if (["home","blog","faq","leaderboard","partners","forum","admin","schools"].indexOf(hash) !== -1) {
         setPageState(hash);
       } else {
         setPageState("home");
