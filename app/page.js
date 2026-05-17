@@ -1228,6 +1228,47 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
   var [selectedProfileData, setSelectedProfileData] = useState(null);
   var [selectedConnStatus, setSelectedConnStatus] = useState(null);
   var [connections, setConnections] = useState([]);
+  var [myProfile, setMyProfile] = useState(null);
+  var [showProfileModal, setShowProfileModal] = useState(false);
+  var [profileForm, setProfileForm] = useState({ target_exam:"GMAT", target_score:"", exam_date:"", target_schools:"", study_style:"", bio:"", linkedin_url:"" });
+  var [savingProfile, setSavingProfile] = useState(false);
+  var hasProfile = user && myProfile && myProfile.target_exam;
+
+  // Fetch my profile
+  useEffect(function() {
+    if (!user) return;
+    supabase.from("profiles").select("*").eq("id", user.id).single().then(function(res) {
+      if (res.data) {
+        setMyProfile(res.data);
+        setProfileForm({ target_exam:res.data.target_exam||"GMAT", target_score:res.data.target_score||"", exam_date:res.data.exam_date||"", target_schools:res.data.target_schools||"", study_style:res.data.study_style||"", bio:res.data.bio||"", linkedin_url:res.data.linkedin_url||"" });
+      }
+    });
+  }, [user]);
+
+  // Save profile
+  async function handleSaveProfile() {
+    if (!user) return;
+    setSavingProfile(true);
+    var payload = { id:user.id, target_exam:profileForm.target_exam, target_score:profileForm.target_score||null, exam_date:profileForm.exam_date||null, target_schools:profileForm.target_schools||null, study_style:profileForm.study_style||null, bio:profileForm.bio||null, linkedin_url:profileForm.linkedin_url||null };
+    if (!myProfile) {
+      payload.full_name = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+    }
+    var { error } = await supabase.from("profiles").upsert([payload]);
+    if (error) { alert("Error saving profile: " + error.message); }
+    else {
+      var { data: updated } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      if (updated) setMyProfile(updated);
+      setShowProfileModal(false);
+    }
+    setSavingProfile(false);
+  }
+
+  // Handle Log Score click - check profile first
+  function handleLogScoreClick() {
+    if (!user) { onLoginClick(); return; }
+    if (!hasProfile) { setShowProfileModal(true); return; }
+    setShowScoreModal(true);
+  }
 
   // Fetch user connections for profile modal
   useEffect(function() {
@@ -1367,7 +1408,7 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
             <h1 style={{fontFamily: "'Playfair Display',serif", fontSize: "clamp(28px,4vw,36px)", fontWeight: 700, color: "#111827", margin: 0}}>Prep Leaderboard</h1>
             <p style={{fontSize: 15, color: "#6B7280", marginTop: 6, marginBottom: 0, fontFamily: "'DM Sans',sans-serif"}}>{"Track your " + examType + " prep progress. Compete with fellow aspirants."}</p>
           </div>
-          {user && (<button onClick={function() {setShowScoreModal(true);}} style={{display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}><LbPlusIcon /> Log Study Session</button>)}
+          <button onClick={handleLogScoreClick} style={{display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 24px", background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}><LbPlusIcon /> Log Study Session</button>
         </div>
 
         {/* Exam Tabs */}
@@ -1387,7 +1428,7 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
         {loading && (<div style={{marginTop: 32}}>{[1, 2, 3, 4, 5].map(function(i) {return <div key={i} style={{background: "linear-gradient(90deg,#F3F4F6 25%,#E5E7EB 50%,#F3F4F6 75%)", backgroundSize: "200% 100%", animation: "lbShimmer 1.5s infinite", borderRadius: 8, height: 60, marginBottom: 8}} />;})}</div>)}
 
         {/* Empty */}
-        {!loading && leaderboardData.length === 0 && (<div style={{textAlign: "center", padding: "80px 20px", color: "#9CA3AF"}}><div style={{fontSize: 48, marginBottom: 16}}>&#128202;</div><h3 style={{fontSize: 20, color: "#374151", marginBottom: 8, fontFamily: "'Playfair Display',serif"}}>No scores yet for this period</h3><p style={{fontSize: 14, maxWidth: 400, margin: "0 auto", lineHeight: 1.6, fontFamily: "'DM Sans',sans-serif"}}>{"Be the first to log your " + examType + " study session and claim the top spot."}</p>{user && (<button onClick={function() {setShowScoreModal(true);}} style={{marginTop: 20, padding: "12px 28px", background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Log Your First Session</button>)}</div>)}
+        {!loading && leaderboardData.length === 0 && (<div style={{textAlign: "center", padding: "80px 20px", color: "#9CA3AF"}}><div style={{fontSize: 48, marginBottom: 16}}>&#128202;</div><h3 style={{fontSize: 20, color: "#374151", marginBottom: 8, fontFamily: "'Playfair Display',serif"}}>No scores yet for this period</h3><p style={{fontSize: 14, maxWidth: 400, margin: "0 auto", lineHeight: 1.6, fontFamily: "'DM Sans',sans-serif"}}>{"Be the first to log your " + examType + " study session and claim the top spot."}</p><button onClick={handleLogScoreClick} style={{marginTop: 20, padding: "12px 28px", background: RED, color: "white", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif"}}>Log Your First Session</button></div>)}
 
         {/* Top 3 Podium */}
         {!loading && leaderboardData.length > 0 && (<div>
@@ -1516,6 +1557,35 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
               </div>)}
             </div>);
           })()}
+        </div>
+      </div>)}
+
+      {/* Profile Setup Modal */}
+      {showProfileModal && (<div onClick={function(){setShowProfileModal(false);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1100,padding:20}}>
+        <div onClick={function(e){e.stopPropagation();}} style={{background:"white",borderRadius:20,padding:32,width:"100%",maxWidth:480,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 25px 60px rgba(0,0,0,0.15)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+            <h3 style={{fontSize:18,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>Set Up Your Profile</h3>
+            <button onClick={function(){setShowProfileModal(false);}} style={{background:"none",border:"none",fontSize:22,color:"#9CA3AF",cursor:"pointer"}}>&#10005;</button>
+          </div>
+          <p style={{fontSize:13,color:"#6B7280",marginBottom:20,fontFamily:"'DM Sans',sans-serif"}}>Fill in your exam details to start logging scores on the leaderboard. This also helps you find study partners.</p>
+          <div style={{display:"flex",flexDirection:"column",gap:16}}>
+            <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Exam Type *</label>
+              <select style={{width:"100%",padding:"12px 16px",border:"1px solid #E5E7EB",borderRadius:10,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#FAFAFA",boxSizing:"border-box"}} value={profileForm.target_exam} onChange={function(e){setProfileForm(Object.assign({},profileForm,{target_exam:e.target.value}));}}>
+                <option value="GMAT">GMAT</option><option value="GRE">GRE</option>
+              </select>
+            </div>
+            <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Target Score</label><input type="number" style={{width:"100%",padding:"12px 16px",border:"1px solid #E5E7EB",borderRadius:10,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#FAFAFA",boxSizing:"border-box"}} placeholder={profileForm.target_exam==="GMAT"?"e.g. 720":"e.g. 325"} value={profileForm.target_score} onChange={function(e){setProfileForm(Object.assign({},profileForm,{target_score:e.target.value}));}}/></div>
+            <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Exam Date</label><input type="date" style={{width:"100%",padding:"12px 16px",border:"1px solid #E5E7EB",borderRadius:10,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#FAFAFA",boxSizing:"border-box"}} value={profileForm.exam_date} onChange={function(e){setProfileForm(Object.assign({},profileForm,{exam_date:e.target.value}));}}/></div>
+            <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Target Schools</label><input type="text" style={{width:"100%",padding:"12px 16px",border:"1px solid #E5E7EB",borderRadius:10,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#FAFAFA",boxSizing:"border-box"}} placeholder="e.g. ISB, INSEAD, LBS" value={profileForm.target_schools} onChange={function(e){setProfileForm(Object.assign({},profileForm,{target_schools:e.target.value}));}}/></div>
+            <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Study Style</label>
+              <select style={{width:"100%",padding:"12px 16px",border:"1px solid #E5E7EB",borderRadius:10,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#FAFAFA",boxSizing:"border-box"}} value={profileForm.study_style} onChange={function(e){setProfileForm(Object.assign({},profileForm,{study_style:e.target.value}));}}>
+                <option value="">Select...</option><option value="morning">Morning</option><option value="evening">Evening</option><option value="night">Night Owl</option><option value="flexible">Flexible</option>
+              </select>
+            </div>
+            <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>Short Bio <span style={{color:"#9CA3AF",fontWeight:400}}>(optional)</span></label><textarea style={{width:"100%",padding:"12px 16px",border:"1px solid #E5E7EB",borderRadius:10,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#FAFAFA",boxSizing:"border-box",resize:"vertical"}} rows={2} placeholder="Tell others about yourself..." value={profileForm.bio} onChange={function(e){setProfileForm(Object.assign({},profileForm,{bio:e.target.value}));}}/></div>
+            <div><label style={{fontSize:13,fontWeight:600,color:"#374151",marginBottom:6,display:"block"}}>LinkedIn Profile <span style={{color:"#9CA3AF",fontWeight:400}}>(optional)</span></label><input type="url" style={{width:"100%",padding:"12px 16px",border:"1px solid #E5E7EB",borderRadius:10,fontSize:14,fontFamily:"'DM Sans',sans-serif",outline:"none",background:"#FAFAFA",boxSizing:"border-box"}} placeholder="https://www.linkedin.com/in/yourprofile" value={profileForm.linkedin_url} onChange={function(e){setProfileForm(Object.assign({},profileForm,{linkedin_url:e.target.value}));}}/></div>
+          </div>
+          <button onClick={handleSaveProfile} disabled={savingProfile||!profileForm.target_exam} style={{width:"100%",marginTop:20,padding:14,background:savingProfile?"#D1D5DB":RED,color:"white",border:"none",borderRadius:10,fontSize:15,fontWeight:600,cursor:savingProfile?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>{savingProfile?"Saving...":"Save Profile & Continue"}</button>
         </div>
       </div>)}
     </div>
