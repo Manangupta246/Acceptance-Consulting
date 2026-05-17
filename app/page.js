@@ -1292,7 +1292,7 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
           if (!userMap[uid]) { userMap[uid] = { user_id: uid, questions_solved: 0, questions_correct: 0, study_hours: 0, days_active: new Set(), log_dates: [] }; }
           userMap[uid].questions_solved += row.questions_solved || 0;
           userMap[uid].questions_correct += row.questions_correct || 0;
-          userMap[uid].study_hours += row.study_hours || 0;
+          userMap[uid].study_hours = Math.round((userMap[uid].study_hours + (row.study_hours || 0)) * 10) / 10;
           userMap[uid].days_active.add(row.log_date);
           userMap[uid].log_dates.push(row.log_date);
         });
@@ -1427,7 +1427,7 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
                 <span style={{fontSize: 13, fontWeight: 600, color: "#111827"}}>{entry.questions_solved}</span>
                 <span style={{fontSize: 13, color: "#374151"}}>{entry.questions_correct}</span>
                 <span style={{fontSize: 13, color: "#374151"}}>{lbFormatScore(entry.accuracy) + "%"}</span>
-                <span className="lb-hide-mobile" style={{fontSize: 13, color: "#374151"}}>{entry.study_hours + "h"}</span>
+                <span className="lb-hide-mobile" style={{fontSize: 13, color: "#374151"}}>{lbFormatScore(entry.study_hours) + "h"}</span>
                 <span className="lb-hide-mobile" style={{fontSize: 13, color: "#374151"}}>{entry.days_active}</span>
               </div>);
             })}
