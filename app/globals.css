@@ -88,4 +88,3 @@ body { -webkit-font-smoothing: antialiased; overflow-x: hidden; background-color
   .sf-card-main { min-width: 0 !important; }
   .sf-results-pill { flex-wrap: wrap !important; }
 }
-}
