@@ -469,7 +469,7 @@ function BlogEditor({ post, onSave, onCancel }) {
   };
 
   return (
-    <div style={{paddingTop:"100px",minHeight:"100vh",background:"#fff"}}>
+    <div style={{paddingTop:"100px",minHeight:"100vh",background:"linear-gradient(180deg, #fff 0%, "+RED_BG+" 50%, #fff 100%)"}}>
       <div style={{...sps,...mws,maxWidth:"800px"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"36px",flexWrap:"wrap",gap:"12px"}}>
           <h1 style={{...hs("clamp(24px,4vw,36px)"),margin:0}}>{post?.id ? "Edit Post" : "New Blog Post"}</h1>
@@ -3451,10 +3451,10 @@ function SchoolFinderPage({ user, onLoginClick }) {
           <p style={{margin:"0 0 0 38px",fontSize:12,color:"#6B7280"}}>{school.city}, {school.country}{ft?" · "+ft:""}</p>
         </div>
         <div className="sf-card-stats" style={{display:"flex",gap:12,flexWrap:"wrap",fontSize:13}}>
-          {school.avg_gmat && <div style={{textAlign:"center",padding:"6px 10px",background:"#F9FAFB",borderRadius:8,minWidth:48}}><div style={{color:"#9CA3AF",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>GMAT</div><div style={{fontWeight:700,color:"#111827",fontSize:15}}>{school.avg_gmat}</div></div>}
-          {school.avg_salary_usd && <div style={{textAlign:"center",padding:"6px 10px",background:"#F9FAFB",borderRadius:8,minWidth:48}}><div style={{color:"#9CA3AF",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>Salary</div><div style={{fontWeight:700,color:"#111827",fontSize:15}}>${(school.avg_salary_usd/1000).toFixed(0)}K</div></div>}
-          {school.tuition_usd && <div style={{textAlign:"center",padding:"6px 10px",background:"#F9FAFB",borderRadius:8,minWidth:48}}><div style={{color:"#9CA3AF",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>Cost</div><div style={{fontWeight:700,color:"#111827",fontSize:15}}>${((school.total_cost_usd||school.tuition_usd)/1000).toFixed(0)}K</div></div>}
-          {school.duration_months && <div style={{textAlign:"center",padding:"6px 10px",background:"#F9FAFB",borderRadius:8,minWidth:48}}><div style={{color:"#9CA3AF",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>Months</div><div style={{fontWeight:700,color:"#111827",fontSize:15}}>{school.duration_months}</div></div>}
+          {school.avg_gmat && <div style={{textAlign:"center",padding:"6px 10px",background:RED_BG,borderRadius:8,minWidth:48}}><div style={{color:"#9CA3AF",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>GMAT</div><div style={{fontWeight:700,color:"#111827",fontSize:15}}>{school.avg_gmat}</div></div>}
+          {school.avg_salary_usd && <div style={{textAlign:"center",padding:"6px 10px",background:RED_BG,borderRadius:8,minWidth:48}}><div style={{color:"#9CA3AF",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>Salary</div><div style={{fontWeight:700,color:"#111827",fontSize:15}}>${(school.avg_salary_usd/1000).toFixed(0)}K</div></div>}
+          {school.tuition_usd && <div style={{textAlign:"center",padding:"6px 10px",background:RED_BG,borderRadius:8,minWidth:48}}><div style={{color:"#9CA3AF",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>Cost</div><div style={{fontWeight:700,color:"#111827",fontSize:15}}>${((school.total_cost_usd||school.tuition_usd)/1000).toFixed(0)}K</div></div>}
+          {school.duration_months && <div style={{textAlign:"center",padding:"6px 10px",background:RED_BG,borderRadius:8,minWidth:48}}><div style={{color:"#9CA3AF",fontSize:10,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>Months</div><div style={{fontWeight:700,color:"#111827",fontSize:15}}>{school.duration_months}</div></div>}
           {school.matchPct>0 && <div style={{textAlign:"center",padding:"6px 10px",background:school.matchPct>=80?"#ECFDF5":"#FFFBEB",borderRadius:8,minWidth:48}}><div style={{color:school.matchPct>=80?"#059669":"#D97706",fontSize:10,fontWeight:600,textTransform:"uppercase"}}>Match</div><div style={{fontWeight:700,color:school.matchPct>=80?"#059669":"#D97706",fontSize:15}}>{school.matchPct}%</div></div>}
         </div>
       </div>
@@ -3471,15 +3471,15 @@ function SchoolFinderPage({ user, onLoginClick }) {
           <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,color:"#9CA3AF",cursor:"pointer"}}>&#10005;</button>
         </div>
         <div className="sf-detail-grid" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
-          {school.avg_gmat && <div style={{background:"#F9FAFB",padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Avg GMAT</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.avg_gmat}</div></div>}
-          {school.avg_gre && <div style={{background:"#F9FAFB",padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Avg GRE</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.avg_gre}</div></div>}
-          {school.avg_salary_usd && <div style={{background:"#F9FAFB",padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Avg Salary Post-MBA</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>${school.avg_salary_usd.toLocaleString()}</div></div>}
-          {school.tuition_usd && <div style={{background:"#F9FAFB",padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Tuition</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>${school.tuition_usd.toLocaleString()}</div></div>}
-          {school.total_cost_usd && <div style={{background:"#F9FAFB",padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Total Cost</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>${school.total_cost_usd.toLocaleString()}</div></div>}
-          {school.batch_size && <div style={{background:"#F9FAFB",padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Class Size</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.batch_size}</div></div>}
-          {school.avg_work_exp && <div style={{background:"#F9FAFB",padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Avg Work Exp</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.avg_work_exp} yrs</div></div>}
-          {school.duration_months && <div style={{background:"#F9FAFB",padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Duration</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.duration_months} months</div></div>}
-          {school.acceptance_rate && <div style={{background:"#F9FAFB",padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Acceptance Rate</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.acceptance_rate}%</div></div>}
+          {school.avg_gmat && <div style={{background:RED_BG,padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Avg GMAT</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.avg_gmat}</div></div>}
+          {school.avg_gre && <div style={{background:RED_BG,padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Avg GRE</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.avg_gre}</div></div>}
+          {school.avg_salary_usd && <div style={{background:RED_BG,padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Avg Salary Post-MBA</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>${school.avg_salary_usd.toLocaleString()}</div></div>}
+          {school.tuition_usd && <div style={{background:RED_BG,padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Tuition</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>${school.tuition_usd.toLocaleString()}</div></div>}
+          {school.total_cost_usd && <div style={{background:RED_BG,padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Total Cost</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>${school.total_cost_usd.toLocaleString()}</div></div>}
+          {school.batch_size && <div style={{background:RED_BG,padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Class Size</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.batch_size}</div></div>}
+          {school.avg_work_exp && <div style={{background:RED_BG,padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Avg Work Exp</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.avg_work_exp} yrs</div></div>}
+          {school.duration_months && <div style={{background:RED_BG,padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Duration</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.duration_months} months</div></div>}
+          {school.acceptance_rate && <div style={{background:RED_BG,padding:14,borderRadius:10}}><div style={{fontSize:11,color:"#9CA3AF",marginBottom:4}}>Acceptance Rate</div><div style={{fontSize:18,fontWeight:700,color:"#111827"}}>{school.acceptance_rate}%</div></div>}
         </div>
         {school.top_sectors && <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:700,color:"#111827",marginBottom:6}}>Top Recruiting Sectors</div><p style={{fontSize:13,color:"#6B7280",margin:0,lineHeight:1.6}}>{school.top_sectors}</p></div>}
         {school.post_study_visa && <div style={{marginBottom:16,background:"#EFF6FF",padding:14,borderRadius:10}}><div style={{fontSize:13,fontWeight:700,color:"#1E40AF",marginBottom:6}}>Post-Study Work Visa</div><p style={{fontSize:12,color:"#3B82F6",margin:0,lineHeight:1.6}}>{school.post_study_visa}</p></div>}
@@ -3494,12 +3494,12 @@ function SchoolFinderPage({ user, onLoginClick }) {
     <div style={{minHeight:"100vh",background:"#fff"}}>
       <div style={{maxWidth:900,margin:"0 auto",padding:"100px 20px 40px",fontFamily:"'DM Sans',sans-serif"}}>
         <div style={{textAlign:"center",marginBottom:32}}>
-          <div style={{display:"inline-block",background:RED,color:"white",padding:"6px 16px",borderRadius:20,fontSize:12,fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",marginBottom:16}}>100 MBA Programs Worldwide</div>
+          
           <h1 style={{fontSize:36,fontWeight:700,color:"#111827",marginBottom:10,fontFamily:"'Playfair Display',serif",lineHeight:1.2}}>School Finder</h1>
           <p style={{fontSize:15,color:"#6B7280",maxWidth:480,margin:"0 auto",lineHeight:1.7}}>Explore top MBA programs or find the ones that match your profile, budget, and career ambitions.</p>
         </div>
         <div style={{textAlign:"center",marginBottom:28}}>
-          {!hasSearched ? (<button onClick={function(){setShowFilters(!showFilters);}} style={{padding:"14px 32px",background:showFilters?"#111827":RED,color:"white",border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer",boxShadow:"0 4px 14px rgba(197,48,48,0.25)",transition:"all 0.2s"}}>{showFilters?"Hide Filters ▲":"🎯 Find Schools That Match My Profile"}</button>
+          {!hasSearched ? (<button onClick={function(){setShowFilters(!showFilters);}} style={{padding:"14px 32px",background:showFilters?"#111827":RED,color:"white",border:"none",borderRadius:12,fontSize:14,fontWeight:600,cursor:"pointer",boxShadow:"0 4px 14px rgba(197,48,48,0.25)",transition:"all 0.2s"}}>{showFilters?"Hide Filters ▲":"☝ Filter Schools That Match Your Profile"}</button>
           ) : (<button onClick={resetFilters} style={{padding:"12px 28px",background:"white",color:RED,border:"2px solid "+RED,borderRadius:12,fontSize:13,fontWeight:600,cursor:"pointer"}}>← Clear Filters · Show All Schools</button>)}
         </div>
         {showFilters && !hasSearched && (<div style={{background:"white",borderRadius:16,padding:28,boxShadow:"0 4px 20px rgba(0,0,0,0.06)",border:"1px solid #E5E7EB",marginBottom:28}}>
@@ -3522,13 +3522,13 @@ function SchoolFinderPage({ user, onLoginClick }) {
           {results.top.length===0 && results.other.length===0 && (<div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16}}>🔍</div><h3 style={{fontSize:18,color:"#111827",marginBottom:8,fontFamily:"'Playfair Display',serif"}}>No matches found</h3><p style={{fontSize:14,color:"#6B7280",maxWidth:400,margin:"0 auto"}}>Try adjusting your filters to see more results.</p></div>)}
         </div>)}
         {!hasSearched && (<div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><h2 style={{fontSize:18,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>All MBA Programs</h2><span style={{fontSize:12,color:"#9CA3AF",fontWeight:500}}>{schools.length} schools · FT 2026 Ranking</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><h2 style={{fontSize:18,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>All MBA Programs</h2><span style={{fontSize:12,color:"#9CA3AF",fontWeight:500}}>Sorted by FT 2026 Ranking</span></div>
           {loading && <div style={{textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}>Loading schools...</div>}
           <div style={{display:"flex",flexDirection:"column",gap:8}}>{schools.map(function(s,i){return <SchoolCard key={s.id} school={s} rank={i+1} isTop={false}/>;})}</div>
         </div>)}
-        <div style={{marginTop:48,background:RED,borderRadius:20,padding:"48px 32px",textAlign:"center"}}>
-          <h2 style={{fontSize:24,fontWeight:700,color:"white",marginBottom:12,fontFamily:"'Playfair Display',serif",lineHeight:1.3}}>Found your dream schools?</h2>
-          <p style={{fontSize:15,color:"rgba(255,255,255,0.85)",maxWidth:440,margin:"0 auto 24px",lineHeight:1.7}}>Start your application journey with expert guidance. We help you craft compelling applications for your target schools.</p>
+        <div style={{marginTop:48,background:"white",borderRadius:20,padding:"48px 32px",border:"2px solid "+RED,textAlign:"center"}}>
+          <h2 style={{fontSize:24,fontWeight:700,color:"#111827",marginBottom:12,fontFamily:"'Playfair Display',serif",lineHeight:1.3}}>Found your dream schools?</h2>
+          <p style={{fontSize:15,color:"#6B7280",maxWidth:440,margin:"0 auto 24px",lineHeight:1.7}}>Start your application journey with expert guidance. We help you craft compelling applications for your target schools.</p>
           <a href={WHATSAPP_CONNECT + encodeURIComponent("Hi! I found some schools on your School Finder and I would like to start my application.")} target="_blank" rel="noreferrer" style={{display:"inline-block",padding:"14px 36px",background:RED,color:"white",borderRadius:12,fontSize:15,fontWeight:700,textDecoration:"none",boxShadow:"0 4px 14px rgba(197,48,48,0.3)"}}>Start Your Application With Us →</a>
         </div>
       </div>
