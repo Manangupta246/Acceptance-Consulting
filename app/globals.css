@@ -22,8 +22,8 @@ body { -webkit-font-smoothing: antialiased; overflow-x: hidden; background-color
   .dt-nav { display: none !important; }
   .mob-btn { display: block !important; }
   .sf-filter-grid { grid-template-columns: 1fr !important; }
-  .sf-card-stats { flex-direction: column !important; gap: 8px !important; align-items: flex-start !important; }
-  .sf-card-stats > div { text-align: left !important; display: flex !important; gap: 6px !important; align-items: center !important; }
+  .sf-card-stats { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; width: 100% !important; }
+  .sf-card-stats > div { text-align: center !important; }
   .sf-detail-grid { grid-template-columns: 1fr 1fr !important; }
   .sf-card-layout { flex-direction: column !important; }
 }
