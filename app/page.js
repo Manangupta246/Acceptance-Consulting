@@ -1157,11 +1157,11 @@ function BridgeTheGaps() {
 
 function CTA() {
   return (
-    <section id="contact" style={{...sps,background:"#fff"}}>
-      <div style={{...mws,maxWidth:"750px",textAlign:"center",padding:"64px 40px",borderRadius:"24px",background:"#F3F4F6",position:"relative",overflow:"hidden"}}>
-        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,5vw,42px)",fontWeight:800,color:"#111827",marginBottom:"16px"}}>Ready to Start?</h2>
-        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"17px",color:"#6B7280",marginBottom:"36px",lineHeight:1.7}}>No sales pitch. No pressure. Just a conversation about where you are, where you want to be, and how we can help you get there.</p>
-        <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={{display:"inline-block",background:RED,color:"#fff",padding:"18px 48px",borderRadius:"50px",fontWeight:800,fontSize:"15px",textDecoration:"none",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.5px",textTransform:"uppercase",boxShadow:"0 4px 20px rgba(236,130,131,0.3)"}}>Connect With Us {"\u2192"}</a>
+    <section id="contact" style={{...sps,background:"linear-gradient(180deg, "+RED_BG+" 0%, #fff 100%)"}}>
+      <div style={{...mws,maxWidth:"750px",textAlign:"center",padding:"64px 40px",borderRadius:"24px",background:RED,position:"relative",overflow:"hidden"}}>
+        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,5vw,42px)",fontWeight:800,color:"#fff",marginBottom:"16px"}}>Ready to Start?</h2>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"17px",color:"rgba(255,255,255,0.85)",marginBottom:"36px",lineHeight:1.7}}>No sales pitch. No pressure. Just a conversation about where you are, where you want to be, and how we can help you get there.</p>
+        <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={{display:"inline-block",background:"#fff",color:RED,padding:"18px 48px",borderRadius:"50px",fontWeight:800,fontSize:"15px",textDecoration:"none",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.5px",textTransform:"uppercase",boxShadow:"0 4px 20px rgba(0,0,0,0.15)"}}>Connect With Us {"\u2192"}</a>
       </div>
     </section>
   );
