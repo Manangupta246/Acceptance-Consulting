@@ -3601,6 +3601,7 @@ export default function App() {
       var hash = window.location.hash.replace("#", "");
       if (["home","blog","faq","leaderboard","partners","forum","admin","schools"].indexOf(hash) !== -1) {
         setPageState(hash);
+        window.scrollTo(0,0);
       } else {
         setPageState("home");
       }
