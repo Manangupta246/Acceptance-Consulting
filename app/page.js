@@ -1382,7 +1382,7 @@ function LeaderboardPage({ user, onOpenChat, onLoginClick }) {
           var accuracy = u.questions_solved > 0 ? (u.questions_correct / u.questions_solved) * 100 : 0;
           var daysActive = u.days_active.size;
           // Composite: accuracy 35%, volume 25%, consistency 25%, study hours 15%
-          var composite = (accuracy * 0.35) + (Math.min(u.questions_solved * 0.5, 100) * 0.25) + (Math.min(daysActive * 15, 100) * 0.25) + (Math.min(u.study_hours * 5, 100) * 0.15);
+          var composite = (Math.min(u.questions_solved * 0.4, 100) * 0.40) + (Math.min(u.study_hours * 4, 100) * 0.30) + (accuracy * 0.10) + (Math.min(daysActive * 15, 100) * 0.10);
           var prof = profileMap[u.user_id] || {};
           return { user_id: u.user_id, full_name: prof.full_name || "Anonymous", avatar_url: prof.avatar_url, target_exam: prof.target_exam, target_score: prof.target_score, exam_date: prof.exam_date, questions_solved: u.questions_solved, questions_correct: u.questions_correct, study_hours: u.study_hours, days_active: daysActive, accuracy: accuracy, composite: composite };
         });
