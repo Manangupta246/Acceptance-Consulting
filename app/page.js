@@ -1124,6 +1124,37 @@ function ChatScreenshotsSection() {
   );
 }
 
+function BridgeTheGaps() {
+  var cards = [
+    { emoji: "🎓", title: "Find Your Dream School", desc: "Browse 100 MBA programs worldwide. Filter by GMAT, budget, region, and career goals to find your perfect match.", link: "#schools", label: "School Finder" },
+    { emoji: "🤝", title: "Meet Your Study Partner", desc: "Get matched with fellow applicants preparing for the same exam. Stay motivated, share tips, and hold each other accountable.", link: "#partners", label: "Study Partner" },
+    { emoji: "💬", title: "Get Your Questions Answered", desc: "From essay reviews to interview prep — ask anything in our community forum and get real answers from real applicants.", link: "#forum", label: "Forum" },
+    { emoji: "🏆", title: "Gamify Your Prep", desc: "Log your daily study hours, climb the leaderboard, and build consistency with friendly competition.", link: "#leaderboard", label: "Leaderboard" },
+  ];
+  return (
+    <section style={{padding:"80px 24px",background:"linear-gradient(180deg, #fff 0%, "+RED_BG+" 100%)"}}>
+      <div style={{maxWidth:900,margin:"0 auto",textAlign:"center"}}>
+        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(26px,4vw,34px)",fontWeight:700,color:"#111827",marginBottom:12,lineHeight:1.3}}>We Built What Was Missing</h2>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:16,color:"#6B7280",maxWidth:520,margin:"0 auto 48px",lineHeight:1.7}}>The MBA journey has gaps that nobody fills. We built the tools we wished existed when we were applying.</p>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:20}}>
+          {cards.map(function(c, i) {
+            return (
+              <a key={i} href={c.link} style={{textDecoration:"none",background:"white",borderRadius:16,padding:"32px 24px",border:"1px solid #f5e0e0",transition:"all 0.2s",display:"block",textAlign:"center"}}
+                onMouseEnter={function(e){e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 12px 32px rgba(236,130,131,0.15)";}}
+                onMouseLeave={function(e){e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
+                <div style={{fontSize:36,marginBottom:16}}>{c.emoji}</div>
+                <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:17,fontWeight:700,color:"#111827",marginBottom:8}}>{c.title}</h3>
+                <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#6B7280",lineHeight:1.6,marginBottom:16}}>{c.desc}</p>
+                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:RED}}>{c.label} {"→"}</span>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function CTA() {
   return (
     <section id="contact" style={{...sps,background:"#fff"}}>
@@ -3440,7 +3471,7 @@ function SchoolFinderPage({ user, onLoginClick }) {
 
   function SchoolCard({ school, rank, isTop }) {
     var ft = school.ft_ranking && school.ft_ranking!=="NR" && school.ft_ranking!=="N/R" ? "#"+school.ft_ranking+" FT" : "";
-    return (<div onClick={function(){setSelectedSchool(school);}} style={{background:"linear-gradient(135deg, #fff 0%, "+RED_BG+" 100%)",borderRadius:14,padding:"18px 22px",border:isTop?"2px solid "+RED:"1px solid #f5e0e0",cursor:"pointer",transition:"all 0.2s",position:"relative",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}} onMouseEnter={function(e){e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,0.08)";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={function(e){e.currentTarget.style.boxShadow="0 1px 4px rgba(0,0,0,0.04)";e.currentTarget.style.transform="none";}}>
+    return (<div onClick={function(){setSelectedSchool(school);}} style={{background:"linear-gradient(135deg, "+RED_BG+" 0%, #fff 100%)",borderRadius:14,padding:"18px 22px",border:isTop?"2px solid "+RED:"1px solid #f5e0e0",cursor:"pointer",transition:"all 0.2s",position:"relative",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}} onMouseEnter={function(e){e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,0.08)";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={function(e){e.currentTarget.style.boxShadow="0 1px 4px rgba(0,0,0,0.04)";e.currentTarget.style.transform="none";}}>
       {isTop && <div style={{position:"absolute",top:-1,right:20,background:RED,color:"white",padding:"4px 12px",borderRadius:"0 0 8px 8px",fontSize:11,fontWeight:700,letterSpacing:"0.5px"}}>TOP MATCH</div>}
       <div className="sf-card-layout" style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:16,flexWrap:"wrap"}}>
         <div className="sf-card-main" style={{flex:1,minWidth:200}}>
@@ -3522,7 +3553,7 @@ function SchoolFinderPage({ user, onLoginClick }) {
           {results.top.length===0 && results.other.length===0 && (<div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:48,marginBottom:16}}>🔍</div><h3 style={{fontSize:18,color:"#111827",marginBottom:8,fontFamily:"'Playfair Display',serif"}}>No matches found</h3><p style={{fontSize:14,color:"#6B7280",maxWidth:400,margin:"0 auto"}}>Try adjusting your filters to see more results.</p></div>)}
         </div>)}
         {!hasSearched && (<div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><h2 style={{fontSize:18,fontWeight:700,color:"#111827",margin:0,fontFamily:"'Playfair Display',serif"}}>All MBA Programs</h2></div>
+          <h2 style={{fontSize:18,fontWeight:700,color:"#111827",margin:"0 0 16px",fontFamily:"'Playfair Display',serif"}}>All MBA Programs</h2>
           {loading && <div style={{textAlign:"center",padding:"60px 20px",color:"#9CA3AF"}}>Loading schools...</div>}
           <div style={{display:"flex",flexDirection:"column",gap:8}}>{schools.map(function(s,i){return <SchoolCard key={s.id} school={s} rank={i+1} isTop={false}/>;})}</div>
         </div>)}
@@ -3538,7 +3569,7 @@ function SchoolFinderPage({ user, onLoginClick }) {
 }
 
 function HomePage() {
-  return (<><Hero/><SchoolLogos/><ServicesSection/><TestimonialsSection/><ChatScreenshotsSection/><NotTypical/><TeamSection/><CommunitySection/><CommunityProof/><CTA/></>);
+  return (<><Hero/><SchoolLogos/><ServicesSection/><TestimonialsSection/><ChatScreenshotsSection/><NotTypical/><TeamSection/><CommunitySection/><CommunityProof/><BridgeTheGaps/><CTA/></>);
 }
 
 export default function App() {
