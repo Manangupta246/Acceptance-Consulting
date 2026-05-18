@@ -1126,26 +1126,26 @@ function ChatScreenshotsSection() {
 
 function BridgeTheGaps() {
   var cards = [
-    { emoji: "🎓", title: "Find Your Dream School", desc: "Browse 100 MBA programs worldwide. Filter by GMAT, budget, region, and career goals to find your perfect match.", link: "#schools", label: "School Finder" },
-    { emoji: "🤝", title: "Meet Your Study Partner", desc: "Get matched with fellow applicants preparing for the same exam. Stay motivated, share tips, and hold each other accountable.", link: "#partners", label: "Study Partner" },
-    { emoji: "💬", title: "Get Your Questions Answered", desc: "From essay reviews to interview prep — ask anything in our community forum and get real answers from real applicants.", link: "#forum", label: "Forum" },
-    { emoji: "🏆", title: "Gamify Your Prep", desc: "Log your daily study hours, climb the leaderboard, and build consistency with friendly competition.", link: "#leaderboard", label: "Leaderboard" },
+    { emoji: "\uD83C\uDF93", title: "Find Your Dream School", desc: "Browse 100+ MBA programs matched by your GMAT/GRE, budget, region, career goals etc.", link: "#schools", label: "School Finder" },
+    { emoji: "\uD83E\uDD1D", title: "Meet Your Study Partner", desc: "Get matched with fellow applicants preparing for the same exam. Stay motivated, share tips, and hold each other accountable.", link: "#partners", label: "Study Partner" },
+    { emoji: "\uD83D\uDCAC", title: "Get Your Questions Answered", desc: "Ask anything in the forum, get real answers from real applicants and mentors.", link: "#forum", label: "Forum" },
+    { emoji: "\uD83C\uDFC6", title: "Gamify Your Prep", desc: "Log your daily study hours, climb the leaderboard, and build consistency with friendly competition.", link: "#leaderboard", label: "Leaderboard" },
   ];
   return (
-    <section style={{padding:"80px 24px",background:"linear-gradient(180deg, #fff 0%, "+RED_BG+" 100%)"}}>
+    <section style={{padding:"80px 24px",background:"#fff"}}>
       <div style={{maxWidth:900,margin:"0 auto",textAlign:"center"}}>
         <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(26px,4vw,34px)",fontWeight:700,color:"#111827",marginBottom:12,lineHeight:1.3}}>We Built What Was Missing</h2>
         <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:16,color:"#6B7280",maxWidth:520,margin:"0 auto 48px",lineHeight:1.7}}>The MBA journey has gaps that nobody fills. We built the tools we wished existed when we were applying.</p>
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))",gap:20}}>
           {cards.map(function(c, i) {
             return (
-              <a key={i} href={c.link} style={{textDecoration:"none",background:"white",borderRadius:16,padding:"32px 24px",border:"1px solid #f5e0e0",transition:"all 0.2s",display:"block",textAlign:"center"}}
+              <a key={i} href={c.link} style={{textDecoration:"none",background:"white",borderRadius:16,padding:"32px 24px 20px",border:"1px solid #f5e0e0",transition:"all 0.2s",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}
                 onMouseEnter={function(e){e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 12px 32px rgba(236,130,131,0.15)";}}
                 onMouseLeave={function(e){e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none";}}>
                 <div style={{fontSize:36,marginBottom:16}}>{c.emoji}</div>
                 <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:17,fontWeight:700,color:"#111827",marginBottom:8}}>{c.title}</h3>
-                <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#6B7280",lineHeight:1.6,marginBottom:16}}>{c.desc}</p>
-                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:RED}}>{c.label} {"→"}</span>
+                <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,color:"#6B7280",lineHeight:1.6,marginBottom:"auto",paddingBottom:16,flex:1}}>{c.desc}</p>
+                <span style={{fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:700,color:RED}}>{c.label} {"\u2192"}</span>
               </a>
             );
           })}
@@ -1158,10 +1158,10 @@ function BridgeTheGaps() {
 function CTA() {
   return (
     <section id="contact" style={{...sps,background:"#fff"}}>
-      <div style={{...mws,maxWidth:"750px",textAlign:"center",padding:"64px 40px",borderRadius:"24px",background:RED,position:"relative",overflow:"hidden"}}>
-        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,5vw,42px)",fontWeight:800,color:"#fff",marginBottom:"16px"}}>Ready to Start?</h2>
-        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"17px",color:"rgba(255,255,255,0.85)",marginBottom:"36px",lineHeight:1.7}}>No sales pitch. No pressure. Just a conversation about where you are, where you want to be, and how we can help you get there.</p>
-        <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={{display:"inline-block",background:"#fff",color:RED,padding:"18px 48px",borderRadius:"50px",fontWeight:800,fontSize:"15px",textDecoration:"none",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.5px",textTransform:"uppercase",boxShadow:"0 4px 20px rgba(0,0,0,0.15)"}}>Connect With Us {"\u2192"}</a>
+      <div style={{...mws,maxWidth:"750px",textAlign:"center",padding:"64px 40px",borderRadius:"24px",background:"#F3F4F6",position:"relative",overflow:"hidden"}}>
+        <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,5vw,42px)",fontWeight:800,color:"#111827",marginBottom:"16px"}}>Ready to Start?</h2>
+        <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"17px",color:"#6B7280",marginBottom:"36px",lineHeight:1.7}}>No sales pitch. No pressure. Just a conversation about where you are, where you want to be, and how we can help you get there.</p>
+        <a href={WHATSAPP_CONNECT} target="_blank" rel="noreferrer" style={{display:"inline-block",background:RED,color:"#fff",padding:"18px 48px",borderRadius:"50px",fontWeight:800,fontSize:"15px",textDecoration:"none",fontFamily:"'DM Sans',sans-serif",letterSpacing:"0.5px",textTransform:"uppercase",boxShadow:"0 4px 20px rgba(236,130,131,0.3)"}}>Connect With Us {"\u2192"}</a>
       </div>
     </section>
   );
