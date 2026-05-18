@@ -3448,24 +3448,33 @@ function SchoolFinderPage({ user, onLoginClick }) {
     if (!filters.score) { alert("Please enter your exam score"); return; }
     var score = parseInt(filters.score);
     var workExp = filters.work_exp ? parseFloat(filters.work_exp) : null;
-    var top = []; var other = [];
-    schools.forEach(function (s) {
+    var top = [];
+    var pool = schools;
+    if (filters.regions && filters.regions.length > 0) {
+      pool = schools.filter(function(s) {
+        return filters.regions.some(function(reg) {
+          return (s.region && s.region.toLowerCase() === reg.toLowerCase()) ||
+            (s.country && s.country.toLowerCase().indexOf(reg.toLowerCase()) >= 0);
+        });
+      });
+    }
+    pool.forEach(function (s) {
       var reasons = []; var ms = 0; var tc = 0;
       if (s.avg_gmat || s.avg_gre) { tc++; var ss = filters.exam_type === "GMAT" ? s.avg_gmat : s.avg_gre; if (ss) { if (score >= ss) ms++; else if (score >= ss - 20) { ms += 0.5; reasons.push(filters.exam_type + " (" + score + ") slightly below avg (" + ss + ")"); } else reasons.push(filters.exam_type + " (" + score + ") below avg (" + ss + ")"); } }
       if (workExp !== null && s.avg_work_exp) { tc++; if (workExp >= s.avg_work_exp - 1) ms++; else reasons.push("Avg exp " + s.avg_work_exp + "yr (you: " + workExp + ")"); }
-      if (filters.budget) { tc++; var b = budgetRanges.find(function(x){return x.label===filters.budget;}); var c = s.total_cost_usd || s.tuition_usd; if (b && c) { if (c <= b.max && c >= b.min) ms++; else if (c > b.max) reasons.push("Cost $" + (c/1000).toFixed(0) + "K exceeds budget"); else ms += 0.5; } }
+      if (filters.budget) { tc++; var b = budgetRanges.find(function(x){return x.label===filters.budget;}); var c = s.total_cost_usd || s.tuition_usd; if (b && c) { if (c <= b.max) ms++; else reasons.push("Cost $" + (c/1000).toFixed(0) + "K exceeds budget"); } }
       if (filters.duration) { tc++; var d = durations.find(function(x){return x.label===filters.duration;}); if (d && s.duration_months) { if (s.duration_months >= d.min && s.duration_months <= d.max) ms++; else reasons.push(s.duration_months + " months"); } }
-      if (filters.region) { tc++; var rm = (s.region && s.region.toLowerCase()===filters.region.toLowerCase()) || (s.country && s.country.toLowerCase().indexOf(filters.region.toLowerCase())>=0); if (rm) ms++; else reasons.push("Located in " + (s.country||s.region)); }
+
       if (filters.career_sector && s.top_sectors) { tc++; if (s.top_sectors.toLowerCase().indexOf(filters.career_sector.toLowerCase())>=0) ms++; else reasons.push("Sectors: " + s.top_sectors.substring(0,50)); }
       var pct = tc > 0 ? Math.round((ms/tc)*100) : 0;
       var r = Object.assign({}, s, { matchPct: pct, reasons: reasons });
       if (pct >= 80) top.push(r); else if (pct >= 40) other.push(r);
     });
     var sf = function(a,b) { if (b.matchPct!==a.matchPct) return b.matchPct-a.matchPct; return (parseInt(a.ft_ranking)||999)-(parseInt(b.ft_ranking)||999); };
-    top.sort(sf); other.sort(sf);
-    setResults({ top: top.slice(0,5), other: other.slice(0,15) }); setHasSearched(true); setShowFilters(false);
+    top.sort(sf);
+    setResults({ top: top.slice(0,5), other: top.slice(5,20) }); setHasSearched(true); setShowFilters(false);
   }
-  function resetFilters() { setFilters({ exam_type:"GMAT", score:"", work_exp:"", budget:"", duration:"", region:"", career_sector:"" }); setHasSearched(false); setResults({ top:[], other:[] }); }
+  function resetFilters() { setHasSearched(false); setResults({ top:[], other:[] }); setShowFilters(true); }
 
   var sfIn = { width:"100%", padding:"12px 16px", border:"1px solid #E5E7EB", borderRadius:10, fontSize:14, fontFamily:"'DM Sans',sans-serif", outline:"none", background:"white", boxSizing:"border-box" };
 
@@ -3541,7 +3550,7 @@ function SchoolFinderPage({ user, onLoginClick }) {
             <div><label style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:"0.5px"}}>Work Experience</label><input type="number" step="0.5" style={sfIn} placeholder="e.g. 4 years" value={filters.work_exp} onChange={function(e){updateFilter("work_exp",e.target.value);}}/></div>
             <div><label style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:"0.5px"}}>Total Budget</label><select style={sfIn} value={filters.budget} onChange={function(e){updateFilter("budget",e.target.value);}}><option value="">Any budget</option>{budgetRanges.map(function(b){return <option key={b.label} value={b.label}>{b.label}</option>;})}</select></div>
             <div><label style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:"0.5px"}}>Duration</label><select style={sfIn} value={filters.duration} onChange={function(e){updateFilter("duration",e.target.value);}}><option value="">Any duration</option>{durations.map(function(d){return <option key={d.label} value={d.label}>{d.label}</option>;})}</select></div>
-            <div><label style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:"0.5px"}}>Region</label><select style={sfIn} value={filters.region} onChange={function(e){updateFilter("region",e.target.value);}}><option value="">Any region</option>{regions.map(function(r){return <option key={r} value={r}>{r}</option>;})}</select></div>
+            <div><label style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:"0.5px"}}>Region (select multiple)</label><div style={{display:"flex",flexWrap:"wrap",gap:8}}>{regions.map(function(r){var sel=filters.regions&&filters.regions.indexOf(r)>=0;return <button key={r} type="button" onClick={function(){var curr=filters.regions||[];var next=sel?curr.filter(function(x){return x!==r;}):curr.concat([r]);updateFilter("regions",next);}} style={{padding:"8px 14px",borderRadius:8,border:sel?"2px solid "+RED:"1px solid #E5E7EB",background:sel?RED_BG:"white",color:sel?RED:"#6B7280",fontSize:13,fontWeight:sel?600:400,cursor:"pointer",transition:"all 0.15s"}}>{ r}</button>;})}</div></div>
             <div style={{gridColumn:"1 / -1"}}><label style={{fontSize:12,fontWeight:600,color:"#6B7280",marginBottom:6,display:"block",textTransform:"uppercase",letterSpacing:"0.5px"}}>Career Sector</label><select style={sfIn} value={filters.career_sector} onChange={function(e){updateFilter("career_sector",e.target.value);}}><option value="">Any sector</option>{sectors.map(function(s){return <option key={s} value={s}>{s}</option>;})}</select></div>
           </div>
           <button onClick={findSchools} disabled={loading} style={{width:"100%",marginTop:20,padding:14,background:RED,color:"white",border:"none",borderRadius:12,fontSize:15,fontWeight:700,cursor:"pointer",boxShadow:"0 4px 14px rgba(197,48,48,0.25)"}}>Find My Schools</button>
