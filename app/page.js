@@ -1157,7 +1157,7 @@ function BridgeTheGaps() {
 
 function CTA() {
   return (
-    <section id="contact" style={{...sps,background:"linear-gradient(180deg, "+RED_BG+" 0%, #fff 100%)"}}>
+    <section id="contact" style={{...sps,background:"#fff"}}>
       <div style={{...mws,maxWidth:"750px",textAlign:"center",padding:"64px 40px",borderRadius:"24px",background:RED,position:"relative",overflow:"hidden"}}>
         <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(28px,5vw,42px)",fontWeight:800,color:"#fff",marginBottom:"16px"}}>Ready to Start?</h2>
         <p style={{fontFamily:"'DM Sans',sans-serif",fontSize:"17px",color:"rgba(255,255,255,0.85)",marginBottom:"36px",lineHeight:1.7}}>No sales pitch. No pressure. Just a conversation about where you are, where you want to be, and how we can help you get there.</p>
