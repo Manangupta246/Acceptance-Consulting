@@ -1,4 +1,5 @@
 import './globals.css';
+import AppShell from './AppShell';
 
 export const metadata = {
   metadataBase: new URL('https://www.acceptanceconsulting.com'),
@@ -177,7 +178,7 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       </head>
-      <body>{children}</body>
+      <body><AppShell>{children}</AppShell></body>
     </html>
   );
 }
