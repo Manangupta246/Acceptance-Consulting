@@ -178,7 +178,7 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       </head>
-      <body><AppShell>{children}</AppShell></body>
+      <body suppressHydrationWarning><AppShell>{children}</AppShell></body>
     </html>
   );
 }
