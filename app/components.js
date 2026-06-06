@@ -699,23 +699,23 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
     window.addEventListener("scroll", fn, { passive: true }); return () => window.removeEventListener("scroll", fn);
   }, []);
   const links = [
-    { label:"Home", action:()=>{setPage("home");window.scrollTo({top:0,behavior:"smooth"});} },
-    { label:"Testimonials", action:()=>{setPage("home");setTimeout(()=>document.getElementById("testimonials")?.scrollIntoView({behavior:"smooth"}),300);} },
-    { label:"Our Team", action:()=>{setPage("home");setTimeout(()=>document.getElementById("our-team")?.scrollIntoView({behavior:"smooth"}),300);} },
-    { label:"School Finder", action:()=>{setPage("schools");window.scrollTo(0,0);} },
-    { label:"Leaderboard", action:()=>{setPage("leaderboard");window.scrollTo(0,0);} },
-    { label:"Study Partner", action:()=>{setPage("partners");window.scrollTo(0,0);} },
-    { label:"Forum", action:()=>{setPage("forum");window.scrollTo(0,0);} },
-    { label:"Blog", action:()=>{setPage("blog");window.scrollTo(0,0);} },
-    { label:"FAQ", action:()=>{setPage("faq");window.scrollTo(0,0);} },
+    { label:"Home", href:"/", action:()=>{setPage("home");window.scrollTo({top:0,behavior:"smooth"});} },
+    { label:"Testimonials", href:"/#testimonials", action:()=>{setPage("home");setTimeout(()=>document.getElementById("testimonials")?.scrollIntoView({behavior:"smooth"}),300);} },
+    { label:"Our Team", href:"/#our-team", action:()=>{setPage("home");setTimeout(()=>document.getElementById("our-team")?.scrollIntoView({behavior:"smooth"}),300);} },
+    { label:"School Finder", href:"/schools", action:()=>{setPage("schools");window.scrollTo(0,0);} },
+    { label:"Leaderboard", href:"/leaderboard", action:()=>{setPage("leaderboard");window.scrollTo(0,0);} },
+    { label:"Study Partner", href:"/study-partner", action:()=>{setPage("partners");window.scrollTo(0,0);} },
+    { label:"Forum", href:"/forum", action:()=>{setPage("forum");window.scrollTo(0,0);} },
+    { label:"Blog", href:"/blog", action:()=>{setPage("blog");window.scrollTo(0,0);} },
+    { label:"FAQ", href:"/faq", action:()=>{setPage("faq");window.scrollTo(0,0);} },
   ];
   const isActive = (l) => (page==="faq"&&l.label==="FAQ")||(page==="blog"&&l.label==="Blog")||(page==="leaderboard"&&l.label==="Leaderboard")||(page==="partners"&&l.label==="Study Partner")||(page==="forum"&&l.label==="Forum")||(page==="schools"&&l.label==="School Finder");
   return (
     <>
     <nav style={{position:"fixed",top:0,left:0,right:0,zIndex:1000,padding:scrolled?"8px 24px":"12px 24px",background:scrolled?"rgba(255,255,255,0.97)":"rgba(255,255,255,0.95)",backdropFilter:"blur(16px)",boxShadow:scrolled?"0 2px 20px rgba(0,0,0,0.06)":"none",transition:"padding 0.3s,box-shadow 0.3s",display:"flex",alignItems:"center",gap:"16px"}}>
-      <a onClick={()=>{setPage("home");window.scrollTo(0,0);}} style={{cursor:"pointer",flexShrink:0}}><img src={LOGO} alt="AC" style={{height:"36px"}} /></a>
+      <a href="/" onClick={(e)=>{e.preventDefault();setPage("home");window.scrollTo(0,0);}} style={{cursor:"pointer",flexShrink:0}}><img src={LOGO} alt="AC" style={{height:"36px"}} /></a>
       <div style={{flex:1,display:"flex",justifyContent:"center",gap:"16px",alignItems:"center",overflow:"hidden"}} className="dt-nav">
-        {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:isActive(l)?RED:GRAY,textDecoration:"none",fontSize:"11.5px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
+        {links.map(l=>(<a key={l.label} href={l.href} onClick={(e)=>{e.preventDefault();l.action();setMenuOpen(false);}} style={{color:isActive(l)?RED:GRAY,textDecoration:"none",fontSize:"11.5px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,letterSpacing:"0.5px",textTransform:"uppercase",cursor:"pointer",whiteSpace:"nowrap"}}>{l.label}</a>))}
       </div>
       <div style={{display:"flex",gap:"10px",alignItems:"center",flexShrink:0}} className="dt-nav">
         {user ? (
@@ -731,7 +731,7 @@ function Navbar({ page, setPage, user, onLoginClick, onLogout }) {
     {menuOpen&&(<div onClick={()=>setMenuOpen(false)} style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.5)",zIndex:1100}}/>)}
     {menuOpen&&(<div style={{position:"fixed",top:0,right:0,bottom:0,width:"280px",backgroundColor:"#FFFFFF",zIndex:1101,display:"flex",flexDirection:"column",paddingTop:"80px",paddingLeft:"32px",paddingRight:"32px",gap:"8px",boxShadow:"-8px 0 30px rgba(0,0,0,0.15)",overflowY:"auto"}}>
       <button onClick={()=>setMenuOpen(false)} style={{position:"absolute",top:20,right:20,background:"none",border:"none",fontSize:24,color:"#9CA3AF",cursor:"pointer"}}>{"\u2715"}</button>
-      {links.map(l=>(<a key={l.label} onClick={()=>{l.action();setMenuOpen(false);}} style={{color:DARK,textDecoration:"none",fontSize:"15px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer",padding:"12px 0",borderBottom:"1px solid #F3F4F6"}}>{l.label}</a>))}
+      {links.map(l=>(<a key={l.label} href={l.href} onClick={(e)=>{e.preventDefault();l.action();setMenuOpen(false);}} style={{color:DARK,textDecoration:"none",fontSize:"15px",fontFamily:"'DM Sans',sans-serif",fontWeight:600,cursor:"pointer",padding:"12px 0",borderBottom:"1px solid #F3F4F6"}}>{l.label}</a>))}
       <div style={{marginTop:"16px",display:"flex",flexDirection:"column",gap:"12px"}}>
         {user ? (
           <button onClick={()=>{setMenuOpen(false);onLogout();}} style={{...bos,padding:"12px 24px",width:"100%",textAlign:"center"}}>Log Out</button>
