@@ -19,7 +19,7 @@ export default async function sitemap() {
   // Fetch blog posts
   var blogPages = [];
   try {
-    var { data: posts } = await supabase.from("blog_posts").select("slug, updated_at").eq("published", true);
+    var { data: posts } = await supabase.from("posts").select("slug, updated_at").eq("published", true);
     if (posts) {
       blogPages = posts.map(function(p) {
         return { url: "https://www.acceptanceconsulting.com/blog/" + p.slug, lastModified: new Date(p.updated_at), changeFrequency: "monthly", priority: 0.7 };
@@ -33,8 +33,7 @@ export default async function sitemap() {
     var { data: threads } = await supabase.from("forum_posts").select("id, title, updated_at").order("created_at", { ascending: false }).limit(100);
     if (threads) {
       forumPages = threads.map(function(t) {
-        var slug = t.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").substring(0, 60);
-        return { url: "https://www.acceptanceconsulting.com/forum/" + t.id + "-" + slug, lastModified: new Date(t.updated_at), changeFrequency: "weekly", priority: 0.6 };
+        return { url: "https://www.acceptanceconsulting.com/forum/" + t.id, lastModified: new Date(t.updated_at), changeFrequency: "weekly", priority: 0.6 };
       });
     }
   } catch(e) {}
