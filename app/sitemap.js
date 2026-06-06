@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
-  "https://lbrcrknnivxkqvryzamr.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxicmNya25uaXZ4a3F2cnl6YW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTQ2OTUsImV4cCI6MjA1ODczMDY5NX0.PqGMAsEfMFCmajjm1ERCaGKpV4sdE_Bfat3JjnuR7YA"
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 export default async function sitemap() {
