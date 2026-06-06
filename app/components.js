@@ -648,7 +648,7 @@ function BlogPage({ user }) {
               const date = new Date(post.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
               return (
                 <div key={post.id} style={{borderRadius:"20px",overflow:"hidden",border:"1px solid rgba(0,0,0,0.06)",background:"#fff",transition:"box-shadow 0.3s",cursor:"pointer"}}
-                  onClick={()=>setViewingPost(post)}
+                  onClick={()=>window.location.href='/blog/'+post.slug}
                   onMouseEnter={e=>{e.currentTarget.style.boxShadow="0 8px 30px rgba(0,0,0,0.08)";}}
                   onMouseLeave={e=>{e.currentTarget.style.boxShadow="none";}}>
                   {post.cover_image ? (
@@ -2405,7 +2405,7 @@ function ForumPage({ user, onLoginClick }) {
           var colors = ["#ec8283","#2563EB","#059669","#7C3AED","#D97706","#DB2777"];
           var color = colors[(authorName||"A").length % colors.length];
           return (
-            <div key={post.id} onClick={function(){setSelectedPost(post);}} style={{background:"white",borderRadius:12,border:"1px solid #E5E7EB",padding:"16px 20px",marginBottom:10,cursor:"pointer",display:"flex",gap:14,transition:"box-shadow 0.15s"}}>
+            <div key={post.id} onClick={function(){window.location.href='/forum/'+post.id;}} style={{background:"white",borderRadius:12,border:"1px solid #E5E7EB",padding:"16px 20px",marginBottom:10,cursor:"pointer",display:"flex",gap:14,transition:"box-shadow 0.15s"}}>
               {/* Vote */}
               <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:0,flexShrink:0,minWidth:36}} onClick={function(e){e.stopPropagation();}}>
                 <button onClick={function(){handleVote("post",post.id,1);}} style={{background:"none",border:"none",cursor:"pointer",color:myVotes["post_"+post.id]===1?RED:"#D1D5DB",padding:1}}><FmUpIcon/></button>
