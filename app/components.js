@@ -3449,6 +3449,7 @@ function SchoolFinderPage({ user, onLoginClick }) {
     var score = parseInt(filters.score);
     var workExp = filters.work_exp ? parseFloat(filters.work_exp) : null;
     var top = [];
+    var other = [];
     var pool = schools;
     if (filters.regions && filters.regions.length > 0) {
       pool = schools.filter(function(s) {
@@ -3472,7 +3473,8 @@ function SchoolFinderPage({ user, onLoginClick }) {
     });
     var sf = function(a,b) { if (b.matchPct!==a.matchPct) return b.matchPct-a.matchPct; return (parseInt(a.ft_ranking)||999)-(parseInt(b.ft_ranking)||999); };
     top.sort(sf);
-    setResults({ top: top.slice(0,5), other: top.slice(5,20) }); setHasSearched(true); setShowFilters(false);
+    other.sort(sf);
+    setResults({ top: top.slice(0,5), other: [...top.slice(5), ...other].slice(0,15) }); setHasSearched(true); setShowFilters(false);
   }
   function resetFilters() { setHasSearched(false); setResults({ top:[], other:[] }); setShowFilters(true); }
 
