@@ -3118,7 +3118,7 @@ function AdminDashboard({ user }) {
   if (!isAdmin) return (<div style={{paddingTop:120,minHeight:"100vh",background:"#FAFAFA",textAlign:"center",padding:"200px 20px"}}><h2 style={{fontFamily:"'Playfair Display',serif",color:"#111827"}}>Access Denied</h2><p style={{color:"#6B7280",fontFamily:"'DM Sans',sans-serif"}}>Admin access only.</p></div>);
 
   var tabs = [
-    { key: "blog", label: "Blog Posts", table: "blog_posts" },
+    { key: "blog", label: "Blog Posts", table: "posts" },
     { key: "forum_posts", label: "Forum Posts", table: "forum_posts" },
     { key: "forum_comments", label: "Forum Comments", table: "forum_comments" },
     { key: "profiles", label: "Partner Profiles", table: "profiles" },
