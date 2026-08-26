@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 );
-const ADMIN_EMAILS = ["manangupta246@gmail.com", "tannyamehta@gmail.com"];
+const ADMIN_EMAILS = ["manangupta246@gmail.com", "tannyamehta@gmail.com","acceptanceconsuting2023@gmail.com"];
 const ADMIN_EMAIL = ADMIN_EMAILS[0];
 function isAdminUser(u) { return u && u.email && ADMIN_EMAILS.indexOf(u.email) !== -1; }
 
